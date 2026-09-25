@@ -1,0 +1,164 @@
+// All copy and data for the page. Facts mirror ../data/profile.json in the knowledge base.
+
+export const PERSON = {
+  name: 'Bogdan Nenadović',
+  firstName: 'bogdan',
+  role: 'Full-Stack Design Engineer',
+  // TODO: confirm the public mailbox — sunlucki.pl has no MX records yet.
+  email: 'hello@sunlucki.pl',
+  linkedin: 'https://www.linkedin.com/in/sunlucki',
+  github: 'https://github.com/Sunlucki',
+  location: 'Poznań, Poland',
+} as const;
+
+export const NAV = [
+  { label: 'About', href: '#about' },
+  { label: 'Services', href: '#services' },
+  { label: 'Projects', href: '#projects' },
+  { label: 'Contact', href: '#contact' },
+] as const;
+
+export const HERO_FRAMES = 83; // frames 0–82 of the eye clip (public/hero/count.txt)
+
+export const HERO_TAGLINE = 'a full-stack design engineer who designs, builds and ships complete products';
+
+export const ABOUT_TEXT =
+  'Eight years in design, video and marketing taught me how products should look, feel and sell. Now I build them end to end — interfaces, backends, infrastructure and native iOS apps — shipping AI-native with rigorous verification. Let’s build something that works flawlessly and looks unforgettable.';
+
+export const STATS = [
+  { value: 10, suffix: '+', label: 'production systems shipped in 2026' },
+  { value: 339, suffix: '', label: 'API endpoints in one B2B platform' },
+  { value: 4, suffix: '', label: 'native iOS apps' },
+  { value: 23, suffix: '', label: 'languages in one storefront' },
+] as const;
+
+export const SERVICES = [
+  {
+    name: 'Product Engineering',
+    description:
+      'End-to-end web products in TypeScript, React, Node.js and PostgreSQL — data model, APIs, deploys and backups included. MVPs and SaaS built to survive production.',
+  },
+  {
+    name: 'Design Engineering',
+    description:
+      'Design systems, motion and interfaces that feel crafted — accessible components, spring-based animation and Three.js / WebGL when the story needs depth.',
+  },
+  {
+    name: 'AI Integration',
+    description:
+      'LLM features with guardrails — structured outputs, document AI and assistants — delivered AI-native, with specs, tests and adversarial reviews on every change.',
+  },
+  {
+    name: 'Payments & E-invoicing',
+    description:
+      'Stripe, PayU, Przelewy24, marketplaces and Poland’s KSeF 2.0 — financial integrations engineered for correctness, idempotency and audits.',
+  },
+  {
+    name: 'Native iOS',
+    description:
+      'SwiftUI apps with widgets, Live Activities, offline sync and push — connected to the same backend as your web product.',
+  },
+  {
+    name: 'Brand & Motion',
+    description:
+      'Identity, packaging and AI-assisted video. The person designing your brand can also ship your product.',
+  },
+] as const;
+
+export type Project = {
+  category: string;
+  name: string;
+  description: string;
+  stack: string[];
+  live?: string;
+  images: [string, string, string];
+  alts: [string, string, string];
+};
+
+export const PROJECTS: Project[] = [
+  {
+    category: 'Own product · Fintech',
+    name: 'SIMBIA CRM',
+    description:
+      'Sales CRM with full double-entry accounting, KSeF e-invoicing and open banking — the system my own company runs on.',
+    stack: ['React 19', 'Fastify', 'PostgreSQL', 'SwiftUI'],
+    live: 'https://simbia.eu',
+    images: ['/work/simbia-1.webp', '/work/simbia-2.webp', '/work/simbia-3.webp'],
+    alts: ['SIMBIA CRM kanban board', 'SIMBIA CRM finance overview', 'SIMBIA CRM dashboard'],
+  },
+  {
+    category: 'Client · B2B wholesale',
+    name: 'Mind Logistic B2B',
+    description:
+      'Wholesale platform with company approval flows, trade credit, 7 payment gateways and 6 marketplace channels.',
+    stack: ['React', 'Node.js', 'PostgreSQL', 'Three.js'],
+    live: 'https://bosspartners.pl',
+    images: ['/work/b2b-1.webp', '/work/b2b-2.webp', '/work/b2b-3.webp'],
+    alts: ['Wholesale portal audience section', 'Wholesale platform key numbers', 'Wholesale platform landing page'],
+  },
+  {
+    category: 'Client · Medical e-commerce',
+    name: 'PROTECTDENT',
+    description:
+      '23-language EU storefront for CE-certified dental barriers, with an AI lead-qualification pipeline behind it.',
+    stack: ['React', 'Express', 'PostgreSQL', 'Stripe'],
+    live: 'https://protectdent.eu',
+    images: ['/work/protectdent-1.webp', '/work/protectdent-2.webp', '/work/protectdent-3.webp'],
+    alts: ['PROTECTDENT bestselling products', 'PROTECTDENT product categories', 'PROTECTDENT landing page'],
+  },
+  {
+    category: 'Own product · HR-tech',
+    name: 'iApply Workforce',
+    description:
+      'Shift and time tracking for staffing agencies — QR, GPS and NFC clock-in, a live coordinator board and a native iOS app.',
+    stack: ['React', 'Socket.IO', 'PostgreSQL', 'SwiftUI'],
+    live: 'https://iapply.com.pl',
+    images: ['/work/iapply-1.webp', '/work/iapply-2.webp', '/work/iapply-3.webp'],
+    alts: ['iApply QR check-in centre', 'iApply shift planning', 'iApply weekly schedule'],
+  },
+  {
+    category: 'Client · Mobility',
+    name: 'TAXI BOSS',
+    description:
+      'Fleet platform for Uber and Bolt partners — driver funnel, e-signed contracts, Uber API sync and a SwiftUI driver app.',
+    stack: ['React', 'Express', 'Redis', 'SwiftUI'],
+    images: ['/work/taxiboss-1.webp', '/work/taxiboss-2.webp', '/work/taxiboss-3.webp'],
+    alts: ['TAXI BOSS 3D vehicle showcase', 'TAXI BOSS driver dashboard', 'TAXI BOSS landing page'],
+  },
+  {
+    category: 'Contract · Design engineering',
+    name: 'spin.clinic UI Kit',
+    description:
+      'Production design system and motion kit — FLIP morphing, spring physics and full accessibility, shipped in 14.5 hours.',
+    stack: ['Next.js', 'Framer Motion', 'TypeScript'],
+    live: 'https://spin.clinic/ui-kit',
+    images: ['/work/spin-1.webp', '/work/spin-2.webp', '/work/spin-3.webp'],
+    alts: ['spin.clinic component library', 'spin.clinic portal', 'spin.clinic UI kit showcase'],
+  },
+];
+
+const tile = (i: number, alt: string) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp`, alt });
+
+export const TILES = [
+  tile(0, 'AiBizBox landing page'),
+  tile(1, 'XyliMelts storefront'),
+  tile(2, 'SIMBIA CRM dashboard, light theme'),
+  tile(3, 'AntMight landing page'),
+  tile(4, 'PROTECTDENT blog'),
+  tile(5, 'iApply shift planning'),
+  tile(6, 'TAXI BOSS benefits section'),
+  tile(7, 'spin.clinic typography'),
+  tile(8, 'XyliMelts ingredients section'),
+  tile(9, 'SIMBIA CRM reports'),
+  tile(10, 'Mind Logistic B2B landing'),
+  tile(11, 'AiBizBox app preview'),
+  tile(12, 'AntMight academy numbers'),
+  tile(13, 'XyliMelts product selector'),
+  tile(14, 'PROTECTDENT procedures'),
+  tile(15, 'SIMBIA CRM project board'),
+  tile(16, 'TAXI BOSS fleet admin'),
+  tile(17, 'iApply coordinator panel'),
+  tile(18, 'XyliMelts sample kit'),
+  tile(19, 'SIMBIA CRM kanban'),
+  tile(20, 'TAXI BOSS 3D car'),
+];
