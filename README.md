@@ -42,7 +42,7 @@ npm run dev
 npm run build
 ```
 
-Deployment is a static upload of `dist/` behind nginx, with TLS from Let's Encrypt.
+`npm run deploy` builds and rsyncs `dist/` to the server (SSH host alias `styleicon`), where nginx serves it with TLS from Let's Encrypt.
 
 ## Rights
 
