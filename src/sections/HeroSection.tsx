@@ -58,7 +58,8 @@ export function HeroSection() {
     const tilt = tiltRef.current;
     if (!section || !bgCanvas || !fgCanvas || !bg || !fg || !heading || !copy || !shade || !blackout || !hintEl || !hintDot || !poster || !tilt) return;
 
-    const mobile = window.matchMedia('(max-width: 767px)').matches;
+    const mobile = window.matchMedia('(max-width: 767px)').matches; // lighter 1280 px frame set
+    const phone = window.matchMedia('(max-width: 639px)').matches; // two-line headline → loosened framing
     const frames: Record<Layer, HTMLImageElement[]> = { bg: [], fg: [] };
     const ready: Record<Layer, boolean[]> = { bg: new Array(HERO_FRAMES).fill(false), fg: new Array(HERO_FG_FRAMES).fill(false) };
     let current = 0;
@@ -70,14 +71,14 @@ export function HeroSection() {
     // leaving headroom for the two-line headline; the framing reaches full cover by LOOSE_UNTIL.
     const place = (canvas: HTMLCanvasElement, img: HTMLImageElement) => {
       let scale = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
-      if (mobile) {
+      if (phone) {
         const loose = (canvas.height * (1 - HEADROOM)) / img.naturalHeight;
         const k = 1 - (1 - Math.min(1, progress / LOOSE_UNTIL)) ** 3;
         scale = loose + (scale - loose) * k;
       }
       const w = img.naturalWidth * scale;
       const h = img.naturalHeight * scale;
-      return { x: (canvas.width - w) / 2, y: mobile ? canvas.height - h : (canvas.height - h) / 2, w, h };
+      return { x: (canvas.width - w) / 2, y: phone ? canvas.height - h : (canvas.height - h) / 2, w, h };
     };
 
     // Average colour of the backdrop's top rows, used to extend the wall above a loosened frame.
@@ -131,7 +132,7 @@ export function HeroSection() {
       img.decoding = 'async';
       img.onload = () => {
         ready[layer][i] = true;
-        if (layer === 'bg' && i === 0 && mobile) sampleWall(img);
+        if (layer === 'bg' && i === 0 && phone) sampleWall(img);
         requestPaint();
       };
       img.src = frameSrc(layer, mobile, i);
