@@ -4,6 +4,8 @@
 Outputs into ../public:
   hero/d/NNN.webp (1920w) and hero/m/NNN.webp (1280w)  — scroll-scrubbed hero frames
   hero/poster.jpg                                       — first frame (LCP / no-JS fallback)
+  hero/fg-d/NNN.webp, hero/fg-m/NNN.webp                — first FG_FRAMES frames with the background removed
+                                                          (Apple Vision, scripts/cutout.swift) so the headline can sit behind the subject
   work/<name>.webp  (1600w)                             — project card images
   tiles/<name>.webp (840x540 cover)                     — marquee tiles
   about/<name>.webp (560px, alpha)                      — 3D icons
@@ -20,6 +22,7 @@ ART = os.environ.get("ARTIMG", "")  # extracted artifact screenshots (scratchpad
 TAXI = os.path.join(HOME, "Developer", "TAXI-BOSS", "showcase", "screenshots")
 ICONS = os.path.join(HOME, "Desktop", "Проэкты", "SUNLUCKI", "ASSETS CV")
 VIDEO = os.path.join(KB, "LANDING HERO COVER Scroll Video.mp4")
+FG_FRAMES = 25  # cutouts cover the part of the scroll where the headline is still visible
 
 assert features.check("webp"), "Pillow without WebP support"
 
@@ -43,7 +46,7 @@ def to_webp(src, dst, width=None, q=78, cover=None):
     return os.path.getsize(dst)
 
 def hero_frames():
-    for stale in glob.glob(out("hero", "d", "*.webp")) + glob.glob(out("hero", "m", "*.webp")):
+    for stale in sum((glob.glob(out("hero", d, "*.webp")) for d in ("d", "m", "fg-d", "fg-m")), []):
         os.remove(stale)
     with tempfile.TemporaryDirectory() as tmp:
         subprocess.run(["ffmpeg", "-v", "error", "-i", VIDEO, "-fps_mode", "passthrough",
@@ -61,6 +64,15 @@ def hero_frames():
             if i == 0:
                 Image.open(f).convert("RGB").save(out("hero", "poster.jpg"), quality=82)
         print(f"hero: {len(frames)} frames, d={total['d']/1e6:.1f}MB m={total['m']/1e6:.1f}MB")
+
+        cut = os.path.join(tmp, "cut")
+        subprocess.run(["swift", os.path.join(os.path.dirname(__file__), "cutout.swift"), tmp, cut, str(FG_FRAMES)], check=True)
+        fg = {"d": 0, "m": 0}
+        for i in range(FG_FRAMES):
+            f = os.path.join(cut, f"{i:03d}.png")
+            fg["d"] += to_webp(f, out("hero", "fg-d", f"{i:03d}.webp"), width=1920, q=80)
+            fg["m"] += to_webp(f, out("hero", "fg-m", f"{i:03d}.webp"), width=1280, q=80)
+        print(f"hero cutouts: {FG_FRAMES} frames, d={fg['d']/1e6:.1f}MB m={fg['m']/1e6:.1f}MB")
         return len(frames)
 
 WORK = {  # project card images (col1a, col1b, col2 per project)

@@ -19,6 +19,7 @@ export const NAV = [
 ] as const;
 
 export const HERO_FRAMES = 83; // frames 0–82 of the eye clip (public/hero/count.txt)
+export const HERO_FG_FRAMES = 25; // first frames with the background removed (subject cut-out layer)
 
 export const HERO_TAGLINE = 'a full-stack design engineer who designs, builds and ships complete products';
 
