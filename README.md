@@ -1,32 +1,49 @@
-# React + TypeScript + Vite
+# sunlucki.pl — portfolio of Bogdan Nenadović
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+**Live:** https://sunlucki.pl
 
-Currently, two official plugins are available:
+Personal site of a full-stack design engineer from Poznań, Poland. It shows selected production work — a CRM with double-entry accounting and KSeF e-invoicing, a B2B wholesale platform, a 23-language medical-device storefront, workforce and fleet platforms with native iOS apps, and a production design system.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Stack
 
-## React Compiler
+- React 19 + TypeScript, built with Vite
+- Tailwind CSS 3.4
+- Framer Motion — in-view fades, the character-by-character text reveal, sticky stacking project cards
+- anime.js 4 — the scroll-synced hero timeline (`onScroll`), the scroll hint loop and the stat counters
+- Lucide icons, Kanit from Google Fonts
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## How the hero works
 
-## Expanding the Oxlint configuration
+The intro is an 83-frame image sequence (the camera flies into the eye), drawn on a `<canvas>` inside a sticky, viewport-high container. The section is ~3× the viewport tall. An anime.js timeline is linked to the section's scroll range with `onScroll({ enter: 'top top', leave: 'bottom bottom', sync })`. It scrubs the playhead from frame 0 to 82 and, on the same timeline, fades the headline, the gradient shade and the final blackout.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+Frames load in coarse-to-fine order (every 8th frame first), so scrubbing works before everything has downloaded. Phones get a lighter 1280 px set, desktops a 1920 px set, both WebP.
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Project layout
+
+```
+src/
+  content.ts            all copy and project data
+  components/           FadeIn, Magnet, AnimatedText, CountUp, buttons
+  sections/             Hero, Marquee, About, Services, Projects, Contact
+scripts/
+  prepare-media.py      builds hero frames, card images, marquee tiles and icons from local sources
+  qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
+public/                 generated media (hero/, work/, tiles/, about/)
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Develop
+
+```bash
+npm install
+npm run dev
+```
+
+```bash
+npm run build
+```
+
+Deployment is a static upload of `dist/` behind nginx, with TLS from Let's Encrypt.
+
+## Rights
+
+Code © Bogdan Nenadović. Screenshots show products I built and are published with my clients' consent. Photos, video and 3D renders are my own and may not be reused.

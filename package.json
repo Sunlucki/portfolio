@@ -1,5 +1,5 @@
 {
-  "name": "portfolio",
+  "name": "sunlucki-portfolio",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -27,5 +27,7 @@
     "tailwindcss": "^3.4.19",
     "typescript": "~6.0.2",
     "vite": "^8.3.0"
-  }
+  },
+  "description": "Portfolio of Bogdan Nenadovi\u0107 \u2014 full-stack design engineer",
+  "homepage": "https://sunlucki.pl"
 }
