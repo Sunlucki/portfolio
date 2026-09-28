@@ -56,7 +56,7 @@ function ProjectCard({ project, index, progress, range, targetScale }: CardProps
               {String(index + 1).padStart(2, '0')}
             </span>
             <div className="min-w-0">
-              <p className="text-[0.7rem] uppercase tracking-widest text-[#D7E2EA]/60 sm:text-sm">{project.category}</p>
+              <p className="text-xs uppercase tracking-widest text-[#D7E2EA]/60 sm:text-sm">{project.category}</p>
               <h3 className="font-medium uppercase leading-tight text-[#D7E2EA]" style={{ fontSize: 'clamp(1.25rem, 2.6vw, 2.4rem)' }}>
                 {project.name}
               </h3>

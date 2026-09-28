@@ -18,7 +18,7 @@ export function ContactSection() {
         alt=""
         aria-hidden
         loading="lazy"
-        className="pointer-events-none absolute -right-6 top-10 w-[120px] opacity-80 sm:w-[160px] md:right-[6%] md:w-[200px]"
+        className="pointer-events-none absolute -right-2 top-3 w-[84px] opacity-80 sm:-right-6 sm:top-10 sm:w-[160px] md:right-[6%] md:w-[200px]"
       />
       <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 text-center">
         <SectionTitle text="Let’s talk" className="w-full" />
@@ -37,12 +37,12 @@ export function ContactSection() {
           </Magnet>
         </FadeIn>
         <FadeIn delay={0.4} className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm uppercase tracking-widest text-[#D7E2EA] md:text-base">
-          <a href={`mailto:${PERSON.email}`} className="inline-flex items-center gap-2 transition-opacity hover:opacity-70">
+          <a href={`mailto:${PERSON.email}`} className="-my-3 inline-flex items-center gap-2 py-3 transition-opacity hover:opacity-70">
             <Mail aria-hidden className="h-4 w-4" />
             {PERSON.email}
           </a>
           {LINKS.map((link) => (
-            <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 transition-opacity hover:opacity-70">
+            <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="-my-3 inline-flex items-center gap-1 py-3 transition-opacity hover:opacity-70">
               {link.label}
               <ArrowUpRight aria-hidden className="h-4 w-4" />
             </a>
@@ -57,7 +57,7 @@ export function ContactSection() {
           </span>
           <span>B2B contracts via SIMBIA sp. z o.o.</span>
         </div>
-        <p className="mt-4 text-center text-[0.65rem] normal-case tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:underline-offset-2 hover:[&_a]:underline">
+        <p className="mt-4 text-center text-xs normal-case leading-relaxed tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:py-2 [&_a]:underline-offset-2 hover:[&_a]:underline">
           3D model “<a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>” by{' '}
           <a href="https://sketchfab.com/MG990">MajdyModels</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, recoloured.
           Micro Slats, Tech Text and Folder Float from <a href="https://reactbits.dev">React Bits</a>.

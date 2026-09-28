@@ -7,6 +7,7 @@ import MicroSlats from '../vendor/react-bits/MicroSlats';
 import TechText from '../vendor/react-bits/TechText';
 import { HERO_FG_FRAMES, HERO_FRAMES, HERO_TAGLINE, NAV, PERSON } from '../content';
 import heroMotion from '../heroMotion.json';
+import { createHeroVeil } from './heroVeil';
 
 type Layer = 'bg' | 'fg';
 const FRAMES_VERSION = 2; // bump when the frames are regenerated: nginx caches /hero/ for 30 days
@@ -37,6 +38,8 @@ const HEADLINE = { fontFamily: 'Kanit', fontWeight: 900, fontSize: 400, color: '
  *   Micro Slats backdrop (React Bits, hoodie blue) → the video frames (fade in as the camera moves in)
  *   → Tech Text headline → the frames with the background removed, so the headline sits behind Bogdan.
  * Between two frames the camera's zoom is interpolated while they cross-fade, so scrubbing feels continuous.
+ * The cut-out is shown through Dither Veil (heroVeil.ts): a 1-bit print the pointer burns through, with
+ * chromatic aberration around the silhouette.
  * One anime.js timeline drives everything from the scroll position; the camera ends inside the pupil.
  */
 export function HeroSection() {
@@ -59,7 +62,9 @@ export function HeroSection() {
     const bgCanvas = bgRef.current;
     const fgCanvas = fgRef.current;
     const bg = bgCanvas?.getContext('2d');
-    const fg = fgCanvas?.getContext('2d');
+    // The cut-out is composited off screen, then drawn through the Dither Veil shader onto fgCanvas.
+    const fgSource = document.createElement('canvas');
+    const fg = fgSource.getContext('2d');
     const heading = headingRef.current;
     const tilt = tiltRef.current;
     const copy = copyRef.current;
@@ -77,6 +82,9 @@ export function HeroSection() {
     let progress = 0;
     let slatsOff = false;
     let raf = 0;
+    let velocity = 0; // scroll speed, progress per second
+    const veil = createHeroVeil(fgCanvas, fgSource);
+    let sourceChanged = true;
 
     // Desktop: centred cover. Phones: the first frames are drawn a bit smaller and bottom-anchored,
     // leaving headroom (filled by the backdrop) for the two-line headline.
@@ -124,7 +132,9 @@ export function HeroSection() {
     const paint = () => {
       raf = 0;
       drawLayer('bg', bg, bgCanvas, HERO_FRAMES);
-      drawLayer('fg', fg, fgCanvas, HERO_FG_FRAMES);
+      drawLayer('fg', fg, fgSource, HERO_FG_FRAMES);
+      sourceChanged = true;
+      wakeVeil();
     };
     const requestPaint = () => {
       if (!raf) raf = requestAnimationFrame(paint);
@@ -132,10 +142,12 @@ export function HeroSection() {
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      for (const canvas of [bgCanvas, fgCanvas]) {
-        canvas.width = Math.round(canvas.clientWidth * dpr);
-        canvas.height = Math.round(canvas.clientHeight * dpr);
-      }
+      bgCanvas.width = Math.round(bgCanvas.clientWidth * dpr);
+      bgCanvas.height = Math.round(bgCanvas.clientHeight * dpr);
+      const veilDpr = Math.min(window.devicePixelRatio || 1, 1.5); // the print is coarse anyway
+      fgSource.width = Math.round(fgCanvas.clientWidth * veilDpr);
+      fgSource.height = Math.round(fgCanvas.clientHeight * veilDpr);
+      veil.resize(fgCanvas.clientWidth, fgCanvas.clientHeight, veilDpr);
       requestPaint();
     };
 
@@ -155,11 +167,17 @@ export function HeroSection() {
 
     const playhead = { frame: 0 };
     const observer = onScroll({ target: section, enter: 'top top', leave: 'bottom bottom', sync: 0.4 });
+    let lastUpdate = performance.now();
     const timeline = createTimeline({
       autoplay: observer,
       onUpdate: () => {
+        const now = performance.now();
+        const next = playhead.frame / (HERO_FRAMES - 1);
+        velocity = (next - progress) / Math.max(0.008, (now - lastUpdate) / 1000);
+        lastUpdate = now;
         position = playhead.frame;
-        progress = position / (HERO_FRAMES - 1);
+        progress = next;
+        section.dataset.frame = position.toFixed(3); // read by the career timeline to meet the pupil
         // The WebGL backdrop is fully covered after the first third — let it sleep.
         const off = progress > 0.3;
         if (off !== slatsOff) {
@@ -217,13 +235,59 @@ export function HeroSection() {
       tick();
     }
 
+    // Dither Veil loop: burns the pointer's trail into the print (or, when the pointer has been idle for
+    // a while or there is none, a slow wandering spot over the figure) and redraws while anything moves.
+    const wander = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const pointer = { x: 0, y: 0, at: -Infinity };
+    let veilRaf = 0;
+    let veilLast = 0;
+    const onVeilPointer = (e: PointerEvent) => {
+      pointer.x = e.clientX;
+      pointer.y = e.clientY;
+      pointer.at = performance.now();
+      wakeVeil();
+    };
+    const veilTick = (now: number) => {
+      veilRaf = 0;
+      const dt = Math.min(0.05, Math.max(0.001, (now - veilLast) / 1000));
+      veilLast = now;
+      const rect = fgCanvas.getBoundingClientRect(); // includes the depth transform
+      const w = fgCanvas.clientWidth;
+      const h = fgCanvas.clientHeight;
+      let spot: { x: number; y: number } | null = null;
+      if (now - pointer.at < 2500) {
+        spot = { x: ((pointer.x - rect.left) * w) / rect.width, y: ((pointer.y - rect.top) * h) / rect.height };
+      } else if (wander) {
+        const t = now / 1000;
+        spot = { x: w * (0.5 + 0.22 * Math.sin(t * 0.47)), y: h * (0.5 + 0.2 * Math.sin(t * 0.31 + 1.3)) };
+      }
+      const lit = veil.step(dt, spot);
+      velocity *= 0.9;
+      veil.render(sourceChanged, 3 + Math.min(12, Math.abs(velocity) * 40));
+      sourceChanged = false;
+      const shown = progress < 0.3 && inView;
+      if (shown && (lit || spot)) veilRaf = requestAnimationFrame(veilTick);
+    };
+    function wakeVeil() {
+      if (veilRaf) return;
+      veilLast = performance.now();
+      veilRaf = requestAnimationFrame(veilTick);
+    }
+    window.addEventListener('pointermove', onVeilPointer, { passive: true });
+    window.addEventListener('pointerdown', onVeilPointer, { passive: true });
+    if (!depth) visibility.observe(section);
+
     return () => {
       window.removeEventListener('resize', resize);
       window.removeEventListener('pointermove', onPointer);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
+      window.removeEventListener('pointermove', onVeilPointer);
+      window.removeEventListener('pointerdown', onVeilPointer);
       visibility.disconnect();
       if (depthRaf) cancelAnimationFrame(depthRaf);
+      if (veilRaf) cancelAnimationFrame(veilRaf);
       if (raf) cancelAnimationFrame(raf);
+      veil.destroy();
       for (const layer of ['bg', 'fg'] as const) frames[layer].forEach((img) => (img.onload = null));
       hint.revert();
       timeline.revert();
@@ -240,7 +304,7 @@ export function HeroSection() {
         </div>
 
         {/* 2 · the video, revealed as the camera moves in */}
-        <canvas ref={bgRef} aria-hidden className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-0" />
+        <canvas ref={bgRef} data-hero-video aria-hidden className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-0" />
 
         {/* 3 · headline (Tech Text, interactive), behind the subject */}
         <div ref={headingRef} className="absolute inset-x-0 top-0 z-10" style={{ perspective: '1000px' }}>
@@ -277,7 +341,7 @@ export function HeroSection() {
         <div ref={copyRef} className="pointer-events-none relative z-40 flex h-full flex-col">
           <FadeIn as="nav" y={-20} aria-label="Main" className="pointer-events-auto flex justify-between px-6 pt-6 md:px-10 md:pt-8">
             {NAV.map((item) => (
-              <a key={item.href} href={item.href} className={`text-[#D7E2EA] transition-opacity duration-200 hover:opacity-70 ${NAV_TEXT}`}>
+              <a key={item.href} href={item.href} className={`-my-3 py-3 text-[#D7E2EA] transition-opacity duration-200 hover:opacity-70 ${NAV_TEXT}`}>
                 {item.label}
               </a>
             ))}

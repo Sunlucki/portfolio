@@ -33,6 +33,57 @@ export const STATS = [
   { value: 23, suffix: '', label: 'languages in one storefront' },
 ] as const;
 
+// Career timeline after the hero. The particles spell `label`, `title` and `line`; `text` is the
+// fuller sentence for screen readers. Early years from Bogdan (2026-09-28); the rest mirrors
+// ../data/profile.json (experience, company).
+export const TIMELINE = [
+  { label: '1998', title: 'Cherkasy, Ukraine', line: 'Born on the Dnipro', text: 'Born in Cherkasy, a city on the Dnipro in central Ukraine.' },
+  { label: '2012', title: 'School, then studies', line: 'Cherkasy', text: 'Finished school in Cherkasy and went straight on to study.' },
+  {
+    label: '2016',
+    title: 'Poznań, Poland',
+    line: 'Computer Science · WSB',
+    text: 'Moved to Poland and studied Computer Science with a Computer Graphics specialisation at WSB University.',
+  },
+  {
+    label: '2017',
+    title: 'Web developer',
+    line: 'GreenView',
+    text: 'Web developer at GreenView: websites from UX/UI to WordPress deployment, working with clients and marketing teams.',
+  },
+  {
+    label: '2020',
+    title: 'Co-founder',
+    line: 'Black Point · Poznań',
+    text: 'Co-founded Black Point, a barbershop and creative hub in Poznań — brand identity, interior, merch, booking website, social media and video.',
+  },
+  {
+    label: '2022',
+    title: 'Marketing lead',
+    line: 'Black Point Group',
+    text: 'Content creator at Pomaranczowi.PL, then leading the creative team and marketing at Black Point Group.',
+  },
+  {
+    label: '2025',
+    title: 'STYLEICON studio',
+    line: 'Web · brand · video',
+    text: 'Founded STYLEICON, a web, branding and video studio — and turned from building brands to building the software behind them.',
+  },
+  {
+    label: '2026',
+    title: 'AI-native engineer',
+    line: '10+ production systems',
+    text: 'AI-native product engineer: 10+ production systems for Polish and EU companies, including an accounting-grade CRM with KSeF and native iOS apps.',
+  },
+  {
+    label: 'SIMBIA',
+    title: 'My software company',
+    line: 'August 2026',
+    text: 'In August 2026 co-founded SIMBIA sp. z o.o., a software company in Poznań that licenses its platforms and runs on the CRM I built.',
+  },
+  { label: 'NEXT', title: 'Your team?', line: 'Open to remote roles', text: 'Open to remote product and design-engineering roles and B2B contracts.' },
+];
+
 // Tools in daily use, one folder each. Only what the repositories and files actually show
 // (../data/profile.json → skills); nothing listed on the old CV without evidence.
 export const STACK = [

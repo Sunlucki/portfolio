@@ -21,7 +21,7 @@ The intro is a layered, scroll-scrubbed scene, back to front:
 1. **Backdrop** — React Bits Micro Slats in the hoodie's blue (WebGL), paused once it is covered.
 2. **Video layer** — an 83-frame image sequence (the camera flies into the eye) on a `<canvas>` inside a sticky, viewport-high container. It fades in as the camera moves in, replacing the backdrop with the real wall.
 3. **Headline** — "Hi, I'm Bogdan" drawn by Tech Text; the letters react to the cursor.
-4. **Subject layer** — the same frames with the background removed, so the headline sits *behind* the person. The cut-outs are generated on-device with Apple Vision (`scripts/cutout.swift`, the model behind "Copy Subject" in Photos); the armchair, which Vision leaves out, is added back with a hue/saturation key. They are needed only while the headline is on screen, so there are 25 of them.
+4. **Subject layer** — the same frames with the background removed, so the headline sits *behind* the person. The cut-outs are generated on-device with Apple Vision (`scripts/cutout.swift`, the model behind "Copy Subject" in Photos); the armchair, which Vision leaves out, is added back with a hue/saturation key. They are needed only while the headline is on screen, so there are 25 of them. They are drawn through a WebGL pass (`src/sections/heroVeil.ts`): a 1-bit print after React Bits' Dither Veil that the pointer — or, when idle, a wandering spot — burns through to the photo, with a chromatic aberration around the silhouette that grows with scroll speed and hides the rough edges of the cut-out.
 
 Scroll sync: one anime.js timeline is linked to the section's scroll range with `onScroll({ enter: 'top top', leave: 'bottom bottom', sync })`. It drives a fractional playhead for both canvases and, on the same timeline, fades the copy, the shading and the final blackout.
 
@@ -35,6 +35,19 @@ Mouse depth (fine pointers only, off for `prefers-reduced-motion`), in three pla
 On phones the first frames are drawn slightly smaller, with the backdrop extended above, to make room for a two-line headline. The framing eases back to full cover early in the scroll.
 
 Frames load cut-outs first, then video frames coarse-to-fine (every 8th first), so scrubbing works before everything has downloaded. Phones get a 1280 px set, desktops a 1920 px set, all WebP.
+
+## The career timeline
+
+Straight after the hero, one cloud of particles tells the career (`src/sections/TimelineSection.tsx`, `src/three/TimelineScene.tsx`):
+
+- The section starts on top of the hero's last part and is screen-blended, so its black is see-through. From the frame where the camera nears the eye, the particles form an iris laid exactly over the real one — `scripts/estimate-motion.py` also measures the pupil in every frame (`src/heroPupil.json`) — and grow with the zoom until the camera is inside the pupil.
+- From there the particles flow into each stage in turn — year, title, a line — sampled from text laid out for the screen's shape. Most of them sit on the outlines and flicker, and a light pulse runs through the letters (after React Bits' Electric Logo). Every scene's points are ordered along a Hilbert curve, so each particle travels to a nearby place in the next scene and the cloud flows instead of criss-crossing; mid-flight they swirl through 3D noise towards the lens.
+- Dust streams past to carry the flight; bloom, film grain and a chromatic aberration that follows the scroll speed and the morph do the lens work. Everything moves in vertex shaders; the CPU only uploads the next pair of scenes when the scroll crosses into it.
+- Without WebGL the stages are shown as a plain list; screen readers always get the list.
+
+## The 3D cursor
+
+On devices with a mouse (and without reduced motion) the pointer is an extruded arrow in thin-film iridescent chrome (`src/three/cursor3d.ts`). Its tip is the hotspot; it banks with the movement, and near anything clickable it grows, turns to point at it and spins, so buttons are easy to find. The 180 px canvas travels with the pointer instead of covering the page.
 
 ## The About scene
 
@@ -56,13 +69,14 @@ src/
   content.ts            all copy and project data
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
   components/           FadeIn, Magnet, AnimatedText, CountUp, SectionTitle, buttons
-  sections/             Hero, Marquee, About, Stack, Services, Projects, Contact
-  three/AboutScene.tsx  the 3D About scene
+  heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
+  sections/             Hero (+ heroVeil.ts), Timeline, Marquee, About, Stack, Services, Projects, Contact
+  three/                AboutScene, TimelineScene, cursor3d
   vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
   prepare-media.py      builds hero frames (+ Vision cut-outs), card images, marquee tiles and icons from local sources
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
-  estimate-motion.py    fits the camera zoom between hero frames (needs opencv-python-headless, numpy)
+  estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
   prepare-about.py      About scene assets: Bogdan's cut-out, the poster, the recoloured iPhone model
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
 public/                 generated media (hero/, work/, tiles/, about/, models/)
@@ -88,4 +102,5 @@ Code © Bogdan Nenadović. Screenshots show products I built and are published w
 ## Credits
 
 - 3D model: ["iPhone 17 Pro Max"](https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d) by [MajdyModels](https://sketchfab.com/MG990), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Recoloured and compressed for the web.
-- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the About figure's dither is modelled on Dither Veil.
+- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the dithered figures are modelled on Dither Veil and the timeline's flicker on Electric Logo.
+- 3D simplex noise from [ashima/webgl-noise](https://github.com/ashima/webgl-noise) (Ashima Arts, Ian McEwan; MIT).

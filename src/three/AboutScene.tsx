@@ -199,13 +199,16 @@ function LightVolume() {
     }),
     [],
   );
+  // R3F copies a `uniforms` prop into the material, so the animated value is set on the material itself.
+  const material = useRef<THREE.ShaderMaterial>(null);
   useFrame((_, dt) => {
-    if (!still) uniforms.uTime.value += dt;
+    if (!still && material.current) material.current.uniforms.uTime.value += dt;
   });
   return (
     <mesh position={[0, SCREEN_Y + 0.005 + VOLUME.y / 2, 0]} scale={VOLUME} renderOrder={2}>
       <boxGeometry />
       <shaderMaterial
+        ref={material}
         uniforms={uniforms}
         vertexShader={volumeVertex}
         fragmentShader={volumeFragment}

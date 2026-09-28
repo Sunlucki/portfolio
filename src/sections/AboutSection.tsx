@@ -82,7 +82,7 @@ export function AboutSection() {
                 <span className="hero-heading text-4xl font-black leading-none md:text-5xl">
                   <CountUp value={s.value} suffix={s.suffix} />
                 </span>
-                <span className="mt-2 text-[0.7rem] uppercase leading-snug tracking-wider text-[#D7E2EA]/60 md:text-xs">{s.label}</span>
+                <span className="mt-2 text-xs uppercase leading-snug tracking-wider text-[#D7E2EA]/60">{s.label}</span>
               </li>
             ))}
           </ul>
