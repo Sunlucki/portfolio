@@ -11,7 +11,7 @@ Personal site of a full-stack design engineer from Poznań, Poland. It shows sel
 - Framer Motion — in-view fades, the character-by-character text reveal, sticky stacking project cards
 - anime.js 4 — the scroll-synced hero timeline (`onScroll`), the scroll hint loop and the stat counters
 - React Three Fiber + drei + postprocessing — the 3D About scene (loaded lazily)
-- React Bits — Micro Slats (hero backdrop) and Tech Text (headings), in `src/vendor/react-bits/`
+- React Bits — Micro Slats (hero backdrop), Tech Text (headings) and Folder Float (the stack, with matter-js), in `src/vendor/react-bits/`
 - Lucide icons, Kanit from Google Fonts
 
 ## How the hero works
@@ -45,6 +45,10 @@ A small React Three Fiber scene, loaded only when the section comes near (the or
 - Bogdan, lifted out of the render with Apple Vision, floats above it as a billboard. He is printed as a 1-bit Atkinson dither in texture space (after React Bits' Dither Veil); the cursor burns a trail through to the photo, and each cell knits back at its own threshold;
 - the camera orbits a few degrees with the pointer and sways on its own, so the depth reads on touch screens too.
 
+## The stack section
+
+Eight React Bits Folder Float folders (Frontend, Backend, iOS, AI, Fintech, DevOps, Design, Media). A folder opens on hover — on touch screens on tap — and its tools spring out as notes that can be dragged around (matter-js). Wide screens get a 4 × 2 shelf with room above each row for the notes; narrow screens a swipeable row whose middle folder opens by itself. The list lives in `STACK` in `src/content.ts` and only names tools the repositories actually show.
+
 ## Project layout
 
 ```
@@ -52,9 +56,9 @@ src/
   content.ts            all copy and project data
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
   components/           FadeIn, Magnet, AnimatedText, CountUp, SectionTitle, buttons
-  sections/             Hero, Marquee, About, Services, Projects, Contact
+  sections/             Hero, Marquee, About, Stack, Services, Projects, Contact
   three/AboutScene.tsx  the 3D About scene
-  vendor/react-bits/    Micro Slats, Tech Text (unmodified)
+  vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
   prepare-media.py      builds hero frames (+ Vision cut-outs), card images, marquee tiles and icons from local sources
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
@@ -84,4 +88,4 @@ Code © Bogdan Nenadović. Screenshots show products I built and are published w
 ## Credits
 
 - 3D model: ["iPhone 17 Pro Max"](https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d) by [MajdyModels](https://sketchfab.com/MG990), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Recoloured and compressed for the web.
-- [React Bits](https://reactbits.dev) by David Haz — Micro Slats and Tech Text (MIT + Commons Clause); the About figure's dither is modelled on Dither Veil.
+- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the About figure's dither is modelled on Dither Veil.

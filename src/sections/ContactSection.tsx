@@ -60,7 +60,7 @@ export function ContactSection() {
         <p className="mt-4 text-center text-[0.65rem] normal-case tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:underline-offset-2 hover:[&_a]:underline">
           3D model “<a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>” by{' '}
           <a href="https://sketchfab.com/MG990">MajdyModels</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, recoloured.
-          Micro Slats and Tech Text from <a href="https://reactbits.dev">React Bits</a>.
+          Micro Slats, Tech Text and Folder Float from <a href="https://reactbits.dev">React Bits</a>.
         </p>
       </footer>
     </section>

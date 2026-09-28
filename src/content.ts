@@ -33,6 +33,19 @@ export const STATS = [
   { value: 23, suffix: '', label: 'languages in one storefront' },
 ] as const;
 
+// Tools in daily use, one folder each. Only what the repositories and files actually show
+// (../data/profile.json → skills); nothing listed on the old CV without evidence.
+export const STACK = [
+  { name: 'Frontend', items: ['TypeScript', 'React', 'Next.js', 'Vite', 'Tailwind CSS', 'shadcn/ui', 'TanStack Query', 'Zustand', 'Zod'] },
+  { name: 'Backend', items: ['Node.js', 'Fastify', 'Express', 'PostgreSQL', 'Prisma', 'Drizzle', 'Redis', 'BullMQ', 'Socket.IO', 'OpenAPI'] },
+  { name: 'iOS', items: ['Swift 6', 'SwiftUI', 'WidgetKit', 'Live Activities', 'StoreKit 2', 'APNs', 'CoreNFC', 'XCTest'] },
+  { name: 'AI', items: ['Claude Code', 'Codex', 'Claude API', 'OpenAI API', 'Groq', 'Structured outputs', 'Tesseract OCR', 'whisper.cpp'] },
+  { name: 'Fintech', items: ['KSeF 2.0', 'SAF-T / JPK', 'PSD2 banking', 'Stripe', 'PayU', 'Przelewy24', 'Allegro', 'BaseLinker', 'Shopify'] },
+  { name: 'DevOps', items: ['Linux', 'nginx', 'PM2', 'Docker', 'GitHub Actions', 'Let’s Encrypt', 'Sentry', 'Vitest', 'Playwright'] },
+  { name: 'Design', items: ['Figma', 'Framer Motion', 'Three.js', 'React Three Fiber', 'GLSL', 'Spline', 'Photoshop', 'Illustrator'] },
+  { name: 'Media', items: ['Final Cut Pro', 'Premiere Pro', 'Logic Pro', 'Higgsfield', 'Kling', 'Midjourney', 'ElevenLabs', 'Remotion'] },
+];
+
 export const SERVICES = [
   {
     name: 'Product Engineering',
