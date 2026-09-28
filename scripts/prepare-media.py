@@ -3,16 +3,15 @@
 
 Outputs into ../public:
   hero/d/NNN.webp (1920w) and hero/m/NNN.webp (1280w)  — scroll-scrubbed hero frames
-  hero/poster.jpg                                       — first frame (LCP / no-JS fallback)
   hero/fg-d/NNN.webp, hero/fg-m/NNN.webp                — first FG_FRAMES frames with the background removed
                                                           (Apple Vision, scripts/cutout.swift) so the headline can sit behind the subject
   work/<name>.webp  (1600w)                             — project card images
   tiles/<name>.webp (840x540 cover)                     — marquee tiles
-  about/<name>.webp (560px, alpha)                      — 3D icons
+  about/pointer.webp (560px, alpha)                     — 3D pointer icon (contact section)
 Re-run safe: overwrites outputs.
 """
 import os, subprocess, tempfile, glob
-from PIL import Image, ImageStat, features
+from PIL import Image, ImageChops, ImageFilter, ImageStat, features
 
 HOME = os.path.expanduser("~")
 KB = os.path.join(HOME, "Developer", "Bodgan Nenadović")
@@ -61,15 +60,23 @@ def hero_frames():
         for i, f in enumerate(frames):
             total["d"] += to_webp(f, out("hero", "d", f"{i:03d}.webp"), width=1920, q=70)
             total["m"] += to_webp(f, out("hero", "m", f"{i:03d}.webp"), width=1280, q=70)
-            if i == 0:
-                Image.open(f).convert("RGB").save(out("hero", "poster.jpg"), quality=82)
         print(f"hero: {len(frames)} frames, d={total['d']/1e6:.1f}MB m={total['m']/1e6:.1f}MB")
 
         cut = os.path.join(tmp, "cut")
         subprocess.run(["swift", os.path.join(os.path.dirname(__file__), "cutout.swift"), tmp, cut, str(FG_FRAMES)], check=True)
         fg = {"d": 0, "m": 0}
         for i in range(FG_FRAMES):
-            f = os.path.join(cut, f"{i:03d}.png")
+            # Vision lifts the person and laptop but treats the armchair as background. The wall is a
+            # uniform cyan-blue (hue 200–204°) while the chair, even its lit top, sits at 206° and above and
+            # is more saturated, so a hue/saturation key recovers it; the union keeps him seated once the
+            # wall is replaced by the animated backdrop.
+            frame = Image.open(os.path.join(tmp, f"{i + 1:03d}.png")).convert("RGB")
+            h, s, _ = frame.convert("HSV").split()
+            chair = ImageChops.multiply(h.point(lambda x: 255 if 146 <= x <= 175 else 0), s.point(lambda x: 255 if x >= 215 else 0))
+            chair = chair.filter(ImageFilter.MedianFilter(9)).filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(1.2))
+            person = Image.open(os.path.join(cut, f"{i:03d}.png")).convert("RGBA").split()[3]
+            f = os.path.join(cut, f"{i:03d}-full.png")
+            Image.merge("RGBA", (*frame.split(), ImageChops.lighter(person, chair))).save(f)
             fg["d"] += to_webp(f, out("hero", "fg-d", f"{i:03d}.webp"), width=1920, q=80)
             fg["m"] += to_webp(f, out("hero", "fg-m", f"{i:03d}.webp"), width=1280, q=80)
         print(f"hero cutouts: {FG_FRAMES} frames, d={fg['d']/1e6:.1f}MB m={fg['m']/1e6:.1f}MB")
@@ -90,7 +97,7 @@ TILES = [  # marquee: row 1 (11) then row 2 (10)
     f"{SITES}/ab_2.jpg", f"{SITES}/am_1.jpg", f"{SITES}/xm_4.jpg", f"{SITES}/pd_1.jpg", f"{ART}/e16c18a7/21.jpg",
     f"{TAXI}/22-admin-fleet.png", f"{ART}/a9d1ab25/08.jpg", f"{SITES}/xm_1.jpg", f"{ART}/e16c18a7/11.jpg", f"{TAXI}/04-3d-showcase.png",
 ]
-ABOUT = {"star": "ЗВЕЗДА.png", "mask": "Маска.png", "rocket": "Ракета.png", "sphere": "СФЕРА.png", "pointer": "Указатель.png"}
+ABOUT = {"pointer": "Указатель.png"}
 
 if __name__ == "__main__":
     assert ART and os.path.isdir(ART), "set ARTIMG to the extracted artifact screenshots dir"

@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
-import { FadeIn } from '../components/FadeIn';
+import { SectionTitle } from '../components/SectionTitle';
 import { LiveProjectButton } from '../components/Buttons';
 import { PROJECTS, type Project } from '../content';
 
@@ -16,14 +16,7 @@ export function ProjectsSection() {
       id="projects"
       className={`relative z-10 -mt-10 bg-[#0C0C0C] px-4 pb-24 pt-20 sm:-mt-12 sm:px-6 md:-mt-14 md:px-10 md:pt-28 rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px]`}
     >
-      <FadeIn
-        as="h2"
-        y={40}
-        className="hero-heading mb-10 text-center font-black uppercase leading-none tracking-tight md:mb-16"
-        style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-      >
-        Projects
-      </FadeIn>
+      <SectionTitle text="Projects" className="mb-8 md:mb-12" />
       <div ref={containerRef} className="relative">
         {PROJECTS.map((project, i) => (
           <ProjectCard

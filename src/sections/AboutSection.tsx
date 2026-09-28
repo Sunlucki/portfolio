@@ -1,44 +1,84 @@
+import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AnimatedText } from '../components/AnimatedText';
 import { ContactButton } from '../components/Buttons';
 import { CountUp } from '../components/CountUp';
-import { FadeIn } from '../components/FadeIn';
+import { SectionTitle } from '../components/SectionTitle';
 import { ABOUT_TEXT, STATS } from '../content';
 
-// Iridescent 3D objects from Bogdan's own brand kit, one per corner.
-const DECOR = [
-  { src: '/about/star.webp', delay: 0.1, x: -80, className: 'top-[3%] -left-[2%] w-[84px] sm:top-[4%] sm:left-[2%] sm:w-[160px] md:left-[4%] md:w-[210px]' },
-  { src: '/about/rocket.webp', delay: 0.25, x: -80, className: 'bottom-[4%] left-[1%] w-[76px] sm:bottom-[8%] sm:left-[6%] sm:w-[140px] md:left-[10%] md:w-[180px]' },
-  { src: '/about/mask.webp', delay: 0.15, x: 80, className: 'top-[3%] -right-[2%] w-[84px] sm:top-[4%] sm:right-[2%] sm:w-[160px] md:right-[4%] md:w-[210px]' },
-  { src: '/about/sphere.webp', delay: 0.3, x: 80, className: 'bottom-[4%] right-[1%] w-[90px] sm:bottom-[8%] sm:right-[6%] sm:w-[170px] md:right-[10%] md:w-[220px]' },
-];
+// three.js and friends load only when the section gets close.
+const AboutScene = lazy(() => import('../three/AboutScene'));
+
+// Without WebGL the scene throws — the poster underneath simply stays.
+class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
+
+// Feathered edges (two gradients intersected), so the canvas melts into the page.
+const FEATHER = 'linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent)';
 
 export function AboutSection() {
-  return (
-    <section id="about" className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-5 py-28 sm:px-8 sm:py-20 md:px-10">
-      {DECOR.map((d) => (
-        <FadeIn key={d.src} delay={d.delay} x={d.x} y={0} duration={0.9} className={`pointer-events-none absolute ${d.className}`}>
-          <img src={d.src} alt="" aria-hidden loading="lazy" className="h-auto w-full" />
-        </FadeIn>
-      ))}
+  const stageRef = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false); // mount the scene once the stage gets close…
+  const [active, setActive] = useState(false); // …and render frames only while it is around the viewport
+  const [ready, setReady] = useState(false);
+  const onReady = useCallback(() => setReady(true), []);
 
-      <div className="relative z-10 flex flex-col items-center gap-16 sm:gap-20 md:gap-24">
-        <div className="flex flex-col items-center gap-10 sm:gap-14 md:gap-16">
-          <FadeIn
-            as="h2"
-            y={40}
-            className="hero-heading text-center font-black uppercase leading-none tracking-tight"
-            style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-          >
-            About me
-          </FadeIn>
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setActive(entry.isIntersecting);
+        if (entry.isIntersecting) setNear(true);
+      },
+      { rootMargin: '300px 0px' },
+    );
+    observer.observe(stage);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <section id="about" className="relative overflow-hidden px-5 py-24 sm:px-8 md:px-10 md:py-32">
+      <SectionTitle text="About me" className="mx-auto max-w-6xl" />
+
+      <div className="mx-auto mt-2 grid max-w-7xl items-center gap-6 md:mt-6 lg:grid-cols-[1.15fr_1fr] lg:gap-4">
+        <div
+          ref={stageRef}
+          className="relative -mx-5 aspect-[4/5] sm:-mx-8 sm:aspect-square md:mx-0 lg:aspect-auto lg:h-[min(88vh,820px)]"
+          style={{ maskImage: FEATHER, maskComposite: 'intersect', WebkitMaskImage: FEATHER, WebkitMaskComposite: 'source-in' }}
+        >
+          <img
+            src="/about/scene.webp"
+            alt="Bogdan Nenadović floating above a glowing iPhone"
+            loading="lazy"
+            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${ready ? 'opacity-0' : 'opacity-100'}`}
+          />
+          {near && (
+            <SceneBoundary>
+              <Suspense fallback={null}>
+                <div className={`absolute inset-0 transition-opacity duration-700 ${ready ? 'opacity-100' : 'opacity-0'}`}>
+                  <AboutScene active={active} onReady={onReady} />
+                </div>
+              </Suspense>
+            </SceneBoundary>
+          )}
+        </div>
+
+        <div className="flex flex-col items-center gap-10 sm:gap-12 lg:items-start lg:pr-4">
           <AnimatedText
             text={ABOUT_TEXT}
-            className="max-w-[560px] text-center font-medium leading-relaxed text-[#D7E2EA]"
+            className="max-w-[560px] text-center font-medium leading-relaxed text-[#D7E2EA] lg:text-left"
             style={{ fontSize: 'clamp(1rem, 2vw, 1.35rem)' }}
           />
-          <ul className="grid w-full max-w-[760px] grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-4">
+          <ul className="grid w-full max-w-[560px] grid-cols-2 gap-x-6 gap-y-8">
             {STATS.map((s) => (
-              <li key={s.label} className="flex flex-col items-center text-center">
+              <li key={s.label} className="flex flex-col items-center text-center lg:items-start lg:text-left">
                 <span className="hero-heading text-4xl font-black leading-none md:text-5xl">
                   <CountUp value={s.value} suffix={s.suffix} />
                 </span>
@@ -46,8 +86,8 @@ export function AboutSection() {
               </li>
             ))}
           </ul>
+          <ContactButton />
         </div>
-        <ContactButton />
       </div>
     </section>
   );

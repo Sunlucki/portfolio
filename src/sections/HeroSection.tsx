@@ -1,74 +1,85 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { animate, createTimeline, onScroll } from 'animejs';
 import { FadeIn } from '../components/FadeIn';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
+import MicroSlats from '../vendor/react-bits/MicroSlats';
+import TechText from '../vendor/react-bits/TechText';
 import { HERO_FG_FRAMES, HERO_FRAMES, HERO_TAGLINE, NAV, PERSON } from '../content';
+import heroMotion from '../heroMotion.json';
 
 type Layer = 'bg' | 'fg';
+const FRAMES_VERSION = 2; // bump when the frames are regenerated: nginx caches /hero/ for 30 days
+// Per pair of frames: the camera's zoom s about the normalised point (cx, cy) — scripts/estimate-motion.py.
+const HERO_MOTION = heroMotion as Array<[number, number, number]>;
 const frameSrc = (layer: Layer, mobile: boolean, i: number) =>
-  `/hero/${layer === 'fg' ? 'fg-' : ''}${mobile ? 'm' : 'd'}/${String(i).padStart(3, '0')}.webp`;
+  `/hero/${layer === 'fg' ? 'fg-' : ''}${mobile ? 'm' : 'd'}/${String(i).padStart(3, '0')}.webp?v=${FRAMES_VERSION}`;
 
-// Request order: the opening frame of both layers first, then every 8th background frame
-// (coarse scrubbing works early), the cut-outs, and finally the remaining background frames.
+// The opening shows the cut-out over the animated backdrop, so cut-outs load first; then every
+// 8th video frame (coarse scrubbing works early) and finally the rest.
 const range = (n: number) => Array.from({ length: n }, (_, i) => i);
 const LOAD_ORDER: Array<[Layer, number]> = [
-  ['bg', 0],
   ['fg', 0],
-  ...range(HERO_FRAMES).filter((i) => i > 0 && i % 8 === 0).map((i): [Layer, number] => ['bg', i]),
+  ['bg', 0],
   ...range(HERO_FG_FRAMES).slice(1).map((i): [Layer, number] => ['fg', i]),
+  ...range(HERO_FRAMES).filter((i) => i > 0 && i % 8 === 0).map((i): [Layer, number] => ['bg', i]),
   ...range(HERO_FRAMES).filter((i) => i % 8 !== 0).map((i): [Layer, number] => ['bg', i]),
 ];
 
 const NAV_TEXT = 'text-sm font-medium uppercase tracking-wider md:text-lg lg:text-[1.4rem]';
 const HEADROOM = 0.12; // phones: share of the screen above the subject at the very top of the page
 const LOOSE_UNTIL = 0.12; // phones: scroll progress at which the framing is back to full cover
+const HOODIE_BLUE = '#1261d6'; // sampled from the hoodie
+const HEADLINE = { fontFamily: 'Kanit', fontWeight: 900, fontSize: 400, color: '#BBCCD7', accentColor: '#7FB0FF' } as const;
 
 /**
- * Scroll-scrubbed hero in three layers: the full video frame, the headline, and the same frame
- * with its background removed — so the headline sits behind Bogdan. Everything is synced to
- * scroll by one anime.js timeline; the camera ends inside the pupil.
+ * Scroll-scrubbed hero, back to front:
+ *   Micro Slats backdrop (React Bits, hoodie blue) → the video frames (fade in as the camera moves in)
+ *   → Tech Text headline → the frames with the background removed, so the headline sits behind Bogdan.
+ * Between two frames the camera's zoom is interpolated while they cross-fade, so scrubbing feels continuous.
+ * One anime.js timeline drives everything from the scroll position; the camera ends inside the pupil.
  */
 export function HeroSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const posterRef = useRef<HTMLImageElement>(null);
-  const tiltRef = useRef<HTMLDivElement>(null);
+  const slatsRef = useRef<HTMLDivElement>(null);
   const bgRef = useRef<HTMLCanvasElement>(null);
   const fgRef = useRef<HTMLCanvasElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);
+  const tiltRef = useRef<HTMLDivElement>(null);
   const copyRef = useRef<HTMLDivElement>(null);
   const shadeRef = useRef<HTMLDivElement>(null);
   const blackoutRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<HTMLDivElement>(null);
   const hintDotRef = useRef<HTMLSpanElement>(null);
+  const [slatsPaused, setSlatsPaused] = useState(false);
 
   useEffect(() => {
     const section = sectionRef.current;
+    const slats = slatsRef.current;
     const bgCanvas = bgRef.current;
     const fgCanvas = fgRef.current;
     const bg = bgCanvas?.getContext('2d');
     const fg = fgCanvas?.getContext('2d');
     const heading = headingRef.current;
+    const tilt = tiltRef.current;
     const copy = copyRef.current;
     const shade = shadeRef.current;
     const blackout = blackoutRef.current;
     const hintEl = hintRef.current;
     const hintDot = hintDotRef.current;
-    const poster = posterRef.current;
-    const tilt = tiltRef.current;
-    if (!section || !bgCanvas || !fgCanvas || !bg || !fg || !heading || !copy || !shade || !blackout || !hintEl || !hintDot || !poster || !tilt) return;
+    if (!section || !slats || !bgCanvas || !fgCanvas || !bg || !fg || !heading || !tilt || !copy || !shade || !blackout || !hintEl || !hintDot) return;
 
     const mobile = window.matchMedia('(max-width: 767px)').matches; // lighter 1280 px frame set
     const phone = window.matchMedia('(max-width: 639px)').matches; // two-line headline → loosened framing
     const frames: Record<Layer, HTMLImageElement[]> = { bg: [], fg: [] };
     const ready: Record<Layer, boolean[]> = { bg: new Array(HERO_FRAMES).fill(false), fg: new Array(HERO_FG_FRAMES).fill(false) };
-    let current = 0;
+    let position = 0; // fractional frame index
     let progress = 0;
+    let slatsOff = false;
     let raf = 0;
-    let wall = '';
 
     // Desktop: centred cover. Phones: the first frames are drawn a bit smaller and bottom-anchored,
-    // leaving headroom for the two-line headline; the framing reaches full cover by LOOSE_UNTIL.
+    // leaving headroom (filled by the backdrop) for the two-line headline.
     const place = (canvas: HTMLCanvasElement, img: HTMLImageElement) => {
       let scale = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
       if (phone) {
@@ -78,41 +89,42 @@ export function HeroSection() {
       }
       const w = img.naturalWidth * scale;
       const h = img.naturalHeight * scale;
-      return { x: (canvas.width - w) / 2, y: phone ? canvas.height - h : (canvas.height - h) / 2, w, h };
+      return [(canvas.width - w) / 2, phone ? canvas.height - h : (canvas.height - h) / 2, w, h] as const;
     };
 
-    // Average colour of the backdrop's top rows, used to extend the wall above a loosened frame.
-    const sampleWall = (img: HTMLImageElement) => {
-      const probe = document.createElement('canvas').getContext('2d');
-      if (!probe) return;
-      probe.drawImage(img, 0, 0, img.naturalWidth, 6, 0, 0, 1, 1);
-      const [r, g, b] = probe.getImageData(0, 0, 1, 1).data;
-      wall = `${r}, ${g}, ${b}`;
+    // Draws the frame at `position`. Between frames i and i+1 the camera's zoom is interpolated: frame i
+    // grows towards the next framing while i+1 fades in over it from its smaller size, so in-between
+    // positions look like real in-between frames rather than a double exposure. Frame i always covers
+    // the canvas, which keeps the edges filled while i+1 is still smaller than the screen.
+    const drawLayer = (layer: Layer, ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, count: number) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const base = Math.floor(position);
+      if (layer === 'fg' && base >= count) return;
+      let i = Math.min(base, count - 1);
+      while (i >= 0 && !ready[layer][i]) i--;
+      if (i < 0) return;
+      const [x, y, w, h] = place(canvas, frames[layer][i]);
+      const t = i === base ? position - base : 0;
+      if (t === 0 || i + 1 >= HERO_FRAMES) {
+        ctx.drawImage(frames[layer][i], x, y, w, h);
+        return;
+      }
+      const [s, cx, cy] = HERO_MOTION[i];
+      const ox = x + cx * w;
+      const oy = y + cy * h;
+      const zoomed = (k: number) => [ox + (x - ox) * k, oy + (y - oy) * k, w * k, h * k] as const;
+      ctx.drawImage(frames[layer][i], ...zoomed(s ** t));
+      if (i + 1 < count && ready[layer][i + 1]) {
+        ctx.globalAlpha = t;
+        ctx.drawImage(frames[layer][i + 1], ...zoomed(s ** (t - 1)));
+        ctx.globalAlpha = 1;
+      }
     };
 
     const paint = () => {
       raf = 0;
-      // Closest loaded frame at or before `current`; never jump ahead (the poster equals frame 0).
-      let i = current;
-      while (i >= 0 && !ready.bg[i]) i--;
-      if (i < 0) return;
-      const box = place(bgCanvas, frames.bg[i]);
-      if (box.y > 0 && wall) {
-        const seam = Math.min(box.y, 60 * (bgCanvas.height / bgCanvas.clientHeight));
-        bg.fillStyle = `rgb(${wall})`;
-        bg.fillRect(0, 0, bgCanvas.width, box.y + 1);
-        bg.drawImage(frames.bg[i], box.x, box.y, box.w, box.h);
-        const fade = bg.createLinearGradient(0, box.y, 0, box.y + seam);
-        fade.addColorStop(0, `rgba(${wall}, 1)`);
-        fade.addColorStop(1, `rgba(${wall}, 0)`);
-        bg.fillStyle = fade;
-        bg.fillRect(0, box.y, bgCanvas.width, seam);
-      } else {
-        bg.drawImage(frames.bg[i], box.x, box.y, box.w, box.h);
-      }
-      // The cut-out must match the background frame exactly, otherwise leave the layer empty.
-      fg.clearRect(0, 0, fgCanvas.width, fgCanvas.height);
-      if (i < HERO_FG_FRAMES && ready.fg[i]) fg.drawImage(frames.fg[i], box.x, box.y, box.w, box.h);
+      drawLayer('bg', bg, bgCanvas, HERO_FRAMES);
+      drawLayer('fg', fg, fgCanvas, HERO_FG_FRAMES);
     };
     const requestPaint = () => {
       if (!raf) raf = requestAnimationFrame(paint);
@@ -132,7 +144,6 @@ export function HeroSection() {
       img.decoding = 'async';
       img.onload = () => {
         ready[layer][i] = true;
-        if (layer === 'bg' && i === 0 && phone) sampleWall(img);
         requestPaint();
       };
       img.src = frameSrc(layer, mobile, i);
@@ -143,18 +154,26 @@ export function HeroSection() {
     window.addEventListener('resize', resize);
 
     const playhead = { frame: 0 };
-    const observer = onScroll({ target: section, enter: 'top top', leave: 'bottom bottom', sync: 0.5 });
+    const observer = onScroll({ target: section, enter: 'top top', leave: 'bottom bottom', sync: 0.4 });
     const timeline = createTimeline({
       autoplay: observer,
       onUpdate: () => {
-        current = Math.round(playhead.frame);
-        progress = playhead.frame / (HERO_FRAMES - 1);
+        position = playhead.frame;
+        progress = position / (HERO_FRAMES - 1);
+        // The WebGL backdrop is fully covered after the first third — let it sleep.
+        const off = progress > 0.3;
+        if (off !== slatsOff) {
+          slatsOff = off;
+          setSlatsPaused(off);
+        }
         requestPaint();
       },
     });
     timeline
       .add(playhead, { frame: [0, HERO_FRAMES - 1], duration: 1000, ease: 'linear' }, 0)
+      .add(bgCanvas, { opacity: [0, 1], duration: 120, ease: 'inOutSine' }, 80)
       .add(heading, { opacity: [1, 0], y: [0, -80], duration: 240, ease: 'inQuad' }, 0)
+      .add(fgCanvas, { opacity: [1, 0], duration: 50, ease: 'linear' }, 220)
       .add(copy, { opacity: [1, 0], y: [0, -120], duration: 260, ease: 'inQuad' }, 0)
       .add(hintEl, { opacity: [1, 0], duration: 100, ease: 'linear' }, 0)
       .add(shade, { opacity: [1, 0], duration: 420, ease: 'linear' }, 0)
@@ -162,8 +181,8 @@ export function HeroSection() {
 
     const hint = animate(hintDot, { y: [0, 26], opacity: [1, 0], duration: 1600, ease: 'inOutSine', loop: true });
 
-    // Mouse depth: the scene (video + cut-out, moved together so the subject never doubles) drifts
-    // against the cursor; the headline drifts less and tilts, so it reads as sitting behind Bogdan.
+    // Mouse depth in three planes: backdrop (far, barely moves) → headline (middle, tilts) →
+    // subject and video (near). Video and cut-out always move together, so the subject never doubles.
     const depth = window.matchMedia('(hover: hover) and (pointer: fine)').matches && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const aim = { x: 0, y: 0 };
     const pos = { x: 0, y: 0 };
@@ -182,13 +201,13 @@ export function HeroSection() {
       if (!inView) return;
       pos.x += (aim.x - pos.x) * 0.06;
       pos.y += (aim.y - pos.y) * 0.06;
-      const dx = -pos.x * 16;
-      const dy = -pos.y * 10;
-      const scene = `translate3d(${dx}px, ${dy}px, 0) scale(1.06)`;
-      poster.style.transform = scene;
-      bgCanvas.style.transform = scene;
-      fgCanvas.style.transform = scene;
-      tilt.style.transform = `translate3d(${dx * 0.45}px, ${dy * 0.45}px, 0) rotateY(${pos.x * 6}deg) rotateX(${-pos.y * 4}deg)`;
+      const dx = -pos.x * 18;
+      const dy = -pos.y * 11;
+      slats.style.transform = `translate3d(${dx * 0.3}px, ${dy * 0.3}px, 0) scale(1.03)`;
+      tilt.style.transform = `translate3d(${dx * 0.6}px, ${dy * 0.6}px, 0) rotateY(${pos.x * 6}deg) rotateX(${-pos.y * 4}deg)`;
+      const near = `translate3d(${dx}px, ${dy}px, 0) scale(1.06)`;
+      bgCanvas.style.transform = near;
+      fgCanvas.style.transform = near;
     };
     const visibility = new IntersectionObserver(([entry]) => (inView = entry.isIntersecting));
     if (depth) {
@@ -214,42 +233,49 @@ export function HeroSection() {
 
   return (
     <section ref={sectionRef} id="top" aria-label="Intro" className="relative h-[220vh] md:h-[290vh]">
-      <div className="sticky top-0 h-svh w-full overflow-hidden">
-        {/* 1 · full video frame */}
-        <img ref={posterRef} src="/hero/poster.jpg" alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
-        <canvas ref={bgRef} aria-hidden className="absolute inset-0 h-full w-full" />
+      <div className="sticky top-0 h-svh w-full overflow-hidden bg-[#040B1C]">
+        {/* 1 · animated backdrop */}
+        <div ref={slatsRef} aria-hidden className="absolute inset-0" style={{ willChange: 'transform' }}>
+          <MicroSlats color={HOODIE_BLUE} glintColor="#B7D3FF" backgroundColor="#040B1C" cursorStrength={0.8} paused={slatsPaused} />
+        </div>
 
-        {/* 2 · headline, behind the subject. An invisible copy of the nav keeps the template spacing. */}
-        <div ref={headingRef} className="pointer-events-none absolute inset-x-0 top-0 z-10" style={{ perspective: '1000px' }}>
+        {/* 2 · the video, revealed as the camera moves in */}
+        <canvas ref={bgRef} aria-hidden className="pointer-events-none absolute inset-0 z-[1] h-full w-full opacity-0" />
+
+        {/* 3 · headline (Tech Text, interactive), behind the subject */}
+        <div ref={headingRef} className="absolute inset-x-0 top-0 z-10" style={{ perspective: '1000px' }}>
           <div ref={tiltRef} style={{ willChange: 'transform' }}>
             <div aria-hidden className={`invisible px-6 pt-6 md:px-10 md:pt-8 ${NAV_TEXT}`}>
               About
             </div>
-            <div className="overflow-hidden">
-              <FadeIn
-                as="h1"
-                delay={0.15}
-                y={40}
-                className="hero-heading mt-6 w-full whitespace-nowrap text-center text-[19vw] font-black uppercase leading-[0.88] tracking-tight sm:mt-4 sm:text-[12.4vw] sm:leading-none md:-mt-5 md:text-[13.2vw] lg:text-[14.2vw]"
-              >
-                Hi, i’m <br className="sm:hidden" />
-                {PERSON.firstName}
-              </FadeIn>
-            </div>
+            <h1 className="sr-only">Hi, I’m {PERSON.name} — {PERSON.role}</h1>
+            <FadeIn delay={0.15} y={40} className="mt-3 sm:mt-0 md:-mt-8">
+              <div aria-hidden className="hidden h-[17.5vw] sm:block">
+                <TechText text="HI, I’M BOGDAN" {...HEADLINE} />
+              </div>
+              <div aria-hidden className="sm:hidden">
+                <div className="h-[26vw]">
+                  <TechText text="HI, I’M" {...HEADLINE} />
+                </div>
+                <div className="-mt-[7vw] h-[26vw]">
+                  <TechText text="BOGDAN" {...HEADLINE} />
+                </div>
+              </div>
+            </FadeIn>
           </div>
         </div>
 
-        {/* 3 · the same frame with the background removed */}
-        <canvas ref={fgRef} aria-hidden className="absolute inset-0 z-20 h-full w-full" />
+        {/* 4 · the same frames with the background removed */}
+        <canvas ref={fgRef} aria-hidden className="pointer-events-none absolute inset-0 z-20 h-full w-full" />
 
-        {/* Legibility gradients above every layer, so subject and background are shaded alike */}
+        {/* Legibility gradients above every layer, so subject and backdrop are shaded alike */}
         <div ref={shadeRef} aria-hidden className="pointer-events-none absolute inset-0 z-30">
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0C0C0C]/60 to-transparent" />
           <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-[#0C0C0C]/90 via-[#0C0C0C]/40 to-transparent" />
         </div>
 
-        <div ref={copyRef} className="relative z-40 flex h-full flex-col">
-          <FadeIn as="nav" y={-20} aria-label="Main" className="flex justify-between px-6 pt-6 md:px-10 md:pt-8">
+        <div ref={copyRef} className="pointer-events-none relative z-40 flex h-full flex-col">
+          <FadeIn as="nav" y={-20} aria-label="Main" className="pointer-events-auto flex justify-between px-6 pt-6 md:px-10 md:pt-8">
             {NAV.map((item) => (
               <a key={item.href} href={item.href} className={`text-[#D7E2EA] transition-opacity duration-200 hover:opacity-70 ${NAV_TEXT}`}>
                 {item.label}
@@ -267,7 +293,7 @@ export function HeroSection() {
             >
               {HERO_TAGLINE}
             </FadeIn>
-            <FadeIn delay={0.5} y={20}>
+            <FadeIn delay={0.5} y={20} className="pointer-events-auto">
               <Magnet padding={80} strength={4}>
                 <ContactButton />
               </Magnet>

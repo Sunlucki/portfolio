@@ -1,5 +1,6 @@
 import { ArrowUpRight, Mail } from 'lucide-react';
 import { FadeIn } from '../components/FadeIn';
+import { SectionTitle } from '../components/SectionTitle';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
 import { PERSON } from '../content';
@@ -20,14 +21,7 @@ export function ContactSection() {
         className="pointer-events-none absolute -right-6 top-10 w-[120px] opacity-80 sm:w-[160px] md:right-[6%] md:w-[200px]"
       />
       <div className="relative mx-auto flex max-w-6xl flex-col items-center gap-10 text-center">
-        <FadeIn
-          as="h2"
-          y={40}
-          className="hero-heading font-black uppercase leading-none tracking-tight"
-          style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-        >
-          Let’s talk
-        </FadeIn>
+        <SectionTitle text="Let’s talk" className="w-full" />
         <FadeIn
           as="p"
           delay={0.15}
@@ -56,11 +50,18 @@ export function ContactSection() {
         </FadeIn>
       </div>
 
-      <footer className="relative mx-auto mt-24 flex max-w-6xl flex-col items-center justify-between gap-3 border-t border-[#D7E2EA]/15 pt-6 text-xs uppercase tracking-wider text-[#D7E2EA]/50 sm:flex-row">
-        <span>
-          © {new Date().getFullYear()} {PERSON.name}
-        </span>
-        <span>B2B contracts via SIMBIA sp. z o.o.</span>
+      <footer className="relative mx-auto mt-24 max-w-6xl border-t border-[#D7E2EA]/15 pt-6 text-xs uppercase tracking-wider text-[#D7E2EA]/50">
+        <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
+          <span>
+            © {new Date().getFullYear()} {PERSON.name}
+          </span>
+          <span>B2B contracts via SIMBIA sp. z o.o.</span>
+        </div>
+        <p className="mt-4 text-center text-[0.65rem] normal-case tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:underline-offset-2 hover:[&_a]:underline">
+          3D model “<a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>” by{' '}
+          <a href="https://sketchfab.com/MG990">MajdyModels</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, recoloured.
+          Micro Slats and Tech Text from <a href="https://reactbits.dev">React Bits</a>.
+        </p>
       </footer>
     </section>
   );

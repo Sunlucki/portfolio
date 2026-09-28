@@ -1,4 +1,5 @@
 import { FadeIn } from '../components/FadeIn';
+import { SectionTitle } from '../components/SectionTitle';
 import { SERVICES } from '../content';
 
 export function ServicesSection() {
@@ -7,14 +8,7 @@ export function ServicesSection() {
       id="services"
       className="rounded-t-[40px] bg-white px-5 py-20 text-[#0C0C0C] sm:rounded-t-[50px] sm:px-8 sm:py-24 md:rounded-t-[60px] md:px-10 md:py-32"
     >
-      <FadeIn
-        as="h2"
-        y={40}
-        className="mb-16 text-center font-black uppercase leading-none tracking-tight text-[#0C0C0C] sm:mb-20 md:mb-28"
-        style={{ fontSize: 'clamp(3rem, 12vw, 160px)' }}
-      >
-        Services
-      </FadeIn>
+      <SectionTitle text="Services" light className="mb-12 sm:mb-16 md:mb-24" />
       <ul className="mx-auto max-w-5xl">
         {SERVICES.map((service, i) => (
           <FadeIn

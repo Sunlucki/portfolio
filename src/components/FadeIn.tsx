@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import type { CSSProperties, ElementType, ReactNode } from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
+import type { ComponentType, CSSProperties, ReactNode } from 'react';
 
 type Tag = 'div' | 'nav' | 'h1' | 'h2' | 'h3' | 'p' | 'li' | 'span';
 
@@ -15,10 +15,12 @@ type FadeInProps = {
   'aria-label'?: string;
 };
 
-// motion.create() builds a motion component per tag; cache so it is created once.
-const cache = new Map<Tag, ElementType>();
+// motion.create() builds a motion component per tag; cache so it is created once. Typed as a div's motion
+// component: a plain ElementType collapses to `never` props once @react-three/fiber adds its JSX elements.
+type MotionTag = ComponentType<HTMLMotionProps<'div'>>;
+const cache = new Map<Tag, MotionTag>();
 const motionTag = (tag: Tag) => {
-  if (!cache.has(tag)) cache.set(tag, motion.create(tag));
+  if (!cache.has(tag)) cache.set(tag, motion.create(tag) as MotionTag);
   return cache.get(tag)!;
 };
 
