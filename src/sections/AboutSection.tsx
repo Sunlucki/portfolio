@@ -5,7 +5,7 @@ import { CountUp } from '../components/CountUp';
 import { SectionTitle } from '../components/SectionTitle';
 import { ABOUT_TEXT, STATS } from '../content';
 
-// three.js and friends load only when the section gets close.
+// three.js and friends: loaded and mounted when the browser is idle after load (see below).
 const AboutScene = lazy(() => import('../three/AboutScene'));
 
 // Without WebGL the scene throws — the poster underneath simply stays.
@@ -24,23 +24,37 @@ const FEATHER = 'linear-gradient(to right, transparent, #000 12%, #000 88%, tran
 
 export function AboutSection() {
   const stageRef = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false); // mount the scene once the stage gets close…
-  const [active, setActive] = useState(false); // …and render frames only while it is around the viewport
+  const [near, setNear] = useState(false); // mount the scene well ahead of the stage…
+  const [active, setActive] = useState(false); // …and animate it only while it is around the viewport
   const [ready, setReady] = useState(false);
   const onReady = useCallback(() => setReady(true), []);
 
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const observer = new IntersectionObserver(
+    const idle = (run: () => void, timeout: number) => window.requestIdleCallback?.(run, { timeout }) ?? window.setTimeout(run, timeout / 4);
+    const unidle = (id: number) => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : window.clearTimeout(id));
+    // Setting the scene up is a long task: do it early, when the browser is idle after load (while the hero
+    // plays), or at the latest 1.2 s after the page comes within three screens of it, so it is ready long
+    // before the manifesto hands over to it.
+    const mount = () => setNear(true);
+    const early = idle(mount, 5000);
+    let fallback = 0;
+    const ahead = new IntersectionObserver(
       ([entry]) => {
-        setActive(entry.isIntersecting);
-        if (entry.isIntersecting) setNear(true);
+        if (entry.isIntersecting && !fallback) fallback = window.setTimeout(mount, 1200);
       },
-      { rootMargin: '100% 0px' }, // early: the manifesto hands over to this scene
+      { rootMargin: '300% 0px' },
     );
-    observer.observe(stage);
-    return () => observer.disconnect();
+    const around = new IntersectionObserver(([entry]) => setActive(entry.isIntersecting), { rootMargin: '10% 0px' });
+    ahead.observe(stage);
+    around.observe(stage);
+    return () => {
+      ahead.disconnect();
+      around.disconnect();
+      unidle(early);
+      window.clearTimeout(fallback);
+    };
   }, []);
 
   return (

@@ -73,8 +73,9 @@ export function ManifestoSection() {
       { rootMargin: '100% 0px' },
     );
     observer.observe(section);
-    // The scene is the next thing on the page: fetch it as soon as the browser is idle.
-    const idleFetch = window.requestIdleCallback?.(() => void loadScene()) ?? window.setTimeout(() => void loadScene(), 1500);
+    // The scene is the next thing on the page: load and mount it as soon as the browser is idle (while the
+    // hero plays), so its set-up never lands in the middle of a scroll.
+    const idleFetch = window.requestIdleCallback?.(() => setNear(true), { timeout: 3000 }) ?? window.setTimeout(() => setNear(true), 1500);
     return () => {
       observer.disconnect();
       if (window.cancelIdleCallback) window.cancelIdleCallback(idleFetch);

@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, ChromaticAberration, EffectComposer, Noise } from '@react-three/postprocessing';
 import { BlendFunction, type ChromaticAberrationEffect, type NoiseEffect } from 'postprocessing';
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
 import { PHRASES, phraseRuns, type Run } from '../content';
 import heroPupil from '../heroPupil.json';
@@ -616,7 +616,7 @@ function aboutShape(print: Print, aspect: number) {
 const SPIN = [0, 0.22, 0.3, 0, 0, 0, 0];
 
 // ——— the cloud ———
-function Cloud({ uniforms, morph }: { uniforms: Uniforms; morph: RefObject<Morph> }) {
+function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObject<Morph>; onReady: () => void }) {
   const size = useThree((state) => state.size);
   const [print, setPrint] = useState<Print | null>(null);
   useEffect(() => {
@@ -663,7 +663,8 @@ function Cloud({ uniforms, morph }: { uniforms: Uniforms; morph: RefObject<Morph
     if (!layout) return;
     uniforms.uEye.value.set(layout.eye.x, layout.eye.y, layout.eye.w, layout.eye.h);
     uniforms.uEarth.value.fromArray(layout.earth);
-  }, [layout, uniforms]);
+    onReady();
+  }, [layout, uniforms, onReady]);
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -760,12 +761,15 @@ function Cloud({ uniforms, morph }: { uniforms: Uniforms; morph: RefObject<Morph
       float seenTo = 1.0;
       vec3 from = eye(aFrom, seenFrom);
       if (uIrisOn > 0.5) {
-        // the iris gathers out of a wider, fainter swirl as the camera nears the pupil, then winds itself
-        // into a spiral: its inner fibres turn further than the outer ones, so they trail into arms
+        // The iris gathers out of a wider, fainter swirl as the camera nears the pupil. As the camera flies
+        // in it becomes a galaxy: the pupil closes into a dense core and the fibres wind into arms, the
+        // inner ones turning further than the outer ones.
         float r = length(from.xy) / uIrisOuter;
+        float core = pow(clamp((r - ${IRIS_INNER / 0.36}) / ${1 - IRIS_INNER / 0.36}, 0.0, 1.0), 1.6);
+        float rr = mix(r, core, uTwist);
         float loose = 1.0 - uGather;
-        float angle = loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.4 / (r + 0.2) + uTime * 0.35);
-        from.xy = turn(from.xy * (1.0 + loose * (0.6 + aRand.y) - uTwist * 0.25), angle);
+        float angle = loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.0 / (rr + 0.25) + uTime * 0.35);
+        from.xy = turn(normalize(from.xy) * rr * uIrisOuter * (1.0 + loose * (0.6 + aRand.y)), angle);
       }
       from = spin(from, uSpinFrom);
       from.xy = mix(from.xy, uIrisCenter + from.xy * uIrisScale, uIrisOn); // the iris sits on the real pupil
@@ -938,8 +942,8 @@ const WORDS_VERTEX = /* glsl */ `
     float hi = 1.0 - step(0.5, abs(aInfo.y - 1.0));
     float dim = 1.0 - step(0.5, abs(aInfo.y - 2.0));
     float strike = 1.0 - step(0.5, abs(aInfo.y - 3.0));
-    // the words land in reading order, highlights last and the strike after its word
-    float start = aInfo.z * 0.42 + aSeed.x * 0.12 + hi * 0.16 + strike * 0.34;
+    // the words land in reading order, highlights last and the strike after its word (all by show = 1)
+    float start = aInfo.z * 0.36 + aSeed.x * 0.1 + hi * 0.14 + strike * 0.2;
     float m = smoothstep(start, start + 0.3, show);
     float e = m * m * (3.0 - 2.0 * m);
     vec2 home = position.xy * 0.5 * uView; // pixels from the centre
@@ -964,7 +968,7 @@ const WORDS_VERTEX = /* glsl */ `
   }
 `;
 
-function Words({ uniforms, show }: { uniforms: Uniforms; show: number[] }) {
+function Words({ uniforms, show, onReady }: { uniforms: Uniforms; show: number[]; onReady: () => void }) {
   const size = useThree((state) => state.size);
   const [fonts, setFonts] = useState(false);
   useEffect(() => {
@@ -991,7 +995,8 @@ function Words({ uniforms, show }: { uniforms: Uniforms; show: number[] }) {
     if (!words) return;
     own.uView.value.set(size.width, size.height);
     own.uDot.value = words.dot;
-  }, [words, own, size.width, size.height]);
+    onReady();
+  }, [words, own, size.width, size.height, onReady]);
   const material = useSprites(WORDS_VERTEX, own);
   if (!words) return null;
   return <points geometry={words.geometry} material={material} frustumCulled={false} renderOrder={1} />;
@@ -1038,7 +1043,7 @@ const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show: number[]; bridge: RefObject<ManifestoBridge | null>; lens: Lens; morph: RefObject<Morph> }) {
   const camera = useThree((state) => state.camera) as THREE.PerspectiveCamera;
   const canvas = useThree((state) => state.gl.domElement);
-  const state = useRef({ x: 0, h: 0, v: 0, scroll: -1, leanX: 0, leanY: 0, px: -1, py: -1, moved: -1e9, gx: 0, gy: 0, blink: -1, nextBlink: 3, reveal: -1, irisX: 0, irisY: 0, irisScale: 1 });
+  const state = useRef({ started: false, x: 0, h: 0, v: 0, scroll: -1, leanX: 0, leanY: 0, px: -1, py: -1, moved: -1e9, gx: 0, gy: 0, blink: -1, nextBlink: 3, reveal: -1, irisX: 0, irisY: 0, irisScale: 1 });
   const tools = useMemo(() => ({ about: new THREE.PerspectiveCamera(), fit: new THREE.Matrix4(), v: new THREE.Vector3() }), []);
 
   useEffect(() => {
@@ -1080,26 +1085,36 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const handover = about && stage ? handoffLength(about, stage, ch) : 0;
     const h = about && handover ? clamp01((ch - about.top) / handover) : 0;
     // `x` counts shapes along the phrases' scroll: from the hero's end until the About section arrives.
+    // (Measured against the viewport's stable height, so a phone's collapsing toolbar doesn't shift it.)
     const track = Math.max(1, rect.bottom - (hero ? hero.bottom : rect.top) - handover);
-    const x = hero ? Math.max(0, ((vh - hero.bottom) / track) * b.track) : 0;
-    const k = 1 - Math.exp(-dt * 6);
+    const x = hero ? Math.max(0, ((ch - hero.bottom) / track) * b.track) : 0;
+    // Eased towards the scroll; on the first frame and after a pause (the section was off screen or asleep)
+    // it jumps there instead of racing through every shape in between.
+    const snap = !st.started || delta > 0.25;
+    const k = snap ? 1 : 1 - Math.exp(-dt * 6);
+    st.started = true;
     st.x += (x - st.x) * k;
     st.h += (h - st.h) * k;
-    const scroll = window.scrollY;
-    if (st.scroll >= 0 && delta < 0.2) st.v += ((scroll - st.scroll) / dt - st.v) * (1 - Math.exp(-dt * 10));
-    st.scroll = scroll;
+    // Scroll speed (for the lens kick and the aberration) from the eased scroll, not the raw one: a mouse
+    // wheel moves the page in steps, and their raw speed would pump the camera in and out with every notch.
+    const scrolled = st.scroll;
+    st.scroll = snap ? window.scrollY : st.scroll + (window.scrollY - st.scroll) * k;
+    st.v = snap ? 0 : st.v + ((st.scroll - scrolled) / dt - st.v) * (1 - Math.exp(-dt * 4));
     const speed = heroDone ? Math.min(1, Math.abs(st.v) / (2.1 * vh)) : 0;
 
     // iris → Earth → gear → brain → ? → eye: every segment holds its shape first, then morphs; the iris
     // winds into a spiral first. Then the eye → the About scene, with the hand-over.
     let pair: number;
     let t: number;
-    let twist = 0;
+    // The galaxy winds up while the camera flies into the eye (hero frames), then draws to the middle of
+    // the screen past the hero and collapses into the Earth.
+    const twist = smooth(IRIS_FULL + 1, 80, frame);
+    let pull = 0;
     if (st.x < SHAPES) {
       pair = Math.floor(st.x);
       const f = st.x - pair;
       if (pair === 0) {
-        twist = smooth(0, 0.5, f);
+        pull = heroDone ? smooth(0, 0.45, f) : 0;
         t = smooth(0.3, 0.95, f);
       } else t = smooth(0.36, 0.95, f);
     } else {
@@ -1140,7 +1155,6 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     // where the Earth forms, small enough to be seen whole.
     const fit = (Math.min(0.42, 0.48 * (view.width / Math.max(1, view.height))) * worldTall()) / uniforms.uIrisOuter.value;
     const earthAt = uniforms.uEarth.value;
-    const pull = heroDone ? twist : 0;
     uniforms.uIrisCenter.value.set(st.irisX + (earthAt.x - st.irisX) * pull, st.irisY + (earthAt.y - st.irisY) * pull);
     uniforms.uIrisScale.value = st.irisScale + (fit - st.irisScale) * pull;
 
@@ -1163,7 +1177,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const distance = DISTANCE - flight * 1.5;
     camera.position.set(Math.sin(yaw) * distance, Math.sin(pitch) * distance, Math.cos(yaw) * Math.cos(pitch) * distance);
     camera.lookAt(0, 0, 0);
-    const fov = FOV + speed * 10 + flight * 4;
+    const fov = FOV + speed * 6 + flight * 4;
     if (Math.abs(camera.fov - fov) > 0.01) {
       camera.fov = fov;
       camera.updateProjectionMatrix();
@@ -1191,8 +1205,8 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
       b.stage.style.setProperty('--reveal', reveal.toFixed(3));
       handoff.reveal = reveal;
     }
-    // Done: the About scene has taken over, this layer shows nothing until the page scrolls back.
-    if (pair === SHAPES && h >= 1 && st.h > 0.999) b.idle(true);
+    // Done: the About scene has taken over and the particles are gone; sleep until the page scrolls back.
+    if (pair === SHAPES && h >= 1 && leave > 0.999) b.idle(true);
 
     // lens: aberration with the scroll speed and the morph; grain once the hero is gone
     const ca = still ? 0.0008 : 0.0008 + speed * 0.01 + flight * 0.006;
@@ -1235,17 +1249,36 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
       }
     }
 
-    // Phrases: each is written while its shape stands, the last one until the About section arrives.
-    for (let i = 0; i < SHAPES; i++) {
-      const on = st.x > i + 0.93 && (i < SHAPES - 1 ? st.x < i + 1.36 : st.h < 0.002);
-      show[i] = clamp01(show[i] + (on ? dt / 1.4 : -dt / 0.7));
-    }
-  });
+    // Phrases move with their shapes: a phrase gathers while its shape forms (pair i, the second half of
+    // the morph, when the particles land) and breaks up as it leaves (pair i + 1, the first half).
+    for (let i = 0; i < SHAPES; i++) show[i] = pair === i ? smooth(0.45, 1, t) : pair === i + 1 ? 1 - smooth(0, 0.55, t) : 0;
+  }, -1); // before the cloud, which uploads the pair of shapes this frame shows
   return null;
 }
 
-function Scene({ bridge }: { bridge: RefObject<ManifestoBridge | null> }) {
+// Once every part is in the scene, compiles its shaders in the background (KHR_parallel_shader_compile)
+// before the first frame, so the scene can mount early (while the hero plays) without stalling the page.
+function Warmup({ onWarm }: { onWarm: () => void }) {
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  useEffect(() => {
+    let alive = true;
+    const done = () => alive && onWarm();
+    gl.compileAsync(scene, camera).then(done, done);
+    return () => {
+      alive = false;
+    };
+  }, [gl, scene, camera, onWarm]);
+  return null;
+}
+
+function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; onWarm: () => void }) {
   const dpr = useThree((state) => state.viewport.dpr);
+  const [cloudIn, setCloudIn] = useState(false);
+  const [wordsIn, setWordsIn] = useState(false);
+  const cloudReady = useCallback(() => setCloudIn(true), []);
+  const wordsReady = useCallback(() => setWordsIn(true), []);
   const uniforms = useMemo<Uniforms>(
     () => ({
       uTime: { value: 0 },
@@ -1287,8 +1320,9 @@ function Scene({ bridge }: { bridge: RefObject<ManifestoBridge | null> }) {
     <>
       <color attach="background" args={[BG]} />
       <Dust uniforms={uniforms} />
-      <Cloud uniforms={uniforms} morph={morph} />
-      <Words uniforms={uniforms} show={show} />
+      <Cloud uniforms={uniforms} morph={morph} onReady={cloudReady} />
+      <Words uniforms={uniforms} show={show} onReady={wordsReady} />
+      {cloudIn && wordsIn && <Warmup onWarm={onWarm} />}
       <Rig uniforms={uniforms} show={show} bridge={bridge} lens={lens} morph={morph} />
       <KeepSize />
       <EffectComposer multisampling={0}>
@@ -1301,15 +1335,18 @@ function Scene({ bridge }: { bridge: RefObject<ManifestoBridge | null> }) {
 }
 
 export default function ManifestoScene({ active, bridge }: Props) {
+  // No frames until the shaders are compiled (Warmup).
+  const [warm, setWarm] = useState(false);
+  const warmed = useCallback(() => setWarm(true), []);
   return (
     <Canvas
-      frameloop={active ? 'always' : 'never'}
+      frameloop={active && warm ? 'always' : 'never'}
       dpr={small ? [1, 1.5] : [1, 1.75]}
       camera={{ position: [0, 0, DISTANCE], fov: FOV, near: 0.1, far: 200 }}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
     >
-      <Scene bridge={bridge} />
+      <Scene bridge={bridge} onWarm={warmed} />
     </Canvas>
   );
 }

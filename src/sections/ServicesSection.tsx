@@ -18,7 +18,8 @@ export function ServicesSection() {
             className="flex items-start gap-5 py-8 sm:gap-8 sm:py-10 md:gap-12 md:py-12 [&:not(:first-child)]:border-t"
             style={{ borderColor: 'rgba(12, 12, 12, 0.15)' }}
           >
-            <span className="shrink-0 font-black leading-none text-[#0C0C0C]" style={{ fontSize: 'clamp(3rem, 10vw, 140px)' }}>
+            {/* One width for every number (Kanit's digits are proportional), so the text starts in line. */}
+            <span className="shrink-0 font-black leading-none text-[#0C0C0C]" style={{ fontSize: 'clamp(3rem, 10vw, 140px)', width: '1.3em' }}>
               {String(i + 1).padStart(2, '0')}
             </span>
             <div className="flex flex-col gap-2 pt-1 md:gap-3 md:pt-3">

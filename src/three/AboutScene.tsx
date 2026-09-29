@@ -1,7 +1,7 @@
 import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber';
 import { Billboard, Environment, Float, Lightformer, MeshReflectorMaterial, Sparkles, useGLTF, useTexture } from '@react-three/drei';
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
-import { useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import {
   CAMERA_ELEVATION,
@@ -33,9 +33,15 @@ const TARGET = new THREE.Vector3(...CAMERA_TARGET);
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function AboutScene({ active, onReady }: { active: boolean; onReady: () => void }) {
+  // No frame until the shaders are compiled (see Ready), then one frame, then frames while in view.
+  const [warm, setWarm] = useState(false);
+  const warmed = useCallback(() => {
+    setWarm(true);
+    onReady();
+  }, [onReady]);
   return (
     <Canvas
-      frameloop={active ? 'always' : 'never'}
+      frameloop={!warm ? 'never' : active ? 'always' : 'demand'}
       dpr={[1, 1.75]}
       camera={{ position: [0, 3.6, 7.2], fov: CAMERA_FOV }}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
@@ -60,7 +66,7 @@ export default function AboutScene({ active, onReady }: { active: boolean; onRea
       <Figure />
       <Floor />
       <CameraRig />
-      <Ready onReady={onReady} />
+      <Ready onReady={warmed} />
       <KeepSize />
 
       <EffectComposer multisampling={4}>
@@ -71,10 +77,23 @@ export default function AboutScene({ active, onReady }: { active: boolean; onRea
 }
 
 useGLTF.preload('/models/iphone.glb', false, true);
+useTexture.preload('/about/floating.webp');
 
 // Mounted in the same suspense tree as the model and the textures, so it fires once everything is in.
+// It compiles the scene's shaders in the background (KHR_parallel_shader_compile) before the first frame,
+// so mounting the scene doesn't stall the page mid-scroll.
 function Ready({ onReady }: { onReady: () => void }) {
-  useEffect(onReady, [onReady]);
+  const gl = useThree((state) => state.gl);
+  const scene = useThree((state) => state.scene);
+  const camera = useThree((state) => state.camera);
+  useEffect(() => {
+    let alive = true;
+    const done = () => alive && onReady();
+    gl.compileAsync(scene, camera).then(done, done);
+    return () => {
+      alive = false;
+    };
+  }, [gl, scene, camera, onReady]);
   return null;
 }
 
@@ -126,7 +145,8 @@ function useScreenTexture() {
       tex.needsUpdate = true;
     };
     draw();
-    document.fonts?.load('600 30px Kanit').then(draw, () => {});
+    // Redraw once Kanit is in, unless it already is: every redraw re-uploads the whole screen texture.
+    if (document.fonts && !document.fonts.check('600 30px Kanit')) document.fonts.load('600 30px Kanit').then(draw, () => {});
     return tex;
   }, []);
   useEffect(() => () => texture.dispose(), [texture]);
