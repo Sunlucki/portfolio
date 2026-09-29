@@ -40,7 +40,7 @@ function handedOver() {
  * As the hero's camera nears the eye, a particle iris forms over the real one; the camera flies into the
  * pupil and out into a cloud that takes a shape for every phrase, with the phrase written in particles
  * underneath (three/ManifestoScene.tsx). At the end the About section slides over this one (by
- * --handoff, which this section grows by, so nothing below moves) and the particles assemble its scene.
+ * --handoff, which this section grows by, so nothing below moves) and the particles assemble its portrait.
  * The layer is transparent where it is black (ScreenAlpha in the scene), so the hero shows through.
  */
 export function ManifestoSection() {
@@ -106,7 +106,7 @@ export function ManifestoSection() {
     };
   }, [failed]);
 
-  // Asleep once the About scene has taken over; wake up when the page scrolls back into the hand-over.
+  // Asleep once the portrait has taken over; wake up when the page scrolls back into the hand-over.
   useEffect(() => {
     if (!idle) return;
     const onScroll = () => !handedOver() && setIdle(false);

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Assets for the volumetric About scene.
+"""Assets for the volumetric phone scene in the contact section (src/three/PhoneScene.tsx).
 
   public/about/floating.webp  — Bogdan lifted out of the "floating above the phone" render
                                 (Apple Vision instance mask, person only; the phone is rebuilt in 3D)

@@ -5,23 +5,8 @@ import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } fro
 import * as THREE from 'three';
 import { PHRASES, phraseRuns, type Run } from '../content';
 import heroPupil from '../heroPupil.json';
-import {
-  CAMERA_ELEVATION,
-  CAMERA_FOV,
-  CAMERA_TARGET,
-  FIGURE_ASPECT,
-  FIGURE_BASE,
-  FIGURE_HEIGHT,
-  FIGURE_ROWS,
-  PHONE_YAW,
-  SCREEN_LENGTH,
-  SCREEN_WIDTH,
-  SCREEN_Y,
-  cameraDistance,
-  ditherPrint,
-  handoff,
-  handoffLength,
-} from './aboutStage';
+import { coverCrop } from '../components/coverCrop';
+import { PORTRAIT, handoff, handoffLength } from './aboutStage';
 import { landMask } from './earth';
 import { KeepSize } from './KeepSize';
 
@@ -35,9 +20,9 @@ import { KeepSize } from './KeepSize';
  * past. Bloom, grain and a chromatic aberration that follows the scroll speed and the morph do the lens
  * work. All motion runs on the GPU.
  *
- * At the end the About section slides over this one and the eye breaks up into the About scene: the
- * particles land where the About canvas is about to draw the phone and Bogdan's dithered figure (seen
- * through the About camera, aboutStage.ts), and the scene fades in over them.
+ * At the end the About section slides over this one and the eye breaks up into Bogdan's portrait: the
+ * particles land where the About stage is about to show the photo (aboutStage.ts), drawing it like a
+ * halftone, and the portrait fades in over them.
  */
 
 export type ManifestoBridge = {
@@ -45,9 +30,9 @@ export type ManifestoBridge = {
   hero: HTMLElement | null; // carries the frame the hero shows (data-frame)
   video: HTMLCanvasElement | null; // the hero's video canvas, to find the pupil on screen
   about: HTMLElement | null; // the About section, which slides over the end of this one…
-  stage: HTMLElement | null; // …and its 3D stage, where the particles assemble the About scene
+  stage: HTMLElement | null; // …and its stage, where the particles assemble the portrait
   track: number; // length of the phrases' scroll, in shapes (the last phrase holds a little longer)
-  idle: (idle: boolean) => void; // the About scene has taken over: this one can stop rendering
+  idle: (idle: boolean) => void; // the portrait has taken over: this one can stop rendering
 };
 
 type Props = {
@@ -65,15 +50,12 @@ const AMBIENT = 0.1; // share of particles that drift loosely around each shape
 const IRIS_INNER = 0.12; // iris pupil radius, in world heights at the formation plane
 const IRIS_FROM = 55; // hero frames over which the particle iris gathers over the real one
 const IRIS_FULL = 64;
-const SHAPES = PHRASES.length; // Earth, gear, brain, question mark, eye; then the About scene
+const SHAPES = PHRASES.length; // Earth, gear, brain, question mark, eye; then the portrait
 const S = 4; // floats per point: x, y, z and the part of its shape
 // Parts of a shape that move or shine on their own (read by the vertex shader).
-const PART = { loose: 0, iris: 1, lid: 2, line: 3, white: 4, glint: 5, screen: 6, figure: 7, body: 8, haze: 9, land: 10, coast: 11, ocean: 12, air: 13 };
+const PART = { loose: 0, iris: 1, lid: 2, line: 3, white: 4, glint: 5, portrait: 6, land: 10, coast: 11, ocean: 12, air: 13 };
 const LOWER_LID = 0.78; // depth of the lower lid against the height of the upper one
 const IRIS_SIZE = 1.08; // iris radius in half heights of the eye: the lids cut it, like a real one's
-// The phone as the About scene shows it (public/models/iphone.glb, measured in the phone group's space).
-const SCREEN_CORNER = 0.218;
-const BODY = { length: 1.516, width: 0.728, corner: 0.245 }; // half extents
 // The layer lies over the hero and the page. Rather than a CSS screen blend (costly to composite, in Safari
 // above all), the canvas is transparent and this last pass gives every pixel the alpha of its brightest
 // channel (in the sRGB it is encoded to next): as premultiplied colour it then adds up like a screen
@@ -195,11 +177,12 @@ type Uniforms = {
   uEye: { value: THREE.Vector4 }; // centre and half extents of the eye's opening
   uGaze: { value: THREE.Vector2 }; // where its iris looks, in world units
   uBlink: { value: number };
-  uAboutOn: { value: number }; // the particles are headed for the About scene
-  uAbout: { value: THREE.Matrix4 }; // About world → this canvas's clip space, through the About camera
+  uAboutOn: { value: number }; // the particles are headed for the portrait
+  uAbout: { value: THREE.Matrix4 }; // the photo's uv → this canvas's clip space, through the stage's framing
+  uCrop: { value: THREE.Vector4 }; // the part of the photo the stage shows: offset and size, in uv
   uUnproject: { value: THREE.Matrix4 }; // this canvas's clip space → world
   uPlaneZ: { value: number }; // depth of the formation plane in clip space
-  uAboutDot: { value: number }; // pixels per dot of the About figure's print
+  uAboutDot: { value: number }; // size of the portrait's dots, in pixels
 };
 type Morph = { pair: number };
 type Lens = {
@@ -517,134 +500,63 @@ function eyeShape(e: EyeFrame) {
   return hilbertSort(out, e.w * 1.2);
 }
 
-type Print = Pick<ReturnType<typeof ditherPrint>, 'cols' | 'rows' | 'dots'>;
-const NO_PRINT: Print = { cols: 1, rows: 1, dots: new Uint8Array(1) };
-
-// Puts `camera` where the About camera rests for a canvas of `aspect`; returns its distance.
-function aboutCamera(camera: THREE.PerspectiveCamera, aspect: number) {
-  const d = cameraDistance(aspect);
-  const [x, y, z] = CAMERA_TARGET;
-  camera.fov = CAMERA_FOV;
-  camera.aspect = aspect;
-  camera.updateProjectionMatrix();
-  camera.position.set(x, y + d * Math.sin(CAMERA_ELEVATION), z + d * Math.cos(CAMERA_ELEVATION));
-  camera.lookAt(x, y, z);
-  camera.updateMatrixWorld();
-  return d;
-}
-
-const insideRounded = (x: number, z: number, l: number, w: number, r: number) => Math.hypot(Math.max(Math.abs(x) - (l - r), 0), Math.max(Math.abs(z) - (w - r), 0)) <= r;
-
-// A random point on the outline of a rounded rectangle: half extents l × w, corner radius r.
-function outline(l: number, w: number, r: number): [number, number] {
-  const [cx, cz] = [l - r, w - r];
-  const arc = (Math.PI / 2) * r;
-  const runs = [2 * cx, arc, 2 * cz, arc, 2 * cx, arc, 2 * cz, arc];
-  let s = Math.random() * runs.reduce((sum, run) => sum + run, 0);
-  let k = 0;
-  while (k < 7 && s > runs[k]) s -= runs[k++];
-  const t = s / r; // angle into a corner
-  switch (k) {
-    case 0:
-      return [-cx + s, w];
-    case 1:
-      return [cx + Math.sin(t) * r, cz + Math.cos(t) * r];
-    case 2:
-      return [l, cz - s];
-    case 3:
-      return [cx + Math.cos(t) * r, -cz - Math.sin(t) * r];
-    case 4:
-      return [cx - s, -w];
-    case 5:
-      return [-cx - Math.sin(t) * r, -cz - Math.cos(t) * r];
-    case 6:
-      return [-l, -cz + s];
-    default:
-      return [-cx - Math.cos(t) * r, cz + Math.sin(t) * r];
+// The portrait (aboutStage.ts) as the stage frames it (`crop`, in the photo's uv, v up): points scattered
+// over the photo by its brightness, so they draw it like a halftone. They stay in the photo's uv: the vertex
+// shader carries them onto the stage. Sorted by where the stage shows them, so they pair with nearby places
+// in the eye.
+function portraitShape(image: HTMLImageElement | null, crop: number[]) {
+  const W = 384;
+  const H = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  if (image) ctx.drawImage(image, 0, 0, W, H);
+  const px = ctx.getImageData(0, 0, W, H).data;
+  const [x0, y0, w, h] = crop;
+  const cdf = new Float32Array(W * H);
+  let total = 0;
+  for (let i = 0; i < W * H; i++) {
+    const u = ((i % W) + 0.5) / W;
+    const v = 1 - (Math.floor(i / W) + 0.5) / H;
+    const light = (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
+    if (u >= x0 && u <= x0 + w && v >= y0 && v <= y0 + h) total += Math.pow(Math.max(0, light - 0.05), 1.4);
+    cdf[i] = total;
   }
-}
-
-// The About scene in its own world units (AboutScene.tsx): the phone lying on the floor, its glowing
-// screen, the light rising from it and Bogdan's figure floating in the light, dot for dot the print the
-// About scene draws. It stays in About space: the vertex shader carries it through the About camera.
-function aboutShape(print: Print, aspect: number) {
   const out = new Float32Array(COUNT * S);
-  let n = 0;
-  const put = (x: number, y: number, z: number, part: number) => out.set([x, y, z, part], n++ * S);
-  const cos = Math.cos(PHONE_YAW);
-  const sin = Math.sin(PHONE_YAW);
-  const phone = (x: number, y: number, z: number, part: number) => put(x * cos + z * sin, y, -x * sin + z * cos, part);
-  // The figure: the print's dots (a random share, if there are more than room for) on a plane that
-  // faces the About camera at rest, like its billboard.
-  const dots: number[] = [];
-  print.dots.forEach((dot, i) => dot && dots.push(i));
-  const figure = Math.min(dots.length, Math.round(COUNT * 0.34));
-  const width = FIGURE_HEIGHT * FIGURE_ASPECT;
-  const centre = FIGURE_BASE[1] + FIGURE_HEIGHT / 2;
-  for (let k = 0; k < figure; k++) {
-    const j = k + Math.floor(Math.random() * (dots.length - k));
-    [dots[k], dots[j]] = [dots[j], dots[k]];
-    const u = ((dots[k] % print.cols) + 0.5) / print.cols - 0.5;
-    const v = (0.5 - (Math.floor(dots[k] / print.cols) + 0.5) / print.rows) * FIGURE_HEIGHT;
-    put(FIGURE_BASE[0] + u * width, centre + v * Math.cos(CAMERA_ELEVATION), FIGURE_BASE[2] - v * Math.sin(CAMERA_ELEVATION), PART.figure);
-  }
-  // The phone: the screen and its edge, the body's rims and sides, the light above; sparkles around.
-  const sparkles = Math.round(COUNT * 0.05);
-  const phoneCount = COUNT - figure - sparkles;
-  const [l, w] = [SCREEN_LENGTH / 2, SCREEN_WIDTH / 2];
-  const onScreen = () => {
-    let x: number;
-    let z: number;
-    do {
-      x = (Math.random() * 2 - 1) * l;
-      z = (Math.random() * 2 - 1) * w;
-    } while (!insideRounded(x, z, l, w, SCREEN_CORNER));
-    return [x, z];
-  };
-  for (let k = 0; k < phoneCount; k++) {
-    const kind = k / phoneCount;
-    if (kind < 0.56) {
-      const [x, z] = onScreen();
-      phone(x, SCREEN_Y + 0.003, z, PART.screen);
-    } else if (kind < 0.68) {
-      const [x, z] = outline(l, w, SCREEN_CORNER);
-      phone(x, SCREEN_Y + 0.003, z, PART.screen);
-    } else if (kind < 0.84) {
-      const [x, z] = outline(BODY.length, BODY.width, BODY.corner);
-      const y = Math.random() < 0.6 ? (Math.random() < 0.65 ? SCREEN_Y : 0.005) : Math.random() * SCREEN_Y;
-      phone(x, y, z, PART.body);
-    } else {
-      const [x, z] = onScreen();
-      const rise = -Math.log(1 - Math.random() * 0.97) * 0.3;
-      phone(x * (1 + rise * 0.15), SCREEN_Y + rise, z * (1 + rise * 0.15), PART.haze);
+  for (let n = 0; n < COUNT; n++) {
+    if (!total) {
+      out.set([x0 + Math.random() * w, y0 + Math.random() * h, 0, PART.portrait], n * S); // no photo: an even veil
+      continue;
     }
+    const r = Math.random() * total;
+    let lo = 0;
+    let hi = cdf.length - 1;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (cdf[mid] < r) lo = mid + 1;
+      else hi = mid;
+    }
+    out.set([((lo % W) + Math.random()) / W, 1 - (Math.floor(lo / W) + Math.random()) / H, 0, PART.portrait], n * S);
   }
-  while (n < COUNT) put((Math.random() - 0.5) * 2.4, 0.2 + Math.random() * 2.2, (Math.random() - 0.5) * 1.6, PART.haze);
-  // Sorted by where the About camera shows the points, so they pair with nearby places in the eye.
-  const camera = new THREE.PerspectiveCamera();
-  aboutCamera(camera, aspect);
-  const v = new THREE.Vector3();
-  return hilbertSort(out, 1, (i) => {
-    v.set(out[i * S], out[i * S + 1], out[i * S + 2]).project(camera);
-    return [(v.x + 1) / 2, (v.y + 1) / 2];
-  });
+  return hilbertSort(out, 1, (i) => [(out[i * S] - x0) / w, (out[i * S + 1] - y0) / h]);
 }
 
 // Turning speed (radians per second) of the shapes that spin — the Earth, the gear; the rest face the viewer.
 const SPIN = [0, 0.22, 0.3, 0, 0, 0, 0];
 
 // ——— the cloud ———
-function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObject<Morph>; onReady: () => void }) {
+function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph: RefObject<Morph>; bridge: RefObject<ManifestoBridge | null>; onReady: () => void }) {
   const size = useThree((state) => state.size);
-  const [print, setPrint] = useState<Print | null>(null);
+  const [photo, setPhoto] = useState<{ image: HTMLImageElement | null } | null>(null);
   useEffect(() => {
     let alive = true;
     const image = new Image();
-    image.src = '/about/floating.webp';
+    image.src = PORTRAIT.image;
     const fonts = document.fonts ? document.fonts.load('900 100px Kanit') : Promise.resolve();
     Promise.all([image.decode(), fonts]).then(
-      () => alive && setPrint(ditherPrint(image, FIGURE_ROWS)),
-      () => alive && setPrint(NO_PRINT),
+      () => alive && setPhoto({ image }),
+      () => alive && setPhoto({ image: null }),
     );
     return () => {
       alive = false;
@@ -654,9 +566,12 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
   const worldHeight = worldTall() * 0.92;
   const aspect = size.width / Math.max(1, size.height);
   const portrait = aspect < 1;
+  // The portrait is sampled as the About stage frames it (in steps, so small resizes keep the layout).
+  const stage = bridge.current?.stage?.getBoundingClientRect();
+  const stageAspect = stage && stage.height > 0 ? Math.round((stage.width / stage.height) * 20) / 20 : portrait ? 0.8 : 0.6;
   // Laid out once per orientation. On phones the shapes sit higher, above the phrase, and narrower.
   const layout = useMemo(() => {
-    if (!print) return null;
+    if (!photo) return null;
     const fit = Math.min(1, aspect * 1.1);
     const lift = worldHeight * (portrait ? 0.17 : 0.12);
     const s = worldHeight * fit;
@@ -672,11 +587,11 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
         brain(s * 0.54, lift),
         question(s * 0.54, lift),
         eyeShape(eye),
-        aboutShape(print, portrait ? 0.8 : 0.62),
+        portraitShape(photo.image, coverCrop(stageAspect, PORTRAIT.aspect, PORTRAIT.focus)),
       ],
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [print, portrait]);
+  }, [photo, portrait, stageAspect]);
   useEffect(() => {
     if (!layout) return;
     uniforms.uEye.value.set(layout.eye.x, layout.eye.y, layout.eye.w, layout.eye.h);
@@ -723,7 +638,7 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
     uniform float uTime, uMorph, uFade, uPixel, uSpeed, uIrisOn, uIrisScale, uSpinFrom, uSpinTo;
     uniform float uBlink, uAboutOn, uPlaneZ, uAboutDot, uIrisOuter, uGather, uTwist;
     uniform vec2 uIrisCenter, uGaze;
-    uniform vec4 uEye, uEarth;
+    uniform vec4 uEye, uEarth, uCrop;
     uniform mat4 uAbout, uUnproject;
     attribute vec4 aFrom;
     attribute vec4 aTo;
@@ -765,7 +680,7 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
       }
       return p;
     }
-    // A point of the About scene: where the About canvas shows it, on this camera's formation plane.
+    // A point of the portrait: where the About stage shows it, on this camera's formation plane.
     vec3 about(vec3 p) {
       vec4 clip = uAbout * vec4(p, 1.0);
       vec4 world = uUnproject * vec4(clip.xy / clip.w, uPlaneZ, 1.0);
@@ -778,21 +693,35 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
       float seenFrom = 1.0;
       float seenTo = 1.0;
       vec3 from = eye(aFrom, seenFrom);
+      float rr = 1.0; // radius in the galaxy, 0 at its core
+      vec2 local = vec2(0.0); // place in the galaxy, in iris radii (for its clumps and lanes)
+      float halo = 0.0;
       if (uIrisOn > 0.5) {
         // The iris gathers out of a wider, fainter swirl as the camera nears the pupil. As the camera flies
         // in it becomes a galaxy: the pupil closes into a dense core and the fibres wind into arms, the
-        // inner ones turning further than the outer ones.
+        // inner ones turning further than the outer ones. Noise bends the arms unevenly and scatters the
+        // stars off the fibres, so it looks grown rather than drawn.
         float r = length(from.xy) / uIrisOuter;
+        float th = atan(from.y, from.x);
         float core = pow(clamp((r - ${IRIS_INNER / 0.36}) / ${1 - IRIS_INNER / 0.36}, 0.0, 1.0), 1.6);
-        float rr = mix(r, core, uTwist);
+        rr = mix(r, core, uTwist);
         float loose = 1.0 - uGather;
-        float angle = loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.0 / (rr + 0.25) + uTime * 0.35);
-        from.xy = turn(normalize(from.xy) * rr * uIrisOuter * (1.0 + loose * (0.6 + aRand.y)), angle);
+        float bend = snoise(vec3(rr * 2.6, cos(th) * 1.3, sin(th) * 1.3 + 4.0));
+        // the core, the attractor, turns faster than the arms and draws the stars round it into a whirl
+        float whirl = uTwist * uTime * 1.2 * (1.0 - smoothstep(0.05, 0.35, rr));
+        float angle = loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.0 / (rr + 0.25) + uTime * 0.35 + 0.5 * bend + (aRand.y - 0.5) * 0.4) + whirl;
+        float radius = rr * (1.0 + uTwist * ((aRand.z - 0.5) * 0.18 + 0.08 * bend));
+        from.xy = turn(normalize(from.xy) * radius * uIrisOuter * (1.0 + loose * (0.6 + aRand.y)), angle);
+        // a sparse halo of stars round the disc
+        halo = step(0.93, fract(aRand.w * 57.3 + aRand.z * 11.9)) * uTwist;
+        from.xy = mix(from.xy, turn(vec2(0.2 + 0.95 * aRand.y, 0.0), aRand.z * 6.2831853 + uTime * 0.08) * uIrisOuter, halo);
+        from.z += (aRand.x - 0.5) * uIrisOuter * (0.08 * uTwist + 0.5 * halo); // a little thickness
+        local = from.xy / uIrisOuter;
       }
       from = spin(from, uSpinFrom);
       from.xy = mix(from.xy, uIrisCenter + from.xy * uIrisScale, uIrisOn); // the iris sits on the real pupil
       vec3 to = uAboutOn > 0.5 ? about(aTo.xyz) : spin(eye(aTo, seenTo), uSpinTo);
-      float landed = e * uAboutOn; // settled in the About scene: steady, fine dots
+      float landed = e * uAboutOn; // settled on the portrait: steady, fine dots
       vec3 p = mix(from, to, e);
       // out of the spiral the particles keep circling on their way into the planet
       vec2 hub = mix(uIrisCenter, uEarth.xy, e);
@@ -805,20 +734,33 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
       p.xy += vec2(snoise(vec3(aRand.zw * 60.0, uTime * 2.3)), snoise(vec3(aRand.wz * 60.0, uTime * 2.3 + 7.0))) * 0.018 * (1.0 - flight) * (1.0 - landed);
       vec4 mv = modelViewMatrix * vec4(p, 1.0);
       gl_Position = projectionMatrix * mv;
-      // in the About scene: screen, figure, body, haze; sized after the figure's print dots
-      float screen = part(aTo.w, ${PART.screen}.0);
-      float figure = part(aTo.w, ${PART.figure}.0);
-      float body = part(aTo.w, ${PART.body}.0);
-      float haze = part(aTo.w, ${PART.haze}.0);
-      float speck = uAboutDot * (2.3 * screen + 1.9 * figure + 1.7 * body + 1.5 * haze);
-      gl_PointSize = mix((0.9 + aRand.z * 1.3) * 34.0 / max(-mv.z, 1.0), speck * (0.85 + aRand.z * 0.3), landed) * uPixel;
+      // on the portrait: halftone dots; those the stage crops off fade out as they land, and like the stage
+      // they fade towards its sides and its bottom
+      vec2 framed = (aTo.xy - uCrop.xy) / uCrop.zw;
+      float inside = step(0.0, framed.x) * step(framed.x, 1.0) * step(0.0, framed.y) * step(framed.y, 1.0);
+      inside *= clamp(framed.x / ${PORTRAIT.feather.side.toFixed(3)}, 0.0, 1.0) * clamp((1.0 - framed.x) / ${PORTRAIT.feather.side.toFixed(3)}, 0.0, 1.0);
+      inside *= clamp(framed.y / ${(1 - PORTRAIT.feather.bottom).toFixed(3)}, 0.0, 1.0);
+      gl_PointSize = mix((0.9 + aRand.z * 1.3) * 34.0 / max(-mv.z, 1.0), uAboutDot * (0.85 + aRand.z * 0.3), landed) * uPixel;
       float flicker = 0.55 + 0.45 * smoothstep(-0.3, 0.8, snoise(vec3(aRand.xy * 30.0, uTime * 3.0)));
       float sweep = exp(-pow(p.x * 0.18 - mod(uTime * 0.45, 8.0) + 4.0, 2.0) * 5.0) * (1.0 - landed); // a pulse running across
-      // the eye's white is a faint dust; in the About scene the body and the haze stay dim
+      // the eye's white is a faint dust
       float white = mix(part(aFrom.w, ${PART.white}.0), part(aTo.w, ${PART.white}.0), e);
-      float shine = mix(1.0, 0.85 * screen + figure + 0.5 * body + 0.3 * haze, landed) * (1.0 - 0.55 * white);
-      float arms = pow(0.5 + 0.5 * cos(3.0 * atan(aFrom.y, aFrom.x)), 2.0); // sectors of the iris that wind into arms
-      vAlpha = uFade * mix(1.0, 0.15 + 0.85 * arms, uTwist * (1.0 - e) * uIrisOn) * mix(flicker, 0.92, landed) * (0.5 + 0.5 * aRand.w) * (1.0 + sweep * 1.8) * (1.0 - 0.35 * flight) * mix(seenFrom, seenTo, e) * shine;
+      float shine = mix(1.0, inside, landed) * (1.0 - 0.55 * white);
+      float gw = uTwist * (1.0 - e) * uIrisOn; // how much of a galaxy this particle shows
+      float glowCore = 1.0 - smoothstep(0.0, 0.3, rr);
+      float light = 1.0;
+      if (gw > 0.001) {
+        // three arms (sectors of the iris wound up), uneven: wandering edges, one fainter than the others,
+        // clumps of stars and dark lanes of dust along them
+        float th0 = atan(aFrom.y, aFrom.x);
+        float wander = snoise(vec3(cos(th0) * 1.7, sin(th0) * 1.7, rr * 3.0 + 9.0));
+        float arms = pow(0.5 + 0.5 * cos(3.0 * th0 + 1.4 * wander), 2.2) * (0.72 + 0.28 * cos(th0 + 1.0));
+        float clumps = smoothstep(-0.2, 0.9, snoise(vec3(local * 4.5, 17.0)));
+        float lanes = smoothstep(0.3, 0.75, snoise(vec3(local * 7.0, 29.0)));
+        light = (0.1 + 1.8 * arms) * (0.55 + 0.9 * clumps) * (1.0 - 0.6 * lanes * (1.0 - glowCore)) * (1.0 + 2.0 * glowCore);
+        light = mix(light, 0.35, halo);
+      }
+      vAlpha = uFade * mix(1.0, light, gw) * mix(flicker, 0.95, max(landed, gw)) * (0.5 + 0.5 * aRand.w) * (1.0 + sweep * 1.8) * (1.0 - 0.35 * flight) * mix(seenFrom, seenTo, e) * shine;
       float hue = 0.5 + 0.5 * sin(p.x * 0.25 + p.y * 0.18 + uTime * 0.6 + aRand.y * 2.0);
       vec3 blue = vec3(0.12, 0.38, 1.0);
       vec3 cyan = vec3(0.45, 0.95, 1.0);
@@ -830,6 +772,7 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
       vColor = mix(vColor, mix(vec3(0.55, 0.97, 1.0), vec3(0.25, 0.35, 1.0), smoothstep(0.35, 1.0, r)), irisPart * 0.7);
       float glint = mix(part(aFrom.w, ${PART.glint}.0), part(aTo.w, ${PART.glint}.0), e);
       vColor = mix(vColor, vec3(1.0), min(1.0, sweep * 0.6 + (1.0 - flight) * 0.15 + glint * 0.8));
+      vColor = mix(vColor, vec3(1.0, 0.9, 0.76), glowCore * gw * 0.75); // the core glows warm
       // the Earth: green-teal continents with bright coasts, deep blue oceans, a pale rim of air; its far
       // side fades, so the continents behind don't show through the ones in front
       float settled = 1.0 - flight;
@@ -844,9 +787,8 @@ function Cloud({ uniforms, morph, onReady }: { uniforms: Uniforms; morph: RefObj
       vColor = mix(vColor, vec3(0.78, 1.0, 0.9), coast * 0.85);
       vColor = mix(vColor, vec3(0.08, 0.32, 1.0), ocean * 0.9);
       vColor = mix(vColor, vec3(0.55, 0.8, 1.0), air);
-      // the About scene's colours: a white screen, the print's pale blue, steel for the rest
-      vec3 look = screen * vec3(1.0) + figure * vec3(0.77, 0.85, 0.96) + (1.0 - screen - figure) * vec3(0.55, 0.68, 0.98);
-      vColor = mix(vColor, look, landed * 0.9);
+      // the portrait's colour: the photo's pale white in a cool light
+      vColor = mix(vColor, vec3(0.86, 0.9, 0.97), landed * 0.9);
     }
   `;
   const material = useSprites(vertexShader, uniforms);
@@ -1062,7 +1004,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
   const camera = useThree((state) => state.camera) as THREE.PerspectiveCamera;
   const canvas = useThree((state) => state.gl.domElement);
   const state = useRef({ started: false, x: 0, h: 0, v: 0, scroll: -1, leanX: 0, leanY: 0, px: -1, py: -1, moved: -1e9, gx: 0, gy: 0, blink: -1, nextBlink: 3, reveal: -1, irisX: 0, irisY: 0, irisScale: 1 });
-  const tools = useMemo(() => ({ about: new THREE.PerspectiveCamera(), fit: new THREE.Matrix4(), v: new THREE.Vector3() }), []);
+  const tools = useMemo(() => ({ frame: new THREE.Matrix4(), fit: new THREE.Matrix4(), v: new THREE.Vector3() }), []);
 
   useEffect(() => {
     const st = state.current;
@@ -1077,7 +1019,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     return () => {
       window.removeEventListener('pointermove', onPointer);
       window.removeEventListener('pointerdown', onPointer);
-      // give the About scene back its camera and its opacity
+      // give the portrait back its motion and its opacity
       handoff.reveal = 1;
       stage?.style.removeProperty('--reveal');
     };
@@ -1096,7 +1038,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const heroDone = !hero || hero.bottom <= vh + 1;
 
     // The About section slides over the end of this one: `h` runs 0 → 1 from its top entering the
-    // viewport until its stage is centred, while the particles assemble the About scene on the stage.
+    // viewport until its stage is centred, while the particles assemble the portrait on the stage.
     const about = b.about?.getBoundingClientRect();
     const stage = b.stage?.getBoundingClientRect();
     const ch = document.documentElement.clientHeight;
@@ -1121,7 +1063,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const speed = heroDone ? Math.min(1, Math.abs(st.v) / (2.1 * vh)) : 0;
 
     // iris → Earth → gear → brain → ? → eye: every segment holds its shape first, then morphs; the iris
-    // winds into a spiral first. Then the eye → the About scene, with the hand-over.
+    // winds into a spiral first. Then the eye → the portrait, with the hand-over.
     let pair: number;
     let t: number;
     // The galaxy winds up while the camera flies into the eye (hero frames), then draws to the middle of
@@ -1145,7 +1087,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     uniforms.uIrisOn.value = pair === 0 ? 1 : 0;
     uniforms.uAboutOn.value = pair === SHAPES ? 1 : 0;
     const flight = Math.sin(Math.PI * t);
-    const reveal = pair === SHAPES ? smooth(0.76, 0.98, st.h) : 0; // the About scene fades in over the landed particles…
+    const reveal = pair === SHAPES ? smooth(0.76, 0.98, st.h) : 0; // the portrait fades in over the landed particles…
     const leave = pair === SHAPES ? smooth(0.84, 1, st.h) : 0; // …and they fade out
 
     // While the hero plays, lay the iris exactly over the pupil in the video (centre and radius per frame,
@@ -1202,28 +1144,35 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     }
     camera.updateMatrixWorld();
 
-    // The hand-over: the About scene's points go through the About camera at rest, onto the stage's
-    // rectangle on screen, and back into this world on the formation plane.
+    // The hand-over: the portrait's points go from the photo's uv through the stage's framing (the crop
+    // DepthImage shows) onto the stage's rectangle on screen, and back into this world on the formation plane.
     if (pair === SHAPES && stage) {
-      const aspect = stage.width / Math.max(1, stage.height);
-      const d = aboutCamera(tools.about, aspect);
+      const [fx, fy, fw, fh] = coverCrop(stage.width / Math.max(1, stage.height), PORTRAIT.aspect, PORTRAIT.focus);
+      tools.frame.set(
+        2 / fw, 0, 0, -1 - (2 * fx) / fw,
+        0, 2 / fh, 0, -1 - (2 * fy) / fh,
+        0, 0, 1, 0,
+        0, 0, 0, 1,
+      );
       tools.fit.set(
         stage.width / view.width, 0, 0, ((stage.left + stage.width / 2 - view.left) / view.width) * 2 - 1,
         0, stage.height / view.height, 0, 1 - ((stage.top + stage.height / 2 - view.top) / view.height) * 2,
         0, 0, 1, 0,
         0, 0, 0, 1,
       );
-      uniforms.uAbout.value.multiplyMatrices(tools.fit, tools.about.projectionMatrix).multiply(tools.about.matrixWorldInverse);
+      uniforms.uAbout.value.multiplyMatrices(tools.fit, tools.frame);
+      uniforms.uCrop.value.set(fx, fy, fw, fh);
       uniforms.uUnproject.value.multiplyMatrices(camera.matrixWorld, camera.projectionMatrixInverse);
       uniforms.uPlaneZ.value = tools.v.set(0, 0, 0).project(camera).z;
-      uniforms.uAboutDot.value = (stage.height / (2 * d * Math.tan((CAMERA_FOV * Math.PI) / 360))) * (FIGURE_HEIGHT / FIGURE_ROWS);
+      // dots about the size that tiles the stage with all the particles
+      uniforms.uAboutDot.value = Math.min(3.5, Math.max(1.5, Math.sqrt((stage.width * stage.height) / COUNT) * 1.6));
     }
     if (b.stage && reveal !== st.reveal && (Math.abs(reveal - st.reveal) > 0.001 || reveal === 0 || reveal === 1)) {
       st.reveal = reveal;
       b.stage.style.setProperty('--reveal', reveal.toFixed(3));
       handoff.reveal = reveal;
     }
-    // Done: the About scene has taken over and the particles are gone; sleep until the page scrolls back.
+    // Done: the portrait has taken over and the particles are gone; sleep until the page scrolls back.
     if (pair === SHAPES && h >= 1 && leave > 0.999) b.idle(true);
 
     // lens: aberration with the scroll speed and the morph; grain once the hero is gone
@@ -1320,6 +1269,7 @@ function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; 
       uBlink: { value: 0 },
       uAboutOn: { value: 0 },
       uAbout: { value: new THREE.Matrix4() },
+      uCrop: { value: new THREE.Vector4(0, 0, 1, 1) },
       uUnproject: { value: new THREE.Matrix4() },
       uPlaneZ: { value: 0 },
       uAboutDot: { value: 1.5 },
@@ -1338,7 +1288,7 @@ function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; 
   return (
     <>
       <Dust uniforms={uniforms} />
-      <Cloud uniforms={uniforms} morph={morph} onReady={cloudReady} />
+      <Cloud uniforms={uniforms} morph={morph} bridge={bridge} onReady={cloudReady} />
       <Words uniforms={uniforms} show={show} onReady={wordsReady} />
       {cloudIn && wordsIn && <Warmup onWarm={onWarm} />}
       <Rig uniforms={uniforms} show={show} bridge={bridge} lens={lens} morph={morph} />

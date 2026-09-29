@@ -3,36 +3,77 @@ import { Billboard, Environment, Float, Lightformer, MeshReflectorMaterial, Spar
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
-import {
-  CAMERA_ELEVATION,
-  CAMERA_FOV,
-  CAMERA_TARGET,
-  FIGURE_ASPECT,
-  FIGURE_BASE,
-  FIGURE_HEIGHT,
-  FIGURE_ROWS,
-  PHONE_SCALE,
-  PHONE_YAW,
-  SCREEN_LENGTH,
-  SCREEN_WIDTH,
-  SCREEN_Y,
-  cameraDistance,
-  ditherPrint,
-  handoff,
-} from './aboutStage';
 import { KeepSize } from './KeepSize';
 
 /**
- * Volumetric About scene: an iPhone lying on a wet floor, its screen throwing a column of light up to
- * Bogdan, who floats above it. The figure is printed as a 1-bit dither that the cursor burns through
- * to full colour (after React Bits' Dither Veil). iPhone 17 Pro Max model: MajdyModels (Sketchfab, CC BY 4.0).
+ * Volumetric scene for the contact section: an iPhone lying on a wet floor, its screen throwing a column of
+ * light up to Bogdan, who floats above it. The figure is printed as a 1-bit dither that the cursor burns
+ * through to full colour (after React Bits' Dither Veil). iPhone 17 Pro Max model: MajdyModels (Sketchfab, CC BY 4.0).
  */
+
+const PHONE_SCALE = 1.8;
+const PHONE_YAW = 1.13; // top of the phone points away and to the right, like the original render
+const SCREEN_Y = 0.0887 * PHONE_SCALE; // screen surface above the floor
+// Screen footprint in the phone group's space (long side along X), centred on the origin.
+const SCREEN_LENGTH = 1.663 * PHONE_SCALE;
+const SCREEN_WIDTH = 0.776 * PHONE_SCALE;
+const FIGURE_HEIGHT = 2.4;
+const FIGURE_ASPECT = 816 / 1320; // public/about/floating.webp
+const FIGURE_BASE = [0.05, SCREEN_Y + 0.4, 0.2] as const; // feet, floating above the middle of the screen
+const FIGURE_ROWS = 300; // rows of the figure's dither print
+const CAMERA_TARGET = [0.1, 1.15, -0.1] as const;
+const CAMERA_FOV = 32;
+const CAMERA_ELEVATION = 0.28; // radians above the target, at rest
+
+// Narrow canvases step back to keep the phone in frame.
+const cameraDistance = (aspect: number) => 7.8 * Math.max(1, Math.pow(0.8 / aspect, 0.7));
+
+// Error-diffused (Atkinson) 1-bit print of the figure: R = dot, A = inside the silhouette.
+function ditherPrint(image: HTMLImageElement, rows: number) {
+  const cols = Math.round((rows * image.naturalWidth) / image.naturalHeight);
+  const canvas = document.createElement('canvas');
+  canvas.width = cols;
+  canvas.height = rows;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(image, 0, 0, cols, rows);
+  const pixels = ctx.getImageData(0, 0, cols, rows);
+  const px = pixels.data;
+  const level = new Float32Array(cols * rows);
+  for (let i = 0; i < level.length; i++) {
+    const l = (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
+    level[i] = 0.1 + 0.9 * Math.pow(l, 0.8); // lift the shadows so the dark hoodie keeps a sparse print
+  }
+  const spread = [
+    [1, 0],
+    [2, 0],
+    [-1, 1],
+    [0, 1],
+    [1, 1],
+    [0, 2],
+  ];
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      const dot = level[i] > 0.5 ? 1 : 0;
+      const error = (level[i] - dot) / 8;
+      for (const [dx, dy] of spread) {
+        const nx = x + dx;
+        const ny = y + dy;
+        if (nx >= 0 && nx < cols && ny < rows) level[ny * cols + nx] += error;
+      }
+      px[i * 4] = dot * 255;
+      px[i * 4 + 3] = px[i * 4 + 3] > 128 ? 255 : 0;
+    }
+  }
+  ctx.putImageData(pixels, 0, 0);
+  return { canvas, cols, rows };
+}
 
 const BG = '#0C0C0C';
 const TARGET = new THREE.Vector3(...CAMERA_TARGET);
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export default function AboutScene({ active, onReady }: { active: boolean; onReady: () => void }) {
+export default function PhoneScene({ active, onReady }: { active: boolean; onReady: () => void }) {
   // No frame until the shaders are compiled (see Ready), then one frame, then frames while in view.
   const [warm, setWarm] = useState(false);
   const warmed = useCallback(() => {
@@ -295,7 +336,7 @@ function Floor() {
   );
 }
 
-// The figure's 1-bit print (aboutStage.ts), in texture space so the dots stay on the body while it floats.
+// The figure's 1-bit print, in texture space so the dots stay on the body while it floats.
 function ditherTexture(image: HTMLImageElement, rows: number) {
   const { canvas, cols } = ditherPrint(image, rows);
   const texture = new THREE.CanvasTexture(canvas);
@@ -435,13 +476,11 @@ function Figure() {
 }
 
 // Orbits the camera a few degrees with the pointer (anywhere on the page) and sways gently on its own,
-// so the depth of the scene reads even on touch screens. While the manifesto's particles assemble the
-// scene it holds the resting pose they are aimed through (aboutStage.ts), and eases out of it after.
+// so the depth of the scene reads even on touch screens.
 function CameraRig() {
   const { gl, size } = useThree();
   const aim = useRef({ x: 0, y: 0 });
   const pos = useRef({ x: 0, y: 0 });
-  const free = useRef(handoff.reveal);
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const onMove = (e: PointerEvent) => {
@@ -458,10 +497,9 @@ function CameraRig() {
     const k = 1 - Math.pow(0.04, dt);
     pos.current.x += (aim.current.x - pos.current.x) * k;
     pos.current.y += (aim.current.y - pos.current.y) * k;
-    free.current += ((handoff.reveal >= 0.999 ? 1 : 0) - free.current) * (1 - Math.pow(0.02, dt));
     const sway = still ? 0 : Math.sin(clock.elapsedTime * 0.3) * 0.07;
-    const azimuth = (pos.current.x * 0.18 + sway) * free.current;
-    const elevation = CAMERA_ELEVATION + pos.current.y * 0.06 * free.current;
+    const azimuth = pos.current.x * 0.18 + sway;
+    const elevation = CAMERA_ELEVATION + pos.current.y * 0.06;
     camera.position.set(
       TARGET.x + distance * Math.cos(elevation) * Math.sin(azimuth),
       TARGET.y + distance * Math.sin(elevation),

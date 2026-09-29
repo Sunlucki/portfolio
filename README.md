@@ -10,7 +10,7 @@ Personal site of a full-stack design engineer from Poznań, Poland. It shows sel
 - Tailwind CSS 3.4
 - Framer Motion — in-view fades, the character-by-character text reveal, sticky stacking project cards
 - anime.js 4 — the scroll-synced hero timeline (`onScroll`), the scroll hint loop and the stat counters
-- React Three Fiber + drei + postprocessing — the 3D About scene (loaded lazily)
+- React Three Fiber + drei + postprocessing — the manifesto and the 3D phone scene in the contact section (loaded lazily)
 - React Bits — Micro Slats (hero backdrop), Tech Text (headings) and Folder Float (the stack, with matter-js), in `src/vendor/react-bits/`
 - Lucide icons, Kanit from Google Fonts
 
@@ -46,25 +46,33 @@ Straight after the hero, five phrases, each written in particles under a shape m
 - As the camera flies into the pupil the iris becomes a galaxy: the pupil closes into a bright core and the fibres wind into three arms. Past the hero the galaxy draws to the middle of the screen and collapses into the Earth: continents in dense points with brighter coasts, sparse blue oceans and a rim of air, from hand-simplified coastlines (`src/three/earth.ts`). Its far side fades, so it reads as a solid planet.
 - From there the particles flow from shape to shape. Every shape's points are ordered along a Hilbert curve, so each particle travels to a nearby place in the next one and the cloud flows instead of criss-crossing; mid-flight they swirl through 3D noise towards the lens. Most points sit on outlines and flicker, and a light pulse runs across (after React Bits' Electric Logo). The Earth and the gear turn; the eye's iris follows the cursor (or looks around on its own), hides behind the lids and blinks.
 - The phrases are particles too, sampled from Kanit set on a canvas and drawn straight in clip space so the type stays put while the camera moves. A phrase gathers while its shape forms and breaks up as the shape leaves, driven by the same scroll; words land in reading order, highlighted words (`*word*` in `content.ts`) last, in heavier type and a cyan-to-pink accent, and `~word~` is struck out. Dust streams past; bloom, film grain and a chromatic aberration that follows the scroll speed and the morph do the lens work. Everything moves in vertex shaders; the CPU only uploads the next pair of shapes when the scroll crosses into it.
-- At the end the About section slides over this one (`--handoff`, which this section grows by, so nothing below moves) and the eye breaks up into the About scene: its points, the phone and the figure's very dither dots (`src/three/aboutStage.ts`), are carried through the About camera onto the stage's place on screen, and the scene fades in over them. The About camera holds its resting pose until then. Once it has taken over, the manifesto stops rendering.
+- At the end the About section slides over this one (`--handoff`, which this section grows by, so nothing below moves) and the eye breaks up into Bogdan's portrait: points scattered over the photo by its brightness, drawing it like a halftone, are carried through the stage's framing onto its place on screen (`src/three/aboutStage.ts`), and the portrait fades in over them. The particles fade towards the stage's sides and bottom as the stage does, so the bottom of the photo stays dark. The portrait holds still until it has taken over. Once it has taken over, the manifesto stops rendering.
 - The layer is transparent, not CSS-blended: a last pass (ScreenAlpha) gives each pixel the alpha of its brightest channel, which composites exactly like a screen blend without making the browser (Safari above all) blend a full-screen layer on every frame.
-- Smoothness: the rig runs before the cloud in every frame, so the pair of shapes on the GPU always matches the morph; the lens kick follows the eased scroll, not the wheel's steps; both 3D scenes mount and compile their shaders in the background (`compileAsync`) while the hero plays, so nothing is set up mid-scroll.
+- Smoothness: the rig runs before the cloud in every frame, so the pair of shapes on the GPU always matches the morph; the lens kick follows the eased scroll, not the wheel's steps; both 3D scenes (this one and the phone) mount and compile their shaders in the background (`compileAsync`) while the hero plays, so nothing is set up mid-scroll.
 - Without WebGL the phrases are shown as plain text.
 
 ## The 3D cursor
 
 On devices with a mouse (and without reduced motion) the pointer is an extruded arrow in thin-film iridescent chrome (`src/three/cursor3d.ts`). Its tip is the hotspot; it banks with the movement, and near anything clickable it grows, turns to point at it and spins, so buttons are easy to find. The 180 px canvas travels with the pointer instead of covering the page.
 
-## The About scene
+## The About portrait
 
-A small React Three Fiber scene, loaded only when the section comes near (the original render is shown until then, and stays if WebGL is unavailable):
+A low-angle portrait, full width, right under the title: the letters sit on the photo's dark top, the hoodie fades out at the bottom, and the text and the numbers follow the scene (`src/components/DepthImage.tsx`, one OGL shader; phones get a taller crop around the face). The photo is shown as it is, with depth and light:
+
+- depth: the camera moves with the pointer (or circles on its own), so near parts slide against far ones. The depth map's head is flattened to one depth, so the face holds still as one piece instead of its features sliding against each other;
+- light: the pointer is a lamp above the photo. What faces it brightens (normals from the depth map, smoothed), and the skin glints; away from it the photo stays, a little dimmer, never black;
+- the maps are prepared offline (`scripts/prepare-portrait.py`): one texture packs the parallax depth with the normals, another says where the skin glints. The canvas never renders finer than the photo itself.
+
+## The contact scene
+
+"Let's talk" is a call: a small React Three Fiber scene, loaded when the browser is idle after load (the original render is shown until it is ready, and stays if WebGL is unavailable):
 
 - an iPhone 17 Pro Max model (recoloured to Deep Blue, meshopt-compressed) lies on a reflective floor; its lock screen is drawn on a canvas and rendered over-bright so the bloom pass turns it into a light source;
 - a ray-marched box of light rises from the screen — dense right above it, spreading and fading with height;
 - Bogdan, lifted out of the render with Apple Vision, floats above it as a billboard. He is printed as a 1-bit Atkinson dither in texture space (after React Bits' Dither Veil); the cursor burns a trail through to the photo, and each cell knits back at its own threshold;
 - the camera orbits a few degrees with the pointer and sways on its own, so the depth reads on touch screens too.
 
-Two R3F canvases can be on screen at once here. `@react-three/postprocessing` sizes a new composer from a size vector shared by all composers, so one canvas could come up at the other's size; `src/three/KeepSize.tsx` puts the renderer back.
+Two R3F canvases live on the page, the manifesto and this one. `@react-three/postprocessing` sizes a new composer from a size vector shared by all composers, so one canvas could come up at the other's size; `src/three/KeepSize.tsx` puts the renderer back.
 
 ## The stack section
 
@@ -76,16 +84,17 @@ Eight React Bits Folder Float folders (Frontend, Backend, iOS, AI, Fintech, DevO
 src/
   content.ts            all copy and project data
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
-  components/           FadeIn, Magnet, AnimatedText, CountUp, SectionTitle, buttons
+  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, CountUp, SectionTitle, buttons
   heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
   sections/             Hero (+ heroVeil.ts), Manifesto, About, Stack, Services, Projects, Marquee, Contact
-  three/                AboutScene, ManifestoScene (+ earth.ts, aboutStage.ts, KeepSize), cursor3d
+  three/                PhoneScene, ManifestoScene (+ earth.ts, aboutStage.ts, KeepSize), cursor3d
   vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
   prepare-media.py      builds hero frames (+ Vision cut-outs), card images, marquee tiles (project covers) and icons from local sources
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
   estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
-  prepare-about.py      About scene assets (cut-out, poster, recoloured iPhone model)
+  prepare-about.py      phone scene assets (cut-out, poster, recoloured iPhone model)
+  prepare-portrait.py   About portrait assets (photo, packed depth + normals, glint map)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
 public/                 generated media (hero/, work/, tiles/, about/, models/)
 ```
