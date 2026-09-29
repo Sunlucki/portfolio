@@ -37,21 +37,23 @@ export function AboutSection() {
         setActive(entry.isIntersecting);
         if (entry.isIntersecting) setNear(true);
       },
-      { rootMargin: '300px 0px' },
+      { rootMargin: '100% 0px' }, // early: the manifesto hands over to this scene
     );
     observer.observe(stage);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <section id="about" className="relative overflow-hidden px-5 py-24 sm:px-8 md:px-10 md:py-32">
+    // Slides over the end of the manifesto, whose particles assemble the stage's scene (ManifestoSection).
+    <section id="about" className="relative overflow-hidden px-5 py-24 sm:px-8 md:px-10 md:py-32" style={{ marginTop: 'calc(-1 * var(--handoff, 0px))' }}>
       <SectionTitle text="About me" className="mx-auto max-w-6xl" />
 
       <div className="mx-auto mt-2 grid max-w-7xl items-center gap-6 md:mt-6 lg:grid-cols-[1.15fr_1fr] lg:gap-4">
         <div
           ref={stageRef}
+          data-about-stage
           className="relative -mx-5 aspect-[4/5] sm:-mx-8 sm:aspect-square md:mx-0 lg:aspect-auto lg:h-[min(88vh,820px)]"
-          style={{ maskImage: FEATHER, maskComposite: 'intersect', WebkitMaskImage: FEATHER, WebkitMaskComposite: 'source-in' }}
+          style={{ maskImage: FEATHER, maskComposite: 'intersect', WebkitMaskImage: FEATHER, WebkitMaskComposite: 'source-in', opacity: 'var(--reveal, 1)' }}
         >
           <img
             src="/about/scene.webp"
@@ -76,7 +78,7 @@ export function AboutSection() {
             className="max-w-[560px] text-center font-medium leading-relaxed text-[#D7E2EA] lg:text-left"
             style={{ fontSize: 'clamp(1rem, 2vw, 1.35rem)' }}
           />
-          <ul className="grid w-full max-w-[560px] grid-cols-2 gap-x-6 gap-y-8">
+          <ul className="grid w-full max-w-[560px] grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-3">
             {STATS.map((s) => (
               <li key={s.label} className="flex flex-col items-center text-center lg:items-start lg:text-left">
                 <span className="hero-heading text-4xl font-black leading-none md:text-5xl">

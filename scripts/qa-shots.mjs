@@ -62,7 +62,7 @@ async function shoot(name, { width, height, dpr, mobile }) {
   await sleep(4000);
   const a = await evaluate(`(() => {
     const top = (s) => { const el = document.querySelector(s); return el ? Math.round(el.getBoundingClientRect().top + scrollY) : null; };
-    return { heroEnd: document.querySelector('#top').offsetHeight - innerHeight, marquee: top('section[aria-label="Selected screens"]'),
+    return { heroEnd: document.querySelector('#top').offsetHeight - innerHeight, marquee: top('section[aria-label="Selected work"]'),
       about: top('#about'), services: top('#services'), projects: top('#projects'), contact: top('#contact'),
       docH: document.documentElement.scrollHeight, innerH: innerHeight, overflowX: document.documentElement.scrollWidth > innerWidth };
   })()`);

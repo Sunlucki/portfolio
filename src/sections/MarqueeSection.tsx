@@ -1,28 +1,30 @@
-import { useEffect, useRef, type RefObject } from 'react';
+import { useEffect, useRef } from 'react';
 import { TILES } from '../content';
 
-const ROW_1 = TILES.slice(0, 11);
-const ROW_2 = TILES.slice(11);
+// Four rows, dealt like cards so neighbouring covers differ.
+const ROWS = [0, 1, 2, 3].map((row) => TILES.filter((_, i) => i % 4 === row));
+const SPEED = 0.15; // pixels of slide per pixel of scroll
+// Fades the rows out at the top and bottom, so they sit in the page like a backdrop.
+const FADE = 'linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent)';
 
-// Two rows of project screens that slide in opposite directions as the page scrolls.
+// The smaller projects as a backdrop above "Let's talk": rows of covers that slide slowly in
+// alternating directions as the page scrolls.
 export function MarqueeSection() {
   const sectionRef = useRef<HTMLElement>(null);
-  const row1Ref = useRef<HTMLDivElement>(null);
-  const row2Ref = useRef<HTMLDivElement>(null);
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
     let raf = 0;
     const update = () => {
       raf = 0;
       const section = sectionRef.current;
-      const row1 = row1Ref.current;
-      const row2 = row2Ref.current;
-      if (!section || !row1 || !row2) return;
+      if (!section) return;
       const sectionTop = section.getBoundingClientRect().top + window.scrollY;
-      const offset = (window.scrollY - sectionTop + window.innerHeight) * 0.3;
-      // Rows hold three copies of their tiles; start one copy to the left so both edges stay filled.
-      row1.style.transform = `translate3d(${offset - 200 - row1.scrollWidth / 3}px, 0, 0)`;
-      row2.style.transform = `translate3d(${-(offset - 200) - row2.scrollWidth / 3}px, 0, 0)`;
+      const offset = (window.scrollY - sectionTop + window.innerHeight) * SPEED;
+      rowRefs.current.forEach((row, i) => {
+        // Rows hold three copies of their tiles; start one copy to the left so both edges stay filled.
+        if (row) row.style.transform = `translate3d(${(i % 2 ? -1 : 1) * (offset - 120) - row.scrollWidth / 3}px, 0, 0)`;
+      });
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -38,32 +40,38 @@ export function MarqueeSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} aria-label="Selected screens" className="overflow-hidden bg-[#0C0C0C] pb-10 pt-24 sm:pt-32 md:pt-40">
-      <div className="flex flex-col gap-3">
-        <Row rowRef={row1Ref} tiles={ROW_1} />
-        <Row rowRef={row2Ref} tiles={ROW_2} />
+    <section
+      ref={sectionRef}
+      aria-label="Selected work"
+      className="overflow-hidden bg-[#0C0C0C] py-10 md:py-16"
+      style={{ maskImage: FADE, WebkitMaskImage: FADE }}
+    >
+      <div className="flex flex-col gap-3 opacity-60">
+        {ROWS.map((tiles, i) => (
+          <div
+            key={i}
+            ref={(el) => {
+              rowRefs.current[i] = el;
+            }}
+            className="flex w-max gap-3"
+            style={{ willChange: 'transform' }}
+          >
+            {[...tiles, ...tiles, ...tiles].map((t, k) => (
+              <img
+                key={k}
+                src={t.src}
+                alt={k < tiles.length ? t.alt : ''}
+                aria-hidden={k >= tiles.length || undefined}
+                loading="lazy"
+                decoding="async"
+                width={296}
+                height={190}
+                className="h-[120px] w-[187px] shrink-0 rounded-2xl object-cover sm:h-[160px] sm:w-[249px] md:h-[190px] md:w-[296px]"
+              />
+            ))}
+          </div>
+        ))}
       </div>
     </section>
-  );
-}
-
-function Row({ tiles, rowRef }: { tiles: typeof TILES; rowRef: RefObject<HTMLDivElement | null> }) {
-  const tripled = [...tiles, ...tiles, ...tiles];
-  return (
-    <div ref={rowRef} className="flex w-max gap-3" style={{ willChange: 'transform' }}>
-      {tripled.map((t, i) => (
-        <img
-          key={i}
-          src={t.src}
-          alt={i < tiles.length ? t.alt : ''}
-          aria-hidden={i >= tiles.length || undefined}
-          loading="lazy"
-          decoding="async"
-          width={420}
-          height={270}
-          className="h-[190px] w-[296px] shrink-0 rounded-2xl object-cover sm:h-[270px] sm:w-[420px]"
-        />
-      ))}
-    </div>
   );
 }

@@ -24,65 +24,42 @@ export const HERO_FG_FRAMES = 25; // first frames with the background removed (s
 export const HERO_TAGLINE = 'a full-stack design engineer who designs, builds and ships complete products';
 
 export const ABOUT_TEXT =
-  'Eight years in design, video and marketing taught me how products should look, feel and sell. Now I build them end to end — interfaces, backends, infrastructure and native iOS apps — shipping AI-native with rigorous verification. Let’s build something that works flawlessly and looks unforgettable.';
+  'Eight years in design, video and marketing taught me how products should look, feel and sell. Now I build them end to end: interfaces, backends, infrastructure and native iOS apps, shipped AI-native with rigorous verification. Let’s build something that works flawlessly and looks unforgettable.';
 
+// The strongest checked claims: ../data/profile.json (stats, person.languages, experience);
+// 76 clients per Bogdan (2026-09-29).
 export const STATS = [
-  { value: 10, suffix: '+', label: 'production systems shipped in 2026' },
-  { value: 339, suffix: '', label: 'API endpoints in one B2B platform' },
-  { value: 4, suffix: '', label: 'native iOS apps' },
-  { value: 23, suffix: '', label: 'languages in one storefront' },
+  { value: 76, suffix: '', label: 'clients served' },
+  { value: 4, suffix: '', label: 'languages: EN · PL · UA · RU' },
+  { value: 11, suffix: '', label: 'production systems shipped in 2026' },
+  { value: 8, suffix: '+', label: 'years in design, video & marketing' },
+  { value: 5, suffix: '', label: 'native Apple apps' },
+  { value: 3, suffix: '', label: 'companies founded' },
 ] as const;
 
-// Career timeline after the hero. The particles spell `label`, `title` and `line`; `text` is the
-// fuller sentence for screen readers. Early years from Bogdan (2026-09-28); the rest mirrors
-// ../data/profile.json (experience, company).
-export const TIMELINE = [
-  { label: '1998', title: 'Cherkasy, Ukraine', line: 'Born on the Dnipro', text: 'Born in Cherkasy, a city on the Dnipro in central Ukraine.' },
-  { label: '2012', title: 'School, then studies', line: 'Cherkasy', text: 'Finished school in Cherkasy and went straight on to study.' },
-  {
-    label: '2016',
-    title: 'Poznań, Poland',
-    line: 'Computer Science · WSB',
-    text: 'Moved to Poland and studied Computer Science with a Computer Graphics specialisation at WSB University.',
-  },
-  {
-    label: '2017',
-    title: 'Web developer',
-    line: 'GreenView',
-    text: 'Web developer at GreenView: websites from UX/UI to WordPress deployment, working with clients and marketing teams.',
-  },
-  {
-    label: '2020',
-    title: 'Co-founder',
-    line: 'Black Point · Poznań',
-    text: 'Co-founded Black Point, a barbershop and creative hub in Poznań — brand identity, interior, merch, booking website, social media and video.',
-  },
-  {
-    label: '2022',
-    title: 'Marketing lead',
-    line: 'Black Point Group',
-    text: 'Content creator at Pomaranczowi.PL, then leading the creative team and marketing at Black Point Group.',
-  },
-  {
-    label: '2025',
-    title: 'STYLEICON studio',
-    line: 'Web · brand · video',
-    text: 'Founded STYLEICON, a web, branding and video studio — and turned from building brands to building the software behind them.',
-  },
-  {
-    label: '2026',
-    title: 'AI-native engineer',
-    line: '10+ production systems',
-    text: 'AI-native product engineer: 10+ production systems for Polish and EU companies, including an accounting-grade CRM with KSeF and native iOS apps.',
-  },
-  {
-    label: 'SIMBIA',
-    title: 'My software company',
-    line: 'August 2026',
-    text: 'In August 2026 co-founded SIMBIA sp. z o.o., a software company in Poznań that licenses its platforms and runs on the CRM I built.',
-  },
-  { label: 'NEXT', title: 'Your team?', line: 'Open to remote roles', text: 'Open to remote product and design-engineering roles and B2B contracts.' },
+// The manifesto after the hero (Bogdan's words, 2026-09-29), written in particles under a shape each:
+// the Earth, a gear, a circuit brain, a question mark, an eye. *Marked* words are highlighted, ~marked~
+// ones struck out.
+export const PHRASES = [
+  'In our world, *anything* is possible.',
+  'I always pick the *best tools* to get the job done.',
+  'The age of *AI* lets us create *beautiful* things.',
+  'The question is no longer ~how~ to build it. Only *why*.',
+  'Have an *idea* and need someone to bring it to life? *Keep scrolling.*',
 ];
+
+export type Run = { text: string; mark: 'plain' | 'hi' | 'off' };
+
+// A phrase as runs of plain, highlighted and struck-out text.
+export const phraseRuns = (phrase: string): Run[] =>
+  phrase
+    .split(/(\*[^*]+\*|~[^~]+~)/)
+    .filter(Boolean)
+    .map((part) =>
+      part[0] === '*' ? { text: part.slice(1, -1), mark: 'hi' } : part[0] === '~' ? { text: part.slice(1, -1), mark: 'off' } : { text: part, mark: 'plain' },
+    );
+
+export const phraseText = (phrase: string) => phrase.replace(/[*~]/g, '');
 
 // Tools in daily use, one folder each. Only what the repositories and files actually show
 // (../data/profile.json → skills); nothing listed on the old CV without evidence.
@@ -101,27 +78,27 @@ export const SERVICES = [
   {
     name: 'Product Engineering',
     description:
-      'End-to-end web products in TypeScript, React, Node.js and PostgreSQL — data model, APIs, deploys and backups included. MVPs and SaaS built to survive production.',
+      'End-to-end web products in TypeScript, React, Node.js and PostgreSQL, with the data model, APIs, deploys and backups included. MVPs and SaaS built to survive production.',
   },
   {
     name: 'Design Engineering',
     description:
-      'Design systems, motion and interfaces that feel crafted — accessible components, spring-based animation and Three.js / WebGL when the story needs depth.',
+      'Design systems, motion and interfaces that feel crafted: accessible components, spring-based animation and Three.js / WebGL when the story needs depth.',
   },
   {
     name: 'AI Integration',
     description:
-      'LLM features with guardrails — structured outputs, document AI and assistants — delivered AI-native, with specs, tests and adversarial reviews on every change.',
+      'LLM features with guardrails (structured outputs, document AI and assistants), delivered AI-native with specs, tests and adversarial reviews on every change.',
   },
   {
     name: 'Payments & E-invoicing',
     description:
-      'Stripe, PayU, Przelewy24, marketplaces and Poland’s KSeF 2.0 — financial integrations engineered for correctness, idempotency and audits.',
+      'Stripe, PayU, Przelewy24, marketplaces and Poland’s KSeF 2.0: financial integrations engineered for correctness, idempotency and audits.',
   },
   {
     name: 'Native iOS',
     description:
-      'SwiftUI apps with widgets, Live Activities, offline sync and push — connected to the same backend as your web product.',
+      'SwiftUI apps with widgets, Live Activities, offline sync and push, connected to the same backend as your web product.',
   },
   {
     name: 'Brand & Motion',
@@ -145,7 +122,7 @@ export const PROJECTS: Project[] = [
     category: 'Own product · Fintech',
     name: 'SIMBIA CRM',
     description:
-      'Sales CRM with full double-entry accounting, KSeF e-invoicing and open banking — the system my own company runs on.',
+      'Sales CRM with full double-entry accounting, KSeF e-invoicing and open banking. My own company runs on it.',
     stack: ['React 19', 'Fastify', 'PostgreSQL', 'SwiftUI'],
     live: 'https://simbia.eu',
     images: ['/work/simbia-1.webp', '/work/simbia-2.webp', '/work/simbia-3.webp'],
@@ -175,7 +152,7 @@ export const PROJECTS: Project[] = [
     category: 'Own product · HR-tech',
     name: 'iApply Workforce',
     description:
-      'Shift and time tracking for staffing agencies — QR, GPS and NFC clock-in, a live coordinator board and a native iOS app.',
+      'Shift and time tracking for staffing agencies: QR, GPS and NFC clock-in, a live coordinator board and a native iOS app.',
     stack: ['React', 'Socket.IO', 'PostgreSQL', 'SwiftUI'],
     live: 'https://iapply.com.pl',
     images: ['/work/iapply-1.webp', '/work/iapply-2.webp', '/work/iapply-3.webp'],
@@ -185,7 +162,7 @@ export const PROJECTS: Project[] = [
     category: 'Client · Mobility',
     name: 'TAXI BOSS',
     description:
-      'Fleet platform for Uber and Bolt partners — driver funnel, e-signed contracts, Uber API sync and a SwiftUI driver app.',
+      'Fleet platform for Uber and Bolt partners: driver funnel, e-signed contracts, Uber API sync and a SwiftUI driver app.',
     stack: ['React', 'Express', 'Redis', 'SwiftUI'],
     images: ['/work/taxiboss-1.webp', '/work/taxiboss-2.webp', '/work/taxiboss-3.webp'],
     alts: ['TAXI BOSS 3D vehicle showcase', 'TAXI BOSS driver dashboard', 'TAXI BOSS landing page'],
@@ -194,7 +171,7 @@ export const PROJECTS: Project[] = [
     category: 'Contract · Design engineering',
     name: 'spin.clinic UI Kit',
     description:
-      'Production design system and motion kit — FLIP morphing, spring physics and full accessibility, shipped in 14.5 hours.',
+      'Production design system and motion kit: FLIP morphing, spring physics and full accessibility, shipped in 14.5 hours.',
     stack: ['Next.js', 'Framer Motion', 'TypeScript'],
     live: 'https://spin.clinic/ui-kit',
     images: ['/work/spin-1.webp', '/work/spin-2.webp', '/work/spin-3.webp'],
@@ -202,28 +179,30 @@ export const PROJECTS: Project[] = [
   },
 ];
 
-const tile = (i: number, alt: string) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp`, alt });
+// Marquee: project covers from the STYLEICON archive (scripts/prepare-media.py). `?v` busts the 30-day cache.
+const tile = (i: number, alt: string) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=2`, alt });
 
 export const TILES = [
-  tile(0, 'AiBizBox landing page'),
-  tile(1, 'XyliMelts storefront'),
-  tile(2, 'SIMBIA CRM dashboard, light theme'),
-  tile(3, 'AntMight landing page'),
-  tile(4, 'PROTECTDENT blog'),
-  tile(5, 'iApply shift planning'),
-  tile(6, 'TAXI BOSS benefits section'),
-  tile(7, 'spin.clinic typography'),
-  tile(8, 'XyliMelts ingredients section'),
-  tile(9, 'SIMBIA CRM reports'),
-  tile(10, 'Mind Logistic B2B landing'),
-  tile(11, 'AiBizBox app preview'),
-  tile(12, 'AntMight academy numbers'),
-  tile(13, 'XyliMelts product selector'),
-  tile(14, 'PROTECTDENT procedures'),
-  tile(15, 'SIMBIA CRM project board'),
-  tile(16, 'TAXI BOSS fleet admin'),
-  tile(17, 'iApply coordinator panel'),
-  tile(18, 'XyliMelts sample kit'),
-  tile(19, 'SIMBIA CRM kanban'),
-  tile(20, 'TAXI BOSS 3D car'),
+  tile(0, 'HYPE event series posters'),
+  tile(1, 'Music poster for Ihor Poperechny'),
+  tile(2, 'DC Consulting logo'),
+  tile(3, 'Touch Coffee branding'),
+  tile(4, 'Da Vinci Tattoo business cards'),
+  tile(5, 'RESULT branding'),
+  tile(6, 'Black Point barbershop social media'),
+  tile(7, 'Adaya branding'),
+  tile(8, 'Soul Nation Tattoo branding'),
+  tile(9, 'Alibia website'),
+  tile(10, 'Magic Patron branding'),
+  tile(11, 'Strimat passenger transport'),
+  tile(12, 'Profi Dokument branding'),
+  tile(13, 'Zero Śladu branding'),
+  tile(14, 'KREEM Pâtisserie'),
+  tile(15, 'Stories Beauty branding'),
+  tile(16, 'Black Point T-shirt'),
+  tile(17, 'Nami Clean branding'),
+  tile(18, 'ARAB30 campaign'),
+  tile(19, 'Alibia logo'),
+  tile(20, 'Time Relax Body branding'),
+  tile(21, 'Lizard Moving website'),
 ];

@@ -3,6 +3,24 @@ import { Billboard, Environment, Float, Lightformer, MeshReflectorMaterial, Spar
 import { Bloom, EffectComposer } from '@react-three/postprocessing';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import {
+  CAMERA_ELEVATION,
+  CAMERA_FOV,
+  CAMERA_TARGET,
+  FIGURE_ASPECT,
+  FIGURE_BASE,
+  FIGURE_HEIGHT,
+  FIGURE_ROWS,
+  PHONE_SCALE,
+  PHONE_YAW,
+  SCREEN_LENGTH,
+  SCREEN_WIDTH,
+  SCREEN_Y,
+  cameraDistance,
+  ditherPrint,
+  handoff,
+} from './aboutStage';
+import { KeepSize } from './KeepSize';
 
 /**
  * Volumetric About scene: an iPhone lying on a wet floor, its screen throwing a column of light up to
@@ -11,13 +29,7 @@ import * as THREE from 'three';
  */
 
 const BG = '#0C0C0C';
-const PHONE_SCALE = 1.8;
-const PHONE_YAW = 1.13; // top of the phone points away and to the right, like the original render
-const SCREEN_Y = 0.0887 * PHONE_SCALE; // screen surface above the floor
-const FIGURE_HEIGHT = 2.4;
-const FIGURE_ASPECT = 816 / 1320; // public/about/floating.webp
-const FIGURE_BASE = new THREE.Vector3(0.05, SCREEN_Y + 0.4, 0.2); // feet, floating above the middle of the screen
-const TARGET = new THREE.Vector3(0.1, 1.15, -0.1);
+const TARGET = new THREE.Vector3(...CAMERA_TARGET);
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 export default function AboutScene({ active, onReady }: { active: boolean; onReady: () => void }) {
@@ -25,7 +37,7 @@ export default function AboutScene({ active, onReady }: { active: boolean; onRea
     <Canvas
       frameloop={active ? 'always' : 'never'}
       dpr={[1, 1.75]}
-      camera={{ position: [0, 3.6, 7.2], fov: 32 }}
+      camera={{ position: [0, 3.6, 7.2], fov: CAMERA_FOV }}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
       style={{ touchAction: 'pan-y' }}
     >
@@ -49,6 +61,7 @@ export default function AboutScene({ active, onReady }: { active: boolean; onRea
       <Floor />
       <CameraRig />
       <Ready onReady={onReady} />
+      <KeepSize />
 
       <EffectComposer multisampling={4}>
         <Bloom mipmapBlur intensity={0.6} luminanceThreshold={0.9} luminanceSmoothing={0.1} levels={6} radius={0.7} />
@@ -139,9 +152,6 @@ function Phone() {
   return <primitive object={model} rotation-z={-Math.PI / 2} position={[-0.0227 * s, 0.0514 * s, 0.123 * s]} scale={s} />;
 }
 
-// Screen footprint in the phone group's space (long side along X).
-const SCREEN_LENGTH = 1.663 * PHONE_SCALE;
-const SCREEN_WIDTH = 0.776 * PHONE_SCALE;
 const VOLUME = new THREE.Vector3(SCREEN_LENGTH * 1.3, 2.6, SCREEN_WIDTH * 1.6);
 
 const volumeVertex = /* glsl */ `
@@ -265,45 +275,9 @@ function Floor() {
   );
 }
 
-// Error-diffused (Atkinson) 1-bit print of the figure, in texture space so the dots stay on the body
-// while it floats. R = dot, A = inside the silhouette.
+// The figure's 1-bit print (aboutStage.ts), in texture space so the dots stay on the body while it floats.
 function ditherTexture(image: HTMLImageElement, rows: number) {
-  const cols = Math.round((rows * image.naturalWidth) / image.naturalHeight);
-  const canvas = document.createElement('canvas');
-  canvas.width = cols;
-  canvas.height = rows;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-  ctx.drawImage(image, 0, 0, cols, rows);
-  const pixels = ctx.getImageData(0, 0, cols, rows);
-  const px = pixels.data;
-  const level = new Float32Array(cols * rows);
-  for (let i = 0; i < level.length; i++) {
-    const l = (0.299 * px[i * 4] + 0.587 * px[i * 4 + 1] + 0.114 * px[i * 4 + 2]) / 255;
-    level[i] = 0.1 + 0.9 * Math.pow(l, 0.8); // lift the shadows so the dark hoodie keeps a sparse print
-  }
-  const spread = [
-    [1, 0],
-    [2, 0],
-    [-1, 1],
-    [0, 1],
-    [1, 1],
-    [0, 2],
-  ];
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      const i = y * cols + x;
-      const dot = level[i] > 0.5 ? 1 : 0;
-      const error = (level[i] - dot) / 8;
-      for (const [dx, dy] of spread) {
-        const nx = x + dx;
-        const ny = y + dy;
-        if (nx >= 0 && nx < cols && ny < rows) level[ny * cols + nx] += error;
-      }
-      px[i * 4] = dot * 255;
-      px[i * 4 + 3] = px[i * 4 + 3] > 128 ? 255 : 0;
-    }
-  }
-  ctx.putImageData(pixels, 0, 0);
+  const { canvas, cols } = ditherPrint(image, rows);
   const texture = new THREE.CanvasTexture(canvas);
   texture.magFilter = THREE.NearestFilter;
   texture.minFilter = THREE.NearestFilter;
@@ -353,7 +327,7 @@ const figureFragment = /* glsl */ `
 function Figure() {
   const photo = useTexture('/about/floating.webp');
   photo.colorSpace = THREE.SRGBColorSpace;
-  const print = useMemo(() => ditherTexture(photo.image as HTMLImageElement, 300), [photo]);
+  const print = useMemo(() => ditherTexture(photo.image as HTMLImageElement, FIGURE_ROWS), [photo]);
   const trail = useMemo(() => {
     const texture = new THREE.DataTexture(new Uint8Array(TRAIL_W * TRAIL_H), TRAIL_W, TRAIL_H, THREE.RedFormat);
     texture.magFilter = THREE.LinearFilter;
@@ -430,7 +404,7 @@ function Figure() {
   const height = FIGURE_HEIGHT;
   return (
     <Float speed={still ? 0 : 1.2} rotationIntensity={0.04} floatIntensity={0.3} floatingRange={[-0.05, 0.05]}>
-      <Billboard position={[FIGURE_BASE.x, FIGURE_BASE.y + height / 2, FIGURE_BASE.z]}>
+      <Billboard position={[FIGURE_BASE[0], FIGURE_BASE[1] + height / 2, FIGURE_BASE[2]]}>
         <mesh onPointerMove={onMove} onPointerDown={onMove} onPointerLeave={onLeave} renderOrder={1}>
           <planeGeometry args={[height * FIGURE_ASPECT, height]} />
           <shaderMaterial uniforms={uniforms} vertexShader={figureVertex} fragmentShader={figureFragment} transparent depthWrite={false} />
@@ -441,11 +415,13 @@ function Figure() {
 }
 
 // Orbits the camera a few degrees with the pointer (anywhere on the page) and sways gently on its own,
-// so the depth of the scene reads even on touch screens. Narrow canvases step back to keep the phone in frame.
+// so the depth of the scene reads even on touch screens. While the manifesto's particles assemble the
+// scene it holds the resting pose they are aimed through (aboutStage.ts), and eases out of it after.
 function CameraRig() {
   const { gl, size } = useThree();
   const aim = useRef({ x: 0, y: 0 });
   const pos = useRef({ x: 0, y: 0 });
+  const free = useRef(handoff.reveal);
   useEffect(() => {
     if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
     const onMove = (e: PointerEvent) => {
@@ -457,14 +433,15 @@ function CameraRig() {
     window.addEventListener('pointermove', onMove, { passive: true });
     return () => window.removeEventListener('pointermove', onMove);
   }, [gl]);
-  const distance = 7.8 * Math.max(1, Math.pow(0.8 / (size.width / size.height), 0.7));
+  const distance = cameraDistance(size.width / size.height);
   useFrame(({ camera, clock }, dt) => {
     const k = 1 - Math.pow(0.04, dt);
     pos.current.x += (aim.current.x - pos.current.x) * k;
     pos.current.y += (aim.current.y - pos.current.y) * k;
+    free.current += ((handoff.reveal >= 0.999 ? 1 : 0) - free.current) * (1 - Math.pow(0.02, dt));
     const sway = still ? 0 : Math.sin(clock.elapsedTime * 0.3) * 0.07;
-    const azimuth = pos.current.x * 0.18 + sway;
-    const elevation = 0.28 + pos.current.y * 0.06;
+    const azimuth = (pos.current.x * 0.18 + sway) * free.current;
+    const elevation = CAMERA_ELEVATION + pos.current.y * 0.06 * free.current;
     camera.position.set(
       TARGET.x + distance * Math.cos(elevation) * Math.sin(azimuth),
       TARGET.y + distance * Math.sin(elevation),

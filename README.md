@@ -36,14 +36,16 @@ On phones the first frames are drawn slightly smaller, with the backdrop extende
 
 Frames load cut-outs first, then video frames coarse-to-fine (every 8th first), so scrubbing works before everything has downloaded. Phones get a 1280 px set, desktops a 1920 px set, all WebP.
 
-## The career timeline
+## The manifesto
 
-Straight after the hero, one cloud of particles tells the career (`src/sections/TimelineSection.tsx`, `src/three/TimelineScene.tsx`):
+Straight after the hero, five phrases, each written in particles under a shape made of one cloud of particles (`src/sections/ManifestoSection.tsx`, `src/three/ManifestoScene.tsx`): the Earth, a gear, a circuit brain, a question mark and an eye that looks back.
 
-- The section starts on top of the hero's last part and is screen-blended, so its black is see-through. From the frame where the camera nears the eye, the particles form an iris laid exactly over the real one — `scripts/estimate-motion.py` also measures the pupil in every frame (`src/heroPupil.json`) — and grow with the zoom until the camera is inside the pupil.
-- From there the particles flow into each stage in turn — year, title, a line — sampled from text laid out for the screen's shape. Most of them sit on the outlines and flicker, and a light pulse runs through the letters (after React Bits' Electric Logo). Every scene's points are ordered along a Hilbert curve, so each particle travels to a nearby place in the next scene and the cloud flows instead of criss-crossing; mid-flight they swirl through 3D noise towards the lens.
-- Dust streams past to carry the flight; bloom, film grain and a chromatic aberration that follows the scroll speed and the morph do the lens work. Everything moves in vertex shaders; the CPU only uploads the next pair of scenes when the scroll crosses into it.
-- Without WebGL the stages are shown as a plain list; screen readers always get the list.
+- The section starts on top of the hero's last part and is screen-blended, so its black is see-through. As the camera nears the eye, particles gather out of a loose swirl into an iris laid exactly over the real one (`scripts/estimate-motion.py` also measures the pupil in every frame, `src/heroPupil.json`) and grow with the zoom until the camera is inside the pupil.
+- Past the hero the iris winds into a three-armed spiral, drawn to the middle of the screen, which collapses into the Earth: continents in dense points with brighter coasts, sparse blue oceans and a rim of air, from hand-simplified coastlines (`src/three/earth.ts`). Its far side fades, so it reads as a solid planet.
+- From there the particles flow from shape to shape. Every shape's points are ordered along a Hilbert curve, so each particle travels to a nearby place in the next one and the cloud flows instead of criss-crossing; mid-flight they swirl through 3D noise towards the lens. Most points sit on outlines and flicker, and a light pulse runs across (after React Bits' Electric Logo). The Earth and the gear turn; the eye's iris follows the cursor (or looks around on its own), hides behind the lids and blinks.
+- The phrases are particles too, sampled from Kanit set on a canvas and drawn straight in clip space so the type stays put while the camera moves. Words land in reading order; highlighted words (`*word*` in `content.ts`) come last, in heavier type and a cyan-to-pink accent, and `~word~` is struck out. Dust streams past; bloom, film grain and a chromatic aberration that follows the scroll speed and the morph do the lens work. Everything moves in vertex shaders; the CPU only uploads the next pair of shapes when the scroll crosses into it.
+- At the end the About section slides over this one (`--handoff`, which this section grows by, so nothing below moves) and the eye breaks up into the About scene: its points, the phone and the figure's very dither dots (`src/three/aboutStage.ts`), are carried through the About camera onto the stage's place on screen, and the scene fades in over them. The About camera holds its resting pose until then. Once it has taken over, the manifesto stops rendering.
+- Without WebGL the phrases are shown as plain text.
 
 ## The 3D cursor
 
@@ -58,6 +60,8 @@ A small React Three Fiber scene, loaded only when the section comes near (the or
 - Bogdan, lifted out of the render with Apple Vision, floats above it as a billboard. He is printed as a 1-bit Atkinson dither in texture space (after React Bits' Dither Veil); the cursor burns a trail through to the photo, and each cell knits back at its own threshold;
 - the camera orbits a few degrees with the pointer and sways on its own, so the depth reads on touch screens too.
 
+Two R3F canvases can be on screen at once here. `@react-three/postprocessing` sizes a new composer from a size vector shared by all composers, so one canvas could come up at the other's size; `src/three/KeepSize.tsx` puts the renderer back.
+
 ## The stack section
 
 Eight React Bits Folder Float folders (Frontend, Backend, iOS, AI, Fintech, DevOps, Design, Media). A folder opens on hover — on touch screens on tap — and its tools spring out as notes that can be dragged around (matter-js). Wide screens get a 4 × 2 shelf with room above each row for the notes; narrow screens a swipeable row whose middle folder opens by itself. The list lives in `STACK` in `src/content.ts` and only names tools the repositories actually show.
@@ -70,14 +74,14 @@ src/
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
   components/           FadeIn, Magnet, AnimatedText, CountUp, SectionTitle, buttons
   heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
-  sections/             Hero (+ heroVeil.ts), Timeline, Marquee, About, Stack, Services, Projects, Contact
-  three/                AboutScene, TimelineScene, cursor3d
+  sections/             Hero (+ heroVeil.ts), Manifesto, About, Stack, Services, Projects, Marquee, Contact
+  three/                AboutScene, ManifestoScene (+ earth.ts, aboutStage.ts, KeepSize), cursor3d
   vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
-  prepare-media.py      builds hero frames (+ Vision cut-outs), card images, marquee tiles and icons from local sources
+  prepare-media.py      builds hero frames (+ Vision cut-outs), card images, marquee tiles (project covers) and icons from local sources
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
   estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
-  prepare-about.py      About scene assets: Bogdan's cut-out, the poster, the recoloured iPhone model
+  prepare-about.py      About scene assets (cut-out, poster, recoloured iPhone model)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
 public/                 generated media (hero/, work/, tiles/, about/, models/)
 ```
@@ -102,5 +106,6 @@ Code © Bogdan Nenadović. Screenshots show products I built and are published w
 ## Credits
 
 - 3D model: ["iPhone 17 Pro Max"](https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d) by [MajdyModels](https://sketchfab.com/MG990), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Recoloured and compressed for the web.
-- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the dithered figures are modelled on Dither Veil and the timeline's flicker on Electric Logo.
+- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the dithered figures are modelled on Dither Veil and the manifesto's flicker on Electric Logo.
+- [Lucide](https://lucide.dev) icons (ISC), including the brain-circuit outline the manifesto draws in particles.
 - 3D simplex noise from [ashima/webgl-noise](https://github.com/ashima/webgl-noise) (Ashima Arts, Ian McEwan; MIT).

@@ -28,7 +28,7 @@ export function ContactSection() {
           className="max-w-[640px] font-light leading-relaxed text-[#D7E2EA]"
           style={{ fontSize: 'clamp(1rem, 1.8vw, 1.3rem)' }}
         >
-          Open to remote product and design-engineering roles and B2B contracts. Based in {PERSON.location} — working with
+          Open to remote product and design-engineering roles and B2B contracts. Based in {PERSON.location}, working with
           teams across Europe and the US.
         </FadeIn>
         <FadeIn delay={0.3}>

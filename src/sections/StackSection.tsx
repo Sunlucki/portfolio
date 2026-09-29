@@ -36,10 +36,10 @@ export function StackSection() {
   const hover = useMedia('(hover: hover) and (pointer: fine)');
   const trigger: FolderFloatTrigger = hover ? 'hover' : 'click';
   const hint = hover
-    ? 'Hover a folder to open it — the notes can be dragged around.'
+    ? 'Hover a folder to open it. The notes can be dragged around.'
     : wide
       ? 'Tap a folder to open it.'
-      : 'Swipe — the folder in the middle opens.';
+      : 'Swipe: the folder in the middle opens.';
 
   return (
     <section id="stack" className="relative px-5 pb-20 pt-24 sm:px-8 md:px-10 md:pb-28 md:pt-32">

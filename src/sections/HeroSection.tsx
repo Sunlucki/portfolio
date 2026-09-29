@@ -312,7 +312,7 @@ export function HeroSection() {
             <div aria-hidden className={`invisible px-6 pt-6 md:px-10 md:pt-8 ${NAV_TEXT}`}>
               About
             </div>
-            <h1 className="sr-only">Hi, I’m {PERSON.name} — {PERSON.role}</h1>
+            <h1 className="sr-only">Hi, I’m {PERSON.name}, {PERSON.role}</h1>
             <FadeIn delay={0.15} y={40} className="mt-3 sm:mt-0 md:-mt-8">
               <div aria-hidden className="hidden h-[17.5vw] sm:block">
                 <TechText text="HI, I’M BOGDAN" {...HEADLINE} />

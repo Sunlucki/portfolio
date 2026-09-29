@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { HeroSection } from './sections/HeroSection';
-import { TimelineSection } from './sections/TimelineSection';
+import { ManifestoSection } from './sections/ManifestoSection';
 import { MarqueeSection } from './sections/MarqueeSection';
 import { AboutSection } from './sections/AboutSection';
 import { ServicesSection } from './sections/ServicesSection';
@@ -33,14 +33,14 @@ export default function App() {
     <main className="bg-[#0C0C0C]" style={{ overflowX: 'clip' }}>
       <Cursor3D />
       <HeroSection />
-      <TimelineSection />
-      <MarqueeSection />
+      <ManifestoSection />
       <AboutSection />
       <Suspense fallback={null}>
         <StackSection />
       </Suspense>
       <ServicesSection />
       <ProjectsSection />
+      <MarqueeSection />
       <ContactSection />
     </main>
   );

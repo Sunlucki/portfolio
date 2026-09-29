@@ -6,7 +6,7 @@ Outputs into ../public:
   hero/fg-d/NNN.webp, hero/fg-m/NNN.webp                — first FG_FRAMES frames with the background removed
                                                           (Apple Vision, scripts/cutout.swift) so the headline can sit behind the subject
   work/<name>.webp  (1600w)                             — project card images
-  tiles/<name>.webp (840x540 cover)                     — marquee tiles
+  tiles/<name>.webp (840x540 cover)                     — marquee tiles (project covers)
   about/pointer.webp (560px, alpha)                     — 3D pointer icon (contact section)
 Re-run safe: overwrites outputs.
 """
@@ -90,12 +90,21 @@ WORK = {  # project card images (col1a, col1b, col2 per project)
     "taxiboss-1": f"{TAXI}/04-3d-showcase.png", "taxiboss-2": f"{TAXI}/15-dashboard-top.png", "taxiboss-3": f"{SITES}/tb_0.jpg",
     "spin-1": f"{SITES}/sck_1.jpg", "spin-2": f"{SITES}/sc_0.jpg", "spin-3": f"{SITES}/sck_0.jpg",
 }
-TILES = [  # marquee: row 1 (11) then row 2 (10)
-    f"{SITES}/ab_0.jpg", f"{SITES}/xm_0.jpg", f"{ART}/e16c18a7/03.jpg", f"{SITES}/am_0.jpg", f"{SITES}/pd_4.jpg",
-    f"{ART}/a9d1ab25/05.jpg", f"{TAXI}/05-benefits.png", f"{SITES}/sck_2.jpg", f"{SITES}/xm_2.jpg",
-    f"{ART}/e16c18a7/14.jpg", f"{SITES}/bp_0.jpg",
-    f"{SITES}/ab_2.jpg", f"{SITES}/am_1.jpg", f"{SITES}/xm_4.jpg", f"{SITES}/pd_1.jpg", f"{ART}/e16c18a7/21.jpg",
-    f"{TAXI}/22-admin-fleet.png", f"{ART}/a9d1ab25/08.jpg", f"{SITES}/xm_1.jpg", f"{ART}/e16c18a7/11.jpg", f"{TAXI}/04-3d-showcase.png",
+# Marquee: project covers from #STYLEICON/WEB/ASSETS. Those files live in iCloud only, so the
+# byte-identical copies in the old styleicon.pl uploads are read instead. Row 1 (11), then row 2 (11).
+COVERS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICON REACT APP", "OLD WORDPRESS SITE",
+                      "public_html", "styleicon.pl", "wp-content", "uploads")
+COVERS_BACKUP = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB", "WORDPRESS", "BACKUP", "public_html",
+                             "styleicon.pl", "wp-content", "uploads")
+TILES = [
+    f"{COVERS}/2025/05/HYPE.jpg", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
+    f"{COVERS}/2025/05/TouchMockup.jpg", f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", f"{COVERS}/2025/05/Result.jpg",
+    f"{COVERS}/2025/05/Black-Point-INSTA1.jpg", f"{COVERS}/2025/05/ADAYA.jpg", f"{COVERS}/2025/05/SOUL-NATION.jpg",
+    f"{COVERS_BACKUP}/2025/05/Alibia-Web-1.jpg", f"{COVERS}/2025/05/Magic-Patrone.jpg",
+    f"{COVERS}/2025/05/Strimat.jpg", f"{COVERS}/2025/05/Profi-Document.jpg", f"{COVERS}/2025/05/Zero-Sladu.jpg",
+    f"{COVERS}/2025/05/KREEM-1.jpg", f"{COVERS}/2025/05/Stories-Beautyc-1.jpg", f"{COVERS}/2025/05/Black-Point-T-shirt-JV.jpg",
+    f"{COVERS}/2025/05/NAMI-CLEAN-1.jpg", f"{COVERS}/2025/05/ARAB30.jpg", f"{COVERS}/2025/05/ALIBIA-LOGO.jpg",
+    f"{COVERS}/2025/05/Time-Relax-Body-1.jpg", f"{COVERS}/2025/05/Lizard-Moving--scaled.jpg",
 ]
 ABOUT = {"pointer": "Указатель.png"}
 
