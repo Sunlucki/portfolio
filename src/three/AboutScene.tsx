@@ -42,7 +42,7 @@ export default function AboutScene({ active, onReady }: { active: boolean; onRea
   return (
     <Canvas
       frameloop={!warm ? 'never' : active ? 'always' : 'demand'}
-      dpr={[1, 1.75]}
+      dpr={[1, 1.5]}
       camera={{ position: [0, 3.6, 7.2], fov: CAMERA_FOV }}
       gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
       style={{ touchAction: 'pan-y' }}

@@ -129,24 +129,50 @@ export function HeroSection() {
       }
     };
 
+    // Asks the browser to decode the frames around the playhead ahead of drawing them: Safari otherwise
+    // decodes a 1920 px frame on the spot when it is first drawn, in the middle of a scroll frame.
+    const decodedAt: Record<Layer, number[]> = { bg: [], fg: [] };
+    const predecode = (layer: Layer, count: number) => {
+      const now = performance.now();
+      for (let i = Math.max(0, Math.floor(position) - 1); i <= Math.min(count - 1, Math.floor(position) + 4); i++) {
+        if (!ready[layer][i] || now - (decodedAt[layer][i] ?? -Infinity) < 2000) continue;
+        decodedAt[layer][i] = now;
+        frames[layer][i].decode().catch(() => {});
+      }
+    };
+
+    // Each layer is drawn only while it can be seen: the video fades in from 8% of the scroll, the
+    // cut-out is gone after 27%.
     const paint = () => {
       raf = 0;
-      drawLayer('bg', bg, bgCanvas, HERO_FRAMES);
-      drawLayer('fg', fg, fgSource, HERO_FG_FRAMES);
-      sourceChanged = true;
-      wakeVeil();
+      if (progress > 0.07) {
+        drawLayer('bg', bg, bgCanvas, HERO_FRAMES);
+        predecode('bg', HERO_FRAMES);
+      }
+      if (progress < 0.28) {
+        drawLayer('fg', fg, fgSource, HERO_FG_FRAMES);
+        predecode('fg', HERO_FG_FRAMES);
+        sourceChanged = true;
+        wakeVeil();
+      }
     };
     const requestPaint = () => {
       if (!raf) raf = requestAnimationFrame(paint);
     };
 
     const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // No sharper than the frames themselves (1920 or 1280 px wide, 16:9, drawn to cover): beyond that
+      // the canvas only adds pixels to fill. On a phone that is a quarter of the pixels at 2x.
+      const frameW = mobile ? 1280 : 1920;
+      const native = 1 / Math.max(bgCanvas.clientWidth / frameW, bgCanvas.clientHeight / ((frameW * 9) / 16));
+      const dpr = Math.min(window.devicePixelRatio || 1, 2, Math.max(1, native));
       bgCanvas.width = Math.round(bgCanvas.clientWidth * dpr);
       bgCanvas.height = Math.round(bgCanvas.clientHeight * dpr);
       const veilDpr = Math.min(window.devicePixelRatio || 1, 1.5); // the print is coarse anyway
-      fgSource.width = Math.round(fgCanvas.clientWidth * veilDpr);
-      fgSource.height = Math.round(fgCanvas.clientHeight * veilDpr);
+      // The photo under the print only shows where the pointer burns through: 1x is plenty, and it is
+      // uploaded to the GPU on every frame change.
+      fgSource.width = Math.round(fgCanvas.clientWidth);
+      fgSource.height = Math.round(fgCanvas.clientHeight);
       veil.resize(fgCanvas.clientWidth, fgCanvas.clientHeight, veilDpr);
       requestPaint();
     };
@@ -162,8 +188,10 @@ export function HeroSection() {
       frames[layer][i] = img;
     }
 
-    resize();
-    window.addEventListener('resize', resize);
+    // Sized from the canvas's own box whenever it changes. Safari can run this before the page's styles
+    // apply, while the canvases are still 300 × 150: sized once, the hero stayed stretched and blurred.
+    const sizes = new ResizeObserver(resize);
+    sizes.observe(bgCanvas);
 
     const playhead = { frame: 0 };
     const observer = onScroll({ target: section, enter: 'top top', leave: 'bottom bottom', sync: 0.4 });
@@ -278,7 +306,7 @@ export function HeroSection() {
     if (!depth) visibility.observe(section);
 
     return () => {
-      window.removeEventListener('resize', resize);
+      sizes.disconnect();
       window.removeEventListener('pointermove', onPointer);
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       window.removeEventListener('pointermove', onVeilPointer);

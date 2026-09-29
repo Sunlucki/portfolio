@@ -1,6 +1,6 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Bloom, ChromaticAberration, EffectComposer, Noise } from '@react-three/postprocessing';
-import { BlendFunction, type ChromaticAberrationEffect, type NoiseEffect } from 'postprocessing';
+import { BlendFunction, Effect, type ChromaticAberrationEffect, type NoiseEffect } from 'postprocessing';
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
 import { PHRASES, phraseRuns, type Run } from '../content';
@@ -59,7 +59,6 @@ const small = typeof window !== 'undefined' && window.matchMedia('(max-width: 76
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const COUNT = small ? 26000 : 64000;
 const DUST = small ? 1400 : 4000;
-const BG = '#000000'; // the layer is screen-blended: black is see-through (over the hero, then the page)
 const FOV = 42;
 const DISTANCE = 16; // camera → formation plane
 const AMBIENT = 0.1; // share of particles that drift loosely around each shape
@@ -75,6 +74,25 @@ const IRIS_SIZE = 1.08; // iris radius in half heights of the eye: the lids cut 
 // The phone as the About scene shows it (public/models/iphone.glb, measured in the phone group's space).
 const SCREEN_CORNER = 0.218;
 const BODY = { length: 1.516, width: 0.728, corner: 0.245 }; // half extents
+// The layer lies over the hero and the page. Rather than a CSS screen blend (costly to composite, in Safari
+// above all), the canvas is transparent and this last pass gives every pixel the alpha of its brightest
+// channel (in the sRGB it is encoded to next): as premultiplied colour it then adds up like a screen
+// blend, and black stays see-through.
+class ScreenAlpha extends Effect {
+  constructor() {
+    super(
+      'ScreenAlpha',
+      /* glsl */ `
+        void mainImage(const in vec4 inputColor, const in vec2 uv, out vec4 outputColor) {
+          vec3 c = clamp(inputColor.rgb, 0.0, 1.0);
+          outputColor = vec4(c, pow(max(max(c.r, c.g), c.b), 1.0 / 2.2));
+        }
+      `,
+      { blendFunction: BlendFunction.SRC },
+    );
+  }
+}
+
 const worldTall = () => 2 * DISTANCE * Math.tan(((FOV / 2) * Math.PI) / 180); // world height seen at the plane
 
 // Brain with circuits — Lucide "brain-circuit" (ISC, lucide.dev), 24-unit paths.
@@ -1316,9 +1334,9 @@ function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; 
     noise: useRef<NoiseEffect>(null),
   };
   const offset = useMemo(() => new THREE.Vector2(0.0008, 0.0005), []);
+  const screenAlpha = useMemo(() => new ScreenAlpha(), []);
   return (
     <>
-      <color attach="background" args={[BG]} />
       <Dust uniforms={uniforms} />
       <Cloud uniforms={uniforms} morph={morph} onReady={cloudReady} />
       <Words uniforms={uniforms} show={show} onReady={wordsReady} />
@@ -1329,6 +1347,7 @@ function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; 
         <Bloom mipmapBlur intensity={1.25} luminanceThreshold={0.1} luminanceSmoothing={0.3} levels={small ? 5 : 7} radius={0.72} />
         <ChromaticAberration ref={lens.aberration} offset={offset} radialModulation modulationOffset={0.1} />
         <Noise ref={lens.noise} premultiply blendFunction={BlendFunction.SCREEN} opacity={0} />
+        <primitive object={screenAlpha} />
       </EffectComposer>
     </>
   );
@@ -1341,9 +1360,9 @@ export default function ManifestoScene({ active, bridge }: Props) {
   return (
     <Canvas
       frameloop={active && warm ? 'always' : 'never'}
-      dpr={small ? [1, 1.5] : [1, 1.75]}
+      dpr={[1, 1.5]}
       camera={{ position: [0, 0, DISTANCE], fov: FOV, near: 0.1, far: 200 }}
-      gl={{ antialias: false, alpha: false, powerPreference: 'high-performance' }}
+      gl={{ antialias: false, alpha: true, premultipliedAlpha: true, powerPreference: 'high-performance' }}
       style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
     >
       <Scene bridge={bridge} onWarm={warmed} />

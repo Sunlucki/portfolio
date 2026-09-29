@@ -41,7 +41,7 @@ function handedOver() {
  * pupil and out into a cloud that takes a shape for every phrase, with the phrase written in particles
  * underneath (three/ManifestoScene.tsx). At the end the About section slides over this one (by
  * --handoff, which this section grows by, so nothing below moves) and the particles assemble its scene.
- * The layer is screen-blended, so its black is see-through over the hero.
+ * The layer is transparent where it is black (ScreenAlpha in the scene), so the hero shows through.
  */
 export function ManifestoSection() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -144,7 +144,7 @@ export function ManifestoSection() {
       className={`relative ${OVERLAP}`}
       style={{ height: `calc(var(--overlap) + ${TRACK_VH}vh + var(--handoff, 0px) + 100svh)` }}
     >
-      <div className="pointer-events-none sticky top-0 h-svh w-full overflow-hidden" style={{ mixBlendMode: 'screen' }}>
+      <div className="pointer-events-none sticky top-0 h-svh w-full overflow-hidden">
         {near && (
           <SceneBoundary onError={onError}>
             <Suspense fallback={null}>
