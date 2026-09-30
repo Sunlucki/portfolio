@@ -140,6 +140,10 @@ const NOISE_GLSL = /* glsl */ `
   vec4 mod289(vec4 x) { return x - floor(x * (1.0 / 289.0)) * 289.0; }
   vec4 permute(vec4 x) { return mod289(((x * 34.0) + 1.0) * x); }
   vec4 taylorInvSqrt(vec4 r) { return 1.79284291400159 - 0.85373472095314 * r; }
+  // x², where pow(x, 2.0) is undefined for x < 0 (NaN on some phones' GPUs)
+  float sq(float x) {
+    return x * x;
+  }
   float snoise(vec3 v) {
     const vec2 C = vec2(1.0 / 6.0, 1.0 / 3.0);
     const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
@@ -187,7 +191,7 @@ const SPRITE_FRAGMENT = /* glsl */ `
   varying float vAlpha;
   void main() {
     float d = length(gl_PointCoord - 0.5);
-    float a = smoothstep(0.5, 0.0, d);
+    float a = 1.0 - smoothstep(0.0, 0.5, d);
     a = a * a * vAlpha;
     if (a < 0.004) discard;
     gl_FragColor = vec4(vColor, a);
@@ -1343,7 +1347,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
     // the heart's beat: two knocks, a little over once a second
     float heartbeat() {
       float t = fract(uTime * 1.1);
-      return exp(-pow((t - 0.1) / 0.045, 2.0)) + 0.6 * exp(-pow((t - 0.3) / 0.055, 2.0));
+      return exp(-sq((t - 0.1) / 0.045)) + 0.6 * exp(-sq((t - 0.3) / 0.055));
     }
     // the texture's brightness a baked model's point carries in its part's fraction
     float shadeOf(vec4 a) {
@@ -1369,7 +1373,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       if (part(a.w, ${PART.arc}.0) > 0.5) {
         vec3 up = p - uEarth.xyz;
         float ground = uEarth.w * 1.006;
-        return uEarth.xyz + normalize(up) * (ground + (length(up) - ground) * uRise);
+        return uEarth.xyz + normalize(up + 1e-6) * (ground + (length(up) - ground) * uRise);
       }
       if (part(a.w, ${PART.heart}.0) > 0.5) return uHeart.xyz + (p - uHeart.xyz) * (1.0 + 0.06 * heartbeat());
       if (part(a.w, ${PART.hand}.0) + part(a.w, ${PART.nail}.0) > 0.5) {
@@ -1377,7 +1381,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         // of its points trailing behind it
         float side = sign(p.x - uBulb.x);
         float reach = clamp(uReach - trailing() * 0.3 * (1.0 - uReach), 0.0, 1.0);
-        vec3 way = normalize(vec3(-side * uReachOff, 0.0));
+        vec3 way = normalize(vec3(-side * uReachOff, 0.0) + 1e-6);
         vec3 centre = side > 0.0 ? uHandRight : uHandLeft;
         vec3 q = p - centre;
         float roll = 0.6 * (1.0 - reach);
@@ -1469,7 +1473,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         // inner ones turning further than the outer ones. Noise bends the arms unevenly and scatters the
         // stars off the fibres, so it looks grown rather than drawn.
         float r = length(from.xy) / uIrisOuter;
-        float th = atan(from.y, from.x);
+        float th = atan(from.y, from.x + 1e-6);
         float core = pow(clamp((r - ${IRIS_INNER / 0.36}) / ${1 - IRIS_INNER / 0.36}, 0.0, 1.0), 1.6);
         rr = mix(r, core, uTwist);
         float loose = 1.0 - uGather;
@@ -1479,7 +1483,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         // (everything here turns it the same way, anticlockwise: gathering, winding, the time going by)
         float angle = -loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.0 / (rr + 0.25) + uTime * 0.35 + 0.5 * bend + (aRand.y - 0.5) * 0.4) + whirl + uTime * 0.12;
         float radius = rr * (1.0 + uTwist * ((aRand.z - 0.5) * 0.18 + 0.08 * bend));
-        from.xy = turn(normalize(from.xy) * radius * uIrisOuter * (1.0 + loose * (0.6 + aRand.y)), angle);
+        from.xy = turn(normalize(from.xy + vec2(1e-6, 0.0)) * radius * uIrisOuter * (1.0 + loose * (0.6 + aRand.y)), angle);
         // a sparse halo of stars round the disc
         halo = step(0.93, fract(aRand.w * 57.3 + aRand.z * 11.9)) * uTwist;
         from.xy = mix(from.xy, turn(vec2(0.2 + 0.95 * aRand.y, 0.0), aRand.z * 6.2831853 + uTime * 0.08) * uIrisOuter, halo);
@@ -1498,7 +1502,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         float s = strewn * strewn * (3.0 - 2.0 * strewn);
         float deep = mod(aRand.w * 96.0 + uWarp, 96.0) - 82.0;
         vec2 arm = from.xy - uIrisCenter;
-        float angle = atan(arm.y, arm.x) + uWind + 0.01 * (deep + 82.0) * s; // further round, the nearer the lens
+        float angle = atan(arm.y, arm.x + 1e-6) + uWind + 0.01 * (deep + 82.0) * s; // further round, the nearer the lens
         float radius = mix(length(arm), 0.4 + 10.0 * length(local), s);
         vec2 axis = uIrisCenter * (${DISTANCE.toFixed(1)} - s * deep) / ${DISTANCE.toFixed(1)};
         from = vec3(axis + vec2(cos(angle), sin(angle)) * radius, mix(from.z, deep, s));
@@ -1560,7 +1564,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       inside *= clamp(framed.y / ${(1 - PORTRAIT.feather.bottom).toFixed(3)}, 0.0, 1.0);
       gl_PointSize = mix((0.9 + aRand.z * 1.3) * 34.0 / max(-mv.z, 1.0), uAboutDot * (0.85 + aRand.z * 0.3), landed) * uPixel;
       float flicker = 0.55 + 0.45 * smoothstep(-0.3, 0.8, snoise(vec3(aRand.xy * 30.0, uTime * 3.0)));
-      float sweep = exp(-pow(p.x * 0.18 - mod(uTime * 0.45, 8.0) + 4.0, 2.0) * 5.0) * (1.0 - landed); // a pulse running across
+      float sweep = exp(-sq(p.x * 0.18 - mod(uTime * 0.45, 8.0) + 4.0) * 5.0) * (1.0 - landed); // a pulse running across
       // the eye's white is a faint dust
       float white = mix(part(aFrom.w, ${PART.white}.0), part(aTo.w, ${PART.white}.0), e);
       float shine = mix(1.0, inside, landed) * (1.0 - 0.55 * white);
@@ -1570,9 +1574,9 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       if (gw > 0.001) {
         // three arms (sectors of the iris wound up), uneven: wandering edges, one fainter than the others,
         // clumps of stars and dark lanes of dust along them
-        float th0 = atan(aFrom.y, aFrom.x);
+        float th0 = atan(aFrom.y, aFrom.x + 1e-6);
         float wander = snoise(vec3(cos(th0) * 1.7, sin(th0) * 1.7, rr * 3.0 + 9.0));
-        float arms = pow(0.5 + 0.5 * cos(3.0 * th0 + 1.4 * wander), 2.2) * (0.72 + 0.28 * cos(th0 + 1.0));
+        float arms = pow(max(0.0, 0.5 + 0.5 * cos(3.0 * th0 + 1.4 * wander)), 2.2) * (0.72 + 0.28 * cos(th0 + 1.0));
         float clumps = smoothstep(-0.2, 0.9, snoise(vec3(local * 4.5, 17.0)));
         float lanes = smoothstep(0.3, 0.75, snoise(vec3(local * 7.0, 29.0)));
         light = (0.1 + 1.8 * arms) * (0.55 + 0.9 * clumps) * (1.0 - 0.6 * lanes * (1.0 - glowCore)) * (1.0 + 2.0 * glowCore);
@@ -1599,7 +1603,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       float ocean = mix(part(aFrom.w, ${PART.ocean}.0), part(aTo.w, ${PART.ocean}.0), e) * settled;
       float air = mix(part(aFrom.w, ${PART.air}.0), part(aTo.w, ${PART.air}.0), e) * settled;
       vec3 earthAt = placed(uEarth.xyz, e);
-      float facing = dot(normalize(p - earthAt), normalize(cameraPosition - earthAt));
+      float facing = dot(normalize(p - earthAt + 1e-6), normalize(cameraPosition - earthAt));
       vAlpha *= mix(1.0, smoothstep(-0.2, 0.3, facing), land + coast + ocean);
       vAlpha *= mix(1.0, 0.35 + smoothstep(0.55, 0.0, abs(facing)), air) * (1.0 - 0.45 * ocean - 0.4 * air);
       vColor = mix(vColor, vec3(0.3, 0.95, 0.62), land * 0.85);
@@ -1622,7 +1626,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       // behind the Earth
       float arc = mix(part(aFrom.w, ${PART.arc}.0), part(aTo.w, ${PART.arc}.0), e) * settled;
       float at = e > 0.5 ? along(aTo) : along(aFrom);
-      float blip = exp(-pow((at - fract(uTime * 0.35 + aRand.w * 0.02)) * 9.0, 2.0));
+      float blip = exp(-sq((at - fract(uTime * 0.35 + aRand.w * 0.02)) * 9.0));
       vAlpha *= mix(1.0, step(at, uRise * 1.2) * (0.45 + 1.6 * blip) * smoothstep(-0.35, 0.05, facing), arc);
       vColor = mix(vColor, mix(vec3(0.45, 0.85, 1.0), vec3(1.0), 0.7 * blip), arc);
       gl_PointSize *= mix(1.0, 0.9 + 0.5 * blip, arc);
@@ -1631,7 +1635,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       // the heart: deep red muscle, pale fat, brighter on the beat; its far side dim, so it reads solid
       float heart = mix(part(aFrom.w, ${PART.heart}.0), part(aTo.w, ${PART.heart}.0), e) * settled;
       vec3 heartAt = placed(uHeart.xyz, e);
-      float heartFacing = dot(normalize(p - heartAt), normalize(cameraPosition - heartAt));
+      float heartFacing = dot(normalize(p - heartAt + 1e-6), normalize(cameraPosition - heartAt));
       vAlpha *= mix(1.0, (0.75 + 0.6 * heartbeat()) * (0.35 + 0.65 * smoothstep(-0.4, 0.4, heartFacing)) * (0.6 + 0.8 * shade), heart);
       vColor = mix(vColor, mix(vec3(0.95, 0.07, 0.14), vec3(1.0, 0.6, 0.62), smoothstep(0.35, 0.75, shade)), heart);
       // the idea: violet hands, pale nails, the bulb's glass bright at its rim like glass, a dark metal base and
@@ -1642,7 +1646,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       float base = mix(part(aFrom.w, ${PART.base}.0), part(aTo.w, ${PART.base}.0), e) * settled;
       float bolt = mix(part(aFrom.w, ${PART.bolt}.0), part(aTo.w, ${PART.bolt}.0), e) * settled;
       vec3 bulbAt = mix(flown(spin(uBulb.xyz, uSpinFrom), uFlyFrom), flown(spin(uBulb.xyz, uSpinTo), uFlyTo), e);
-      float rim = 1.0 - abs(dot(normalize(p - bulbAt), normalize(cameraPosition - bulbAt)));
+      float rim = 1.0 - abs(dot(normalize(p - bulbAt + 1e-6), normalize(cameraPosition - bulbAt)));
       float glow = 0.75 + 0.35 * sin(uTime * 2.2);
       vColor = mix(vColor, vec3(0.56, 0.4, 1.0), hand * 0.85);
       vColor = mix(vColor, vec3(0.92, 0.95, 1.0), nail);
@@ -1666,7 +1670,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       float cortex = mix(part(aFrom.w, ${PART.cortex}.0), part(aTo.w, ${PART.cortex}.0), e) * settled;
       float signal = mix(part(aFrom.w, ${PART.signal}.0), part(aTo.w, ${PART.signal}.0), e) * settled;
       vec3 brainAt = placed(uBrain.xyz, e);
-      float brainFacing = dot(normalize(p - brainAt), normalize(cameraPosition - brainAt));
+      float brainFacing = dot(normalize(p - brainAt + 1e-6), normalize(cameraPosition - brainAt));
       vAlpha *= mix(1.0, (0.08 + 0.92 * smoothstep(-0.1, 0.5, brainFacing)) * (0.55 + 0.7 * shade), cortex);
       gl_PointSize *= mix(1.0, 0.85, cortex); // finer dots, so the folds read
       vColor = mix(vColor, vec3(0.7, 0.8, 1.0), cortex * 0.75);
@@ -1718,6 +1722,11 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       gl_PointSize *= mix(1.0, max(0.4, sqrt(grown)), m * uDiveOn) * max(0.4, sqrt(near));
       // the portrait's colour: the photo's pale white in a cool light
       vColor = mix(vColor, vec3(0.86, 0.9, 0.97), landed * 0.9);
+      // Each dot adds at most this much light: in the galaxy's core thousands of them overlap, and their sum could
+      // pass what the half-float buffer holds, turning to infinity, which the bloom's blur spreads (as NaN) into
+      // black squares (phones, whose dots are bigger, got there). Up to here it only saturated white anyway.
+      vAlpha = clamp(vAlpha, 0.0, 3.0);
+      vColor = clamp(vColor, 0.0, 1.6);
     }
   `;
   const material = useSprites(vertexShader, uniforms);
@@ -1870,7 +1879,7 @@ const WORDS_VERTEX = /* glsl */ `
     float marked = hi + heart + home;
     // the hearts beat with the heart: two knocks, a little over once a second
     float beat = fract(uTime * 1.1);
-    float knock = heart * (exp(-pow((beat - 0.1) / 0.045, 2.0)) + 0.6 * exp(-pow((beat - 0.3) / 0.055, 2.0)));
+    float knock = heart * (exp(-sq((beat - 0.1) / 0.045)) + 0.6 * exp(-sq((beat - 0.3) / 0.055)));
     // the brain's word (its phrase's highlight) shakes and glows as the brain charges up; the bulb's lights up
     // as the hands near the bulb and bursts with it
     float spark = hi * (1.0 - step(0.5, abs(aInfo.x - ${PHRASE_OF[SPARK]}.0))) * uCharge;
@@ -1899,7 +1908,7 @@ const WORDS_VERTEX = /* glsl */ `
     // hearts glow red, flaring on every beat; home is the Earth's green
     float x = at.x / uView.x + 0.5;
     vec3 accent = mix(mix(vec3(0.3, 0.88, 1.0), vec3(0.6, 0.45, 1.0), smoothstep(0.15, 0.55, x)), vec3(1.0, 0.4, 0.78), smoothstep(0.55, 0.9, x));
-    float glint = exp(-pow(x * 3.0 - mod(uTime * 0.55, 4.5) + 0.8, 2.0) * 9.0);
+    float glint = exp(-sq(x * 3.0 - mod(uTime * 0.55, 4.5) + 0.8) * 9.0);
     vColor = mix(vec3(0.9, 0.94, 1.0), accent, hi);
     vColor = mix(vColor, vec3(0.62, 0.68, 0.82), dim);
     vColor = mix(vColor, vec3(1.0, 0.36, 0.72), strike); // crossed out in pink

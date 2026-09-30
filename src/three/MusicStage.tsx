@@ -109,7 +109,8 @@ const rimVertex = /* glsl */ `
   void main() {
     float a = aData.x, seed = aData.y;
     float lit = clamp((uProgress - a) * 300.0, 0.0, 1.0);
-    float head = uProgress > 0.0 ? exp(-pow((a - uProgress) * 70.0, 2.0)) : 0.0; // the front of the fill glows
+    float off = (a - uProgress) * 70.0; // (squared by hand: pow of a negative number is undefined in GLSL)
+    float head = uProgress > 0.0 ? exp(-off * off) : 0.0; // the front of the fill glows
     float r = ${RIM} + (seed - 0.5) * 0.07 + 0.04 * uEnergy * sin(a * 50.0 + uTime * 3.0);
     vec3 p = vec3(sin(a * 6.28318) * r, (fract(seed * 7.3) - 0.5) * 0.04, -cos(a * 6.28318) * r);
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
