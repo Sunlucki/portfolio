@@ -1,8 +1,9 @@
-import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
-import { useRef, type CSSProperties, type ReactNode } from 'react';
+import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue } from 'framer-motion';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 
-// A stretch of the text shown in its own colours, a letter each, and wrapped by `render` (say, in a button).
-type Highlight = { text: string; colors: string[]; render: (letters: ReactNode) => ReactNode };
+// A stretch of the text shown in its own colours, a letter each, and wrapped by `render` (say, in a button), which
+// is told once the reveal has filled it all in (`filled`).
+type Highlight = { text: string; colors: string[]; render: (letters: ReactNode, filled: boolean) => ReactNode };
 type AnimatedTextProps = { text: string; className?: string; style?: CSSProperties; highlight?: Highlight };
 
 // Reveals the paragraph character by character (opacity 0.2 → 1) as it scrolls through the viewport. The
@@ -20,6 +21,10 @@ export function AnimatedText({ text, className, style, highlight }: AnimatedText
   const found = highlight ? text.indexOf(highlight.text) : -1;
   const at = found < 0 ? -1 : Array.from(text.slice(0, found)).length; // in characters, as `chars` counts
   const end = at + (highlight ? Array.from(highlight.text).length : 0);
+  // the highlight filled in: the reveal past its last letter
+  const [filled, setFilled] = useState(false);
+  useMotionValueEvent(scrollYProgress, 'change', (value) => setFilled(value >= end / chars.length));
+  useEffect(() => setFilled(scrollYProgress.get() >= end / chars.length), [scrollYProgress, end, chars.length]);
 
   return (
     <p ref={ref} className={className} style={style}>
@@ -28,7 +33,7 @@ export function AnimatedText({ text, className, style, highlight }: AnimatedText
         <>
           <span className="sr-only">{chars.slice(0, at).join('')}</span>
           <span aria-hidden>{letters(0, at)}</span>
-          {highlight.render(<span aria-hidden>{letters(at, end, highlight.colors)}</span>)}
+          {highlight.render(<span aria-hidden>{letters(at, end, highlight.colors)}</span>, filled)}
           <span className="sr-only">{chars.slice(end).join('')}</span>
           <span aria-hidden>{letters(end, chars.length)}</span>
         </>

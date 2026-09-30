@@ -22,9 +22,10 @@ const HANDLE = [...ABOUT_HELLO.handle].map((_, i) =>
 );
 
 /**
- * The About text: one paragraph that opens with a hello and the handle. Hovering the handle writes "Why?" above it in
- * violet (always there on touch screens); clicking it scatters every letter out from the handle, and the
- * handle's story comes up in their place until "Got it" gathers the letters back.
+ * The About text: one paragraph that opens with a hello and the handle. Once the reveal has filled the handle in, a
+ * hand-drawn arrow is drawn down to it and "Why?" is written beside the arrow in violet (wiped out again if the page
+ * goes back up); clicking the handle scatters every letter out from it, and the handle's story comes up in their
+ * place until "Got it" gathers the letters back.
  */
 function Story() {
   const box = useRef<HTMLDivElement>(null);
@@ -96,7 +97,7 @@ function Story() {
           highlight={{
             text: ABOUT_HELLO.handle,
             colors: HANDLE,
-            render: (letters) => (
+            render: (letters, filled) => (
               <button
                 ref={handle}
                 type="button"
@@ -105,13 +106,7 @@ function Story() {
                 aria-controls="handle-story"
                 className="group relative inline"
               >
-                <span
-                  aria-hidden
-                  className={`pointer-events-none absolute bottom-[55%] left-1/2 -translate-x-1/2 -rotate-6 whitespace-nowrap text-[1.25em] font-bold leading-none text-[#B38BFF] transition-[clip-path] duration-500 ease-out [clip-path:inset(0_100%_0_0)] group-hover:[clip-path:inset(0_0_0_0)] group-focus-visible:[clip-path:inset(0_0_0_0)] [@media(hover:none)]:[clip-path:inset(0_0_0_0)] ${open ? 'invisible' : ''}`}
-                  style={{ fontFamily: 'Caveat, cursive', textShadow: '0 0 6px #0C0C0C, 0 0 12px #0C0C0C' }}
-                >
-                  {ABOUT_HELLO.hint}
-                </span>
+                <Why drawn={filled && !open} />
                 <span className="sr-only">{ABOUT_HELLO.handle}</span>
                 {letters}
               </button>
@@ -157,6 +152,38 @@ function Story() {
         </button>
       </div>
     </div>
+  );
+}
+
+// Over the handle, written by hand: an arrow drawn down to it, then "Why?" beside it, a stroke at a time (the arrow's
+// line, its head, then the word wiped in from the left, room left round its letters so none is cut); `drawn` false
+// wipes it all out at once.
+const INK = '#B38BFF';
+function Why({ drawn: show }: { drawn: boolean }) {
+  const stroke = (delay: number, ms: number) => ({
+    strokeDasharray: 1,
+    strokeDashoffset: show ? 0 : 1,
+    transition: show && !still ? `stroke-dashoffset ${ms}ms cubic-bezier(0.5, 0, 0.3, 1) ${delay}ms` : 'none',
+  });
+  return (
+    <span aria-hidden className="pointer-events-none absolute bottom-[58%] left-1/2 flex -translate-x-[42%] -rotate-6 items-end whitespace-nowrap">
+      <svg viewBox="0 0 48 40" className="mb-[-0.4em] mr-[0.1em] h-[1.7em] w-[2em] overflow-visible" fill="none" stroke={INK} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 3px #0C0C0C)' }}>
+        <path pathLength={1} d="M45 12 C 34 5, 18 6, 12 17 C 9 22, 9 27, 11 33" style={stroke(0, 520)} />
+        <path pathLength={1} d="M4 26 L 11 34 L 18 27" style={stroke(480, 220)} />
+      </svg>
+      <span
+        className="text-[1.25em] font-bold leading-none"
+        style={{
+          color: INK,
+          fontFamily: 'Caveat, cursive',
+          textShadow: '0 0 6px #0C0C0C, 0 0 12px #0C0C0C',
+          clipPath: show ? 'inset(-0.5em -0.5em -0.5em -0.5em)' : 'inset(-0.5em 100% -0.5em -0.5em)',
+          transition: show && !still ? 'clip-path 600ms cubic-bezier(0.45, 0, 0.3, 1) 650ms' : 'none',
+        }}
+      >
+        {ABOUT_HELLO.hint}
+      </span>
+    </span>
   );
 }
 
