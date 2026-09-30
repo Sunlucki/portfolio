@@ -268,6 +268,12 @@ const de: Copy = {
       quotes: ['„', '“'],
     },
   },
+  egg: {
+    slow: 'Nicht so eilig, lernen wir uns näher kennen. Das dauert nur 5 Minuten 😊 Wisch einfach langsam und genieß es.',
+    together: 'Hey, ich habe mir mit diesem Abenteuer viel Mühe gegeben, lass es uns gemeinsam erleben!',
+    name: 'Ich heiße Bogdan und bin Full-Stack Engineer.',
+    back: 'Okay, ich mache langsam',
+  },
 };
 
 export default de;

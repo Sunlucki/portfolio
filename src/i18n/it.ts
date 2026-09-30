@@ -271,6 +271,12 @@ const it: Copy = {
       quotes: ['«', '»'],
     },
   },
+  egg: {
+    slow: 'Non avere fretta, conosciamoci meglio. Ci vogliono solo 5 minuti 😊 Scorri piano e goditela.',
+    together: 'Ehi, ci ho messo il cuore per creare questa avventura, viviamola insieme!',
+    name: 'Mi chiamo Bogdan e sono un full-stack engineer.',
+    back: 'Va bene, andrò piano',
+  },
 };
 
 export default it;

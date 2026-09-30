@@ -310,6 +310,12 @@ const fr: Copy = {
       quotes: ['« ', ' »'],
     },
   },
+  egg: {
+    slow: 'Pas si vite, faisons plus ample connaissance. Ça ne prend que 5 minutes 😊 Fais défiler doucement et profite.',
+    together: 'Hé, j’ai mis tout mon cœur dans cette aventure, vivons-la ensemble\u00a0!',
+    name: 'Je m’appelle Bogdan et je suis full-stack engineer.',
+    back: 'D’accord, j’irai doucement',
+  },
 };
 
 export default fr;

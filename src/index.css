@@ -65,3 +65,41 @@ body {
     box-shadow: 0 0 0 26px rgba(255, 45, 85, 0);
   }
 }
+
+/* The fast-swipe egg's last words (SwipeEgg): they come on glitching, torn and split into red and cyan */
+@keyframes egg-glitch {
+  0% {
+    opacity: 0;
+    clip-path: inset(42% 0 44% 0);
+    transform: translateX(-14px);
+    text-shadow: 6px 0 #ff2d55, -6px 0 #00e5ff;
+  }
+  12% {
+    opacity: 1;
+    clip-path: inset(8% 0 70% 0);
+    transform: translateX(10px);
+  }
+  24% {
+    clip-path: inset(62% 0 4% 0);
+    transform: translateX(-6px);
+    text-shadow: -5px 0 #ff2d55, 5px 0 #00e5ff;
+  }
+  36% {
+    clip-path: inset(0 0 0 0);
+    transform: translateX(4px);
+  }
+  48% {
+    clip-path: inset(30% 0 28% 0);
+    transform: none;
+    text-shadow: 3px 0 #ff2d55, -3px 0 #00e5ff;
+  }
+  60%,
+  100% {
+    clip-path: inset(0 0 0 0);
+    transform: none;
+    text-shadow: -1px 0 #ff2d55, 1px 0 #00e5ff;
+  }
+}
+.egg-glitch {
+  animation: egg-glitch 0.9s steps(1, end) 0.25s both;
+}

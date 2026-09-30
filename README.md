@@ -122,6 +122,19 @@ The floor's rim and PLAY are built by the particles coming from the Video sectio
 
 On the right, the tracks as cards like the projects' only smaller (`Playlist`, Framer Motion): folded to a strip, the one at the list's middle (or under the pointer, or focused) open, the one that plays lit blue; an open card grows as much up as down, its neighbours making way on both sides, so the middle holds still as the list scrolls, and every change springs with a bounce. When the scroll stops, the nearest card settles into the middle; the track that plays comes there by itself. The list fades out at its top and bottom. On phones the list is a short column right under the stage instead (`PhoneList`): the card that is on pinned over its top, the others running in under it (three in view, the fourth peeking in), its first eight tracks, all of them under Show all; a track picked morphs up into the pinned place with a bounce (Framer Motion's shared layout), the one that was there back into its own.
 
+## The fast-swipe Easter egg
+
+Touch screens only (`src/components/SwipeEgg.tsx`). Rushing down the page, a swipe flinging it faster than 4 px a millisecond (over the last 120 ms of the swipe or of the page coasting on after it; taps, jumps to a section and swipes in the video feed don't count), calls the pixel Bogdan from his office game (x20/pixel-office) over the page, a little more cross each time:
+
+1. the page stops and blurs, he walks in, waves and says in a speech bubble, typed out letter by letter, not to rush: it takes 5 minutes, swipe slowly and enjoy; he blinks while it is read, then walks off and the blur goes;
+2. the same, pleading that he worked hard on this adventure, let's go through it together;
+3. he leans in from behind the left edge, fuming, 🤬, and back out (the page runs on under him);
+4. he walks in, fumes, gathers a fireball between his hands and throws it at the screen: it comes at you getting chunkier, the glass cracks from where it hits, shards fall, the picture tears and splits into red and cyan and dies band by band to black. Left on the black: "My name is Bogdan and I'm a full-stack engineer", the contact button (to the Contact section) and a quiet way back to the page. Then he is gone for the visit.
+
+A tap on the bubble shows the rest of its words, the next sends him off. Reduced motion turns him off.
+
+He is drawn on a canvas, in whole device pixels, from one strip: `public/egg/guy.png`, 15 frames, 24 KB. The game's own frames (standing, blinking, the four steps of the walk) and new poses (talking, waving, pleading, angry, gathering the fireball, throwing it), generated with GPT Image 2.5 (Higgsfield) from the game's source art and converted the way the game's frames were: his palette only, his head the size it is standing, each pixel the commonest colour of its cell, stray pixels cleaned up. The talking frame is the standing one with the open mouth of a generated one, so only the mouth moves. The bubbles are set in Tiny5, loaded with only the letters of their words.
+
 ## Languages and search engines
 
 The site speaks English, Russian, Ukrainian, Polish, German, Italian and French. Every word is in `src/i18n/`: `en.ts` is the source, the others are translations of it, key for key (their type is English's, so a missing or extra key fails the build). `src/i18n/index.ts` picks the language: at `/ru/`, `/uk/` and so on that one; at `/` the one the visitor picked last in the language menu (in the hero's nav, and as links in the footer), or else the first of their device's languages the site speaks, or else English. Only that language's words are loaded. Russian and Ukrainian are set in Montserrat, as Kanit has no Cyrillic; numbers are written the language's way (`Intl`).
@@ -135,7 +148,7 @@ src/
   content.ts            all project data, its words from i18n/
   i18n/                 the words in every language (en.ts the source), the language picked (index.ts), the list (langs.ts)
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
-  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, ScatterText, SpeedNumber, SectionTitle, buttons
+  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, ScatterText, SpeedNumber, SectionTitle, ScrollHint, SwipeEgg, buttons
   heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
   promo/                the products' promos in the project cards (Promo.tsx; saas/ and oner/ copied from SIMBIA)
   sections/             Hero (+ heroVeil.ts), Manifesto, About, Numbers, Stack, Services, Projects, FlowSections (Apps, Marquee = Graphics, Video + VideoFeed, Music), Contact
@@ -151,7 +164,7 @@ scripts/
   prepare-models.py     the manifesto's heart, brain and bulb with hands, baked from models into point sets
   prepare-bands.mjs     each track's spectrum for the music stage (needs ffmpeg)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
-public/                 generated media (hero/, work/, tiles/, about/, models/; music/ and video/ not in git)
+public/                 generated media (hero/, work/, tiles/, about/, models/, egg/; music/ and video/ not in git)
 ```
 
 ## Develop

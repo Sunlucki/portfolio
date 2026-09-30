@@ -269,6 +269,14 @@ const en = {
       quotes: ['“', '”'],
     },
   },
+  // touch screens, rushing down the page (components/SwipeEgg.tsx): the pixel me asks to go slowly, the 1st and
+  // the 2nd time; the 4th, only this is left of the page, on black
+  egg: {
+    slow: 'Easy there, let’s get to know each other. It only takes 5 minutes 😊 Just swipe slowly and enjoy.',
+    together: 'Hey, I worked hard to build this adventure for you, let’s go through it together!',
+    name: 'My name is Bogdan and I’m a full-stack engineer.',
+    back: 'OK, I’ll go slowly',
+  },
 };
 
 export type Copy = typeof en;

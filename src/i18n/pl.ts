@@ -270,6 +270,12 @@ const pl: Copy = {
       quotes: ['„', '”'],
     },
   },
+  egg: {
+    slow: 'Nie spiesz się, poznajmy się bliżej. To zajmie tylko 5 minut 😊 Po prostu przewijaj powoli i ciesz się.',
+    together: 'Hej, bardzo się starałem, tworząc tę przygodę, przejdźmy ją razem!',
+    name: 'Nazywam się Bogdan i jestem full-stack engineerem.',
+    back: 'Dobra, przejdę powoli',
+  },
 };
 
 export default pl;
