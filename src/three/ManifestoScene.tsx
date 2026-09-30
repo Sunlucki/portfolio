@@ -479,7 +479,7 @@ function modelPoint(points: Uint8Array, half: number, lift: number, jitter: numb
   return [at(0), at(1) + lift, at(2), points[k + 3] / 255];
 }
 
-// "And inside, our hearts are warmed by dreams": a human heart, gathered from the lights, beating (the vertex shader). Baked from "Realistic Human Heart" by neshallads (CC BY 4.0); its fat light, the muscle deep red.
+// "And inside, dreams are born": a human heart, gathered from the lights, beating (the vertex shader). Baked from "Realistic Human Heart" by neshallads (CC BY 4.0); its fat light, the muscle deep red.
 // The shade rides in the part's fraction. `size` is its height.
 function heartShape(points: Uint8Array | null, size: number, lift: number) {
   const out = new Float32Array(COUNT * S);

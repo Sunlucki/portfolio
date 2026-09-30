@@ -29,7 +29,7 @@ const en = {
       'We live in a universe full of *possibilities*.',
       'On the *blue* planet, our shared +home+!',
       'Our ^hearts^ beat in every corner of the world.',
-      'And deep inside, they are ^warmed by dreams^.',
+      'And inside, ^dreams are born^.',
       'Some of them become *ideas*.',
       'And we look for a way to make them *real*.',
       'A *computer* helps me with that.',

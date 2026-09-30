@@ -28,7 +28,7 @@ const fr: Copy = {
       'Nous vivons dans l’univers des *possibles*.',
       'Sur la planète *bleue*, notre +foyer+ commun\u00a0!',
       'Nos ^cœurs^ battent aux quatre coins du monde.',
-      'Et au fond, ils sont ^réchauffés par les rêves^.',
+      'Et au fond ^naissent les rêves^.',
       'Certains deviennent des *idées*.',
       'Et nous cherchons comment les *concrétiser*.',
       'Pour cela, j’utilise un *ordinateur*.',

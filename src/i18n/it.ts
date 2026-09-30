@@ -28,7 +28,7 @@ const it: Copy = {
       'Viviamo in un universo pieno di *possibilità*.',
       'Sul pianeta *blu*, la nostra +casa+ comune!',
       'I nostri ^cuori^ battono in ogni angolo del mondo.',
-      'E nel profondo, sono ^scaldati dai sogni^.',
+      'E nel profondo ^nascono i sogni^.',
       'Alcuni di loro diventano *idee*.',
       'E cerchiamo un modo per renderle *reali*.',
       'In questo mi aiuta un *computer*.',

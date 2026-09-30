@@ -28,7 +28,7 @@ const pl: Copy = {
       'Żyjemy we wszechświecie pełnym *możliwości*.',
       'Na *błękitnej* planecie, naszym wspólnym +domu+!',
       'Nasze ^serca^ biją w każdym zakątku świata.',
-      'A w środku ^rozgrzewają je marzenia^.',
+      'A w środku ^rodzą się marzenia^.',
       'Niektóre z nich stają się *pomysłami*.',
       'I szukamy sposobu, by je *urzeczywistnić*.',
       'Pomaga mi w tym *komputer*.',
