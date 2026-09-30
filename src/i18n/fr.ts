@@ -289,6 +289,8 @@ const fr: Copy = {
     next: 'Morceau suivant',
     seek: 'Position de lecture',
     playlist: 'Playlist',
+    all: 'Tout afficher',
+    fewer: 'Afficher moins',
   },
   contact: {
     title: 'Parlons-en',

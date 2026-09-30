@@ -249,6 +249,8 @@ const ru: Copy = {
     next: 'Следующий трек',
     seek: 'Перемотка',
     playlist: 'Плейлист',
+    all: 'Показать все',
+    fewer: 'Свернуть',
   },
   contact: {
     title: 'Поговорим?',

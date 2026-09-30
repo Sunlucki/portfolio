@@ -249,6 +249,8 @@ const pl: Copy = {
     next: 'Następny utwór',
     seek: 'Przewijanie',
     playlist: 'Playlista',
+    all: 'Pokaż wszystkie',
+    fewer: 'Zwiń',
   },
   contact: {
     title: 'Porozmawiajmy',

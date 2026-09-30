@@ -4,6 +4,7 @@ import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, ty
 import { SectionTitle } from '../components/SectionTitle';
 import { MUSIC } from '../content';
 import { t } from '../i18n';
+import { phoneLayout } from '../three/flow';
 
 const MusicStage = lazy(() => import('../three/MusicStage'));
 const source = (i: number) => `/music/${String(i).padStart(3, '0')}.m4a`;
@@ -25,7 +26,7 @@ class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
 /**
  * Music: a player for Bogdan's playlist. On the left his stage, which is the player (three/MusicStage): he stands
  * on a round floor of blue particles, its rim the progress, its middle the play or pause button, moved by the music. On the right the tracks, as cards
- * like the projects' only smaller (Playlist). The music plays straight from an <audio> element, so it keeps playing
+ * like the projects' only smaller (Playlist); on phones a short column of them right under the stage (PhoneList). The music plays straight from an <audio> element, so it keeps playing
  * while the page scrolls on and while a phone's screen is locked (sound run through Web Audio stops there), the lock
  * screen showing the track and its controls; the stage moves to the track's spectrum, worked out beforehand.
  */
@@ -39,6 +40,12 @@ export function MusicSection() {
   const [time, setTime] = useState(0);
   const [warm, setWarm] = useState(false); // the stage loads as the section comes near
   const [active, setActive] = useState(false); // and draws only while it's on screen
+  const [phone, setPhone] = useState(phoneLayout); // phones: the playlist as a short column (PhoneList)
+  useEffect(() => {
+    const fit = () => setPhone(phoneLayout());
+    window.addEventListener('resize', fit);
+    return () => window.removeEventListener('resize', fit);
+  }, []);
 
   useEffect(() => {
     const el = stage.current;
@@ -121,10 +128,15 @@ export function MusicSection() {
     <section id="music" className="px-4 pb-24 pt-16 sm:px-6 md:px-10 md:pt-24">
       <SectionTitle text={t.music.title} className="mb-4 md:mb-6" />
 
-      <div className="mx-auto mt-6 grid max-w-6xl items-center gap-8 md:mt-10 md:grid-cols-[1.3fr_1fr] md:gap-10">
+      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 items-center gap-4 md:mt-10 md:grid-cols-[1.3fr_1fr] md:gap-10">
         <div className="min-w-0">
-          {/* (its floor built by the particles from the Video section: three/FlowScene.tsx) */}
-          <div ref={stage} data-flow="music" className="relative aspect-[4/5] sm:aspect-[5/4] md:aspect-auto md:h-[520px]">
+          {/* (its floor built by the particles from the Video section: three/FlowScene.tsx). On phones no taller than
+              leaves room under it for the playlist's four cards, so the stage and they are on the screen together. */}
+          <div
+            ref={stage}
+            data-flow="music"
+            className="relative mx-auto aspect-[4/5] h-[max(260px,min(calc((100vw_-_32px)_*_1.25),calc(100lvh_-_390px)))] max-w-full sm:aspect-[5/4] sm:h-auto md:aspect-auto md:h-[520px]"
+          >
             {warm && (
               <Quiet>
                 <Suspense fallback={null}>
@@ -154,7 +166,7 @@ export function MusicSection() {
             </button>
             <input type="range" min={0} max={track.seconds} step={1} value={Math.min(time, track.seconds)} onChange={(e) => seek(Number(e.target.value))} aria-label={t.music.seek} />
           </div>
-          <p className="mt-4 flex justify-center gap-6 text-sm text-[#D7E2EA]/60">
+          <p className="mt-3 flex justify-center gap-6 text-sm text-[#D7E2EA]/60 md:mt-4">
             {MUSIC.links.map((link) => (
               <a key={link.label} href={link.href} target="_blank" rel="noreferrer" className="underline-offset-4 transition-colors hover:text-white hover:underline">
                 {link.label}
@@ -163,7 +175,11 @@ export function MusicSection() {
           </p>
         </div>
 
-        <Playlist current={current} playing={playing} time={time} onPick={(k) => (k === current ? toggle() : play(k))} />
+        {phone ? (
+          <PhoneList current={current} playing={playing} time={time} onPick={(k) => (k === current ? toggle() : play(k))} />
+        ) : (
+          <Playlist current={current} playing={playing} time={time} onPick={(k) => (k === current ? toggle() : play(k))} />
+        )}
       </div>
 
       <audio
@@ -245,14 +261,14 @@ function Playlist({ current, playing, time, onPick }: PlaylistProps) {
         onMouseLeave={() => setHover(null)}
       >
         <div className="relative" style={{ height: pad * 2 + (TRACKS.length - 1) * PITCH + STRIP }}>
-          {TRACKS.map((t, k) => {
+          {TRACKS.map((track, k) => {
             const on = k === current;
             const isOpen = k === open;
             // the open card grows as much up as down; the cards above move up by half of it, those below down
             const y = pad + k * PITCH + (k > open ? GROW / 2 : -GROW / 2);
             return (
               <motion.div
-                key={t.title}
+                key={track.title}
                 role="listitem"
                 className="absolute inset-x-0 top-0"
                 initial={false}
@@ -260,43 +276,100 @@ function Playlist({ current, playing, time, onPick }: PlaylistProps) {
                 transition={SPRING}
                 onMouseEnter={() => setHover(k)}
               >
-                <button
-                  type="button"
-                  onClick={() => onPick(k)}
-                  onFocus={() => setHover(k)}
-                  onBlur={() => setHover(null)}
-                  aria-current={on ? 'true' : undefined}
-                  className={`flex h-full w-full flex-col overflow-hidden rounded-[22px] border-2 bg-[#0C0C0C] px-4 text-left transition-[border-color,box-shadow] duration-300 sm:px-5 ${
-                    on ? 'border-[#5B9BFF] shadow-[0_0_28px_rgba(91,155,255,0.35)]' : isOpen ? 'border-[#D7E2EA]' : 'border-[#D7E2EA]/25'
-                  }`}
-                >
-                  <span className="flex w-full shrink-0 items-center gap-3" style={{ height: STRIP - 4 }}>
-                    <span className="hero-heading w-9 shrink-0 text-[26px] font-black leading-none">{String(k + 1).padStart(2, '0')}</span>
-                    <span className={`min-w-0 flex-1 truncate text-sm font-medium uppercase tracking-wide ${on || isOpen ? 'text-white' : 'text-[#D7E2EA]/70'}`}>{t.title}</span>
-                    <span className="shrink-0 text-xs tabular-nums text-[#D7E2EA]/50">{clock(t.seconds)}</span>
-                    <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${on ? 'bg-[#5B9BFF] text-white' : 'bg-white/10 text-[#D7E2EA]'}`}>
-                      {on && playing ? <Pause className="h-3 w-3" fill="currentColor" /> : <Play className="h-3 w-3 translate-x-px" fill="currentColor" />}
-                    </span>
-                  </span>
-                  <motion.span
-                    className="flex w-full items-center gap-3 pl-12 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/45"
-                    initial={false}
-                    animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : -6 }}
-                    transition={SPRING}
-                  >
-                    {t.artist ?? MUSIC.artist} · {MUSIC.album}
-                    {on && (
-                      <span className="ml-auto h-1 w-24 overflow-hidden rounded-full bg-white/10">
-                        <span className="block h-full rounded-full bg-[#5B9BFF]" style={{ width: `${Math.min(100, (time / t.seconds) * 100)}%` }} />
-                      </span>
-                    )}
-                  </motion.span>
-                </button>
+                <TrackCard track={track} k={k} on={on} open={isOpen} playing={playing} time={time} onPick={onPick} onFocus={() => setHover(k)} onBlur={() => setHover(null)} />
               </motion.div>
             );
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+// A track's card: its number, title and length and PLAY (or PAUSE, if it plays); open, its artist and album under
+// them and, if it is the one on, how far it has played.
+type CardProps = { track: (typeof TRACKS)[number]; k: number; on: boolean; open: boolean; playing: boolean; time: number; onPick: (k: number) => void; onFocus?: () => void; onBlur?: () => void };
+
+function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur }: CardProps) {
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(k)}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      aria-current={on ? 'true' : undefined}
+      className={`flex h-full w-full flex-col overflow-hidden rounded-[22px] border-2 bg-[#0C0C0C] px-4 text-left transition-[border-color,box-shadow] duration-300 sm:px-5 ${
+        on ? 'border-[#5B9BFF] shadow-[0_0_28px_rgba(91,155,255,0.35)]' : open ? 'border-[#D7E2EA]' : 'border-[#D7E2EA]/25'
+      }`}
+    >
+      <span className="flex w-full shrink-0 items-center gap-3" style={{ height: STRIP - 4 }}>
+        <span className="hero-heading w-9 shrink-0 text-[26px] font-black leading-none">{String(k + 1).padStart(2, '0')}</span>
+        <span className={`min-w-0 flex-1 truncate text-sm font-medium uppercase tracking-wide ${on || open ? 'text-white' : 'text-[#D7E2EA]/70'}`}>{track.title}</span>
+        <span className="shrink-0 text-xs tabular-nums text-[#D7E2EA]/50">{clock(track.seconds)}</span>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${on ? 'bg-[#5B9BFF] text-white' : 'bg-white/10 text-[#D7E2EA]'}`}>
+          {on && playing ? <Pause className="h-3 w-3" fill="currentColor" /> : <Play className="h-3 w-3 translate-x-px" fill="currentColor" />}
+        </span>
+      </span>
+      <motion.span
+        className="flex w-full items-center gap-3 pl-12 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/45"
+        initial={false}
+        animate={{ opacity: open ? 1 : 0, y: open ? 0 : -6 }}
+        transition={SPRING}
+      >
+        {track.artist ?? MUSIC.artist} · {MUSIC.album}
+        {on && (
+          <span className="ml-auto h-1 w-24 overflow-hidden rounded-full bg-white/10">
+            <span className="block h-full rounded-full bg-[#5B9BFF]" style={{ width: `${Math.min(100, (time / track.seconds) * 100)}%` }} />
+          </span>
+        )}
+      </motion.span>
+    </button>
+  );
+}
+
+// Phones: the playlist as a short column right under the stage, four cards in view (the fifth peeking in, fading)
+// and scrolling within: its first eight tracks, or all of them when asked (or once one past the eighth is on). The
+// track that is on is open, and comes into view within the list.
+const FIRST = 8;
+const PEEK = 22;
+const PEEKING = `linear-gradient(to bottom, #000 calc(100% - ${PEEK + 8}px), transparent)`;
+
+function PhoneList({ current, playing, time, onPick }: PlaylistProps) {
+  const list = useRef<HTMLDivElement>(null);
+  const [all, setAll] = useState(false);
+  const count = all || current >= FIRST ? TRACKS.length : FIRST;
+  useEffect(() => {
+    const el = list.current;
+    const card = el?.children[current] as HTMLElement | undefined;
+    if (!el || !card) return;
+    if (card.offsetTop < el.scrollTop || card.offsetTop + OPEN > el.scrollTop + el.clientHeight - PEEK) el.scrollTo({ top: Math.max(0, card.offsetTop - PITCH), behavior: 'smooth' });
+  }, [current, count]);
+  return (
+    <div>
+      <div
+        ref={list}
+        role="list"
+        aria-label={t.music.playlist}
+        className="relative flex flex-col gap-2.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        style={{ height: OPEN + 3 * PITCH + PEEK, maskImage: PEEKING, WebkitMaskImage: PEEKING }}
+      >
+        {TRACKS.slice(0, count).map((track, k) => (
+          <motion.div key={track.title} role="listitem" className="shrink-0" initial={false} animate={{ height: k === current ? OPEN : STRIP }} transition={SPRING}>
+            <TrackCard track={track} k={k} on={k === current} open={k === current} playing={playing} time={time} onPick={onPick} />
+          </motion.div>
+        ))}
+      </div>
+      {current < FIRST && (
+        <button
+          type="button"
+          onClick={() => setAll((shown) => !shown)}
+          aria-expanded={all}
+          className="mx-auto mt-4 flex items-center gap-2 rounded-full border border-[#D7E2EA]/30 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-[#D7E2EA]/80 transition-colors hover:border-[#D7E2EA]/70 hover:text-white"
+        >
+          {all ? t.music.fewer : t.music.all}
+          {!all && <span className="tabular-nums text-[#D7E2EA]/45">{TRACKS.length}</span>}
+        </button>
+      )}
     </div>
   );
 }

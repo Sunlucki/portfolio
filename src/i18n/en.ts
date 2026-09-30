@@ -248,6 +248,8 @@ const en = {
     next: 'Next track',
     seek: 'Seek',
     playlist: 'Playlist',
+    all: 'Show all', // phones: the playlist, all of it
+    fewer: 'Show fewer',
   },
   contact: {
     title: 'Let’s talk',

@@ -247,6 +247,8 @@ const de: Copy = {
     next: 'Nächster Titel',
     seek: 'Wiedergabeposition',
     playlist: 'Playlist',
+    all: 'Alle zeigen',
+    fewer: 'Weniger zeigen',
   },
   contact: {
     title: 'Sprechen wir',

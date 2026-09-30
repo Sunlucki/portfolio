@@ -250,6 +250,8 @@ const it: Copy = {
     next: 'Brano successivo',
     seek: 'Avanzamento',
     playlist: 'Playlist',
+    all: 'Mostra tutti',
+    fewer: 'Mostra meno',
   },
   contact: {
     title: 'Parliamone',
