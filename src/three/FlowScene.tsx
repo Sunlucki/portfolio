@@ -275,7 +275,15 @@ function Scene() {
     root.position.copy(box.getCenter(new THREE.Vector3()).multiplyScalar(-s));
     root.updateMatrixWorld(true);
     const glass = display ? new THREE.Box3().setFromObject(display) : new THREE.Box3(new THREE.Vector3(-0.45, -0.95, 0), new THREE.Vector3(0.45, 0.95, 0));
-    return { root, faded, display: display as THREE.Mesh | null, glass: { centre: glass.getCenter(new THREE.Vector3()), size: glass.getSize(new THREE.Vector3()) } };
+    // black behind the display: what the model leaves see-through there (the Dynamic Island's glass) shows the
+    // phone's inside, not the page, as it flies over the page
+    const inside = new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true });
+    faded.push(inside);
+    const backing = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), inside);
+    backing.scale.set(glass.max.x - glass.min.x, glass.max.y - glass.min.y, 1).multiplyScalar(0.96);
+    backing.position.set((glass.min.x + glass.max.x) / 2, (glass.min.y + glass.max.y) / 2, glass.min.z - 0.01);
+    backing.renderOrder = -1; // drawn before the glass in front of it (all of the phone is see-through, to fade)
+    return { root, backing, faded, display: display as THREE.Mesh | null, glass: { centre: glass.getCenter(new THREE.Vector3()), size: glass.getSize(new THREE.Vector3()) } };
   }, [scene, screen]);
 
   const geometry = useMemo(() => sample(model.root, model.display, films.map((el) => el.offsetWidth * el.offsetHeight)), [model, films]);
@@ -517,6 +525,7 @@ function Scene() {
     <>
       <group ref={group} visible={false}>
         <primitive object={model.root} />
+        <primitive object={model.backing} />
       </group>
       {!still && <points geometry={geometry} material={material} frustumCulled={false} />}
     </>
