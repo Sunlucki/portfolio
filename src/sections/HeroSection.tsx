@@ -200,6 +200,7 @@ export function HeroSection() {
     sizes.observe(bgCanvas);
 
     const playhead = { frame: 0 };
+    section.dataset.frame = '0'; // (at the start until the scroll moves it: the manifesto's iris waits for it)
     const observer = onScroll({ target: section, enter: 'top top', leave: 'bottom bottom', sync: 0.4 });
     let lastUpdate = performance.now();
     const timeline = createTimeline({

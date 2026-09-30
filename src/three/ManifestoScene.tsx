@@ -1998,7 +1998,9 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const view = canvas.getBoundingClientRect();
     const rect = b.section.getBoundingClientRect();
     const hero = b.hero?.getBoundingClientRect();
-    const frame = Number(b.hero?.dataset.frame ?? 82);
+    // the hero's frame (its playhead, set as it scrolls; at its start until it has: nothing of this shows before the
+    // iris gathers, though on phones the top of this layer is already on the screen, under the hero's end)
+    const frame = b.hero ? Number(b.hero.dataset.frame ?? 0) : 82;
     const heroDone = !hero || hero.bottom <= vh + 1;
 
     // The About section slides over the end of this one: `h` runs 0 → 1 from its top entering the
