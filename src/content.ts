@@ -70,7 +70,7 @@ export const NUMBERS = [
   { value: 3, suffix: '', label: t.numbers.companies },
 ];
 
-// The manifesto after the hero (Bogdan's own lines of 2026-09-30, i18n/en.ts), written in particles under a
+// The manifesto after the hero (Bogdan's own lines of 2026-09-30, reworded without repeats at his asking, i18n/en.ts), written in particles under a
 // shape each: the galaxy the camera flies to through the hero's pupil, the Earth, the Earth lit where people
 // live, a heart, a brain, a bulb the hands reach for, a laptop the camera dives into, down to its chip, with a
 // brain on it, then the letters AI, an eye. *Marked* words are highlighted, ~marked~ ones struck out, ^marked^
