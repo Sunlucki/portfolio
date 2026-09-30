@@ -230,6 +230,8 @@ const en = {
     views: '{n} views',
     viewsOn: '{n}+ views on {platform}',
     play: 'Play {title}',
+    tap: 'Tap to play the videos',
+    swipe: 'Swipe up for the next one',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'AI film',

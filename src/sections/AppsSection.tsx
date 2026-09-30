@@ -1,51 +1,38 @@
 import { animate, motion, useMotionValue, useTransform } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { Component, lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
 import { MOBILE_APPS, type PhoneApp } from '../content';
+import { flow } from '../three/flow';
 
-const AppsPhone = lazy(() => import('../three/AppsPhone'));
 const SCREEN_MS = 3400; // how long an app's screen shows on the iPhone
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// Without WebGL the phone just isn't drawn; the names and screens stay.
-class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
-  state = { failed: false };
-  static getDerivedStateFromError() {
-    return { failed: true };
-  }
-  render() {
-    return this.state.failed ? null : this.props.children;
-  }
-}
+// the web projects' cards, which these are drawn after
+const RADIUS = 'rounded-[40px] sm:rounded-[50px]';
 
 /**
- * Mobile Apps: Bogdan's native iOS apps on a 3D iPhone (three/AppsPhone), each through its screens, then the
- * next app, the phone turning round to it. While the section is on screen it turns them itself. Beside the phone
- * the apps are a deck of cards, the shown one's on top with its name and its screens, each a jump to it: drag the
- * top card aside (or use the arrows) and it goes under the deck, and the phone turns to the next app.
+ * Mobile Apps: Bogdan's native iOS apps on a 3D iPhone, each through its screens, then the next app, the phone
+ * turning round to it. The phone is drawn by the particle scene behind the section (three/FlowScene.tsx, which
+ * builds it out of particles here and takes them on to the Video section): this section gives it its place (the
+ * stage, [data-flow="apps"]) and what is on its screen (flow.phone). While the section is on screen it turns the
+ * screens itself. Beside the phone the apps are a deck of cards like the web projects', the shown one's on top with
+ * its screens, each a jump to it: drag the top card aside (or use the arrows) and it goes under the deck, and the
+ * phone turns to the next app.
  */
 export function AppsSection() {
   const { apps } = MOBILE_APPS;
   const shots = useMemo(() => apps.flatMap((app, a) => app.screens.map((screen) => ({ ...screen, app: a }))), [apps]);
-  const images = useMemo(() => shots.map((shot) => shot.image), [shots]);
   const stage = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState(0);
-  const [warm, setWarm] = useState(false); // the phone loads as the section comes near
-  const [active, setActive] = useState(false); // and turns only while it's on screen
+  const [active, setActive] = useState(false); // the screens turn only while the section is on screen
   const [held, setHeld] = useState(false); // a card in hand: the screens wait
 
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const ahead = new IntersectionObserver(([entry]) => entry.isIntersecting && setWarm(true), { rootMargin: '100% 0px' });
     const around = new IntersectionObserver(([entry]) => setActive(entry.isIntersecting));
-    ahead.observe(el);
     around.observe(el);
-    return () => {
-      ahead.disconnect();
-      around.disconnect();
-    };
+    return () => around.disconnect();
   }, []);
   useEffect(() => {
     if (!active || held || still) return;
@@ -57,9 +44,13 @@ export function AppsSection() {
   const current = apps[app];
   const first = shots.findIndex((shot) => shot.app === app);
   const turnTo = (i: number) => setAt(shots.findIndex((shot) => shot.app === (i + apps.length) % apps.length));
+  // what the phone shows, for the scene
+  useEffect(() => {
+    flow.phone = { images: shots.map((shot) => shot.image), shown: at, app };
+  }, [shots, at, app]);
 
   return (
-    <section id="apps" className="bg-[#0C0C0C] px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
+    <section id="apps" className="px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
       <SectionTitle text={MOBILE_APPS.title} className="mb-4 md:mb-6" />
       <p className="mx-auto max-w-[640px] text-center font-light italic leading-relaxed text-[#D7E2EA]/80" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>
         {MOBILE_APPS.caption}
@@ -72,10 +63,10 @@ export function AppsSection() {
               <Card
                 key={one.label}
                 app={one}
+                index={i}
                 depth={(i - app + apps.length) % apps.length}
                 count={apps.length}
                 shown={i === app ? at - first : -1}
-                stack={MOBILE_APPS.stack}
                 onScreen={(k) => setAt(first + k)}
                 onFlip={(way) => turnTo(app + way)}
                 onHold={setHeld}
@@ -103,21 +94,8 @@ export function AppsSection() {
           </div>
         </div>
 
-        <div ref={stage} className="relative order-1 aspect-[4/5] md:order-2 md:aspect-auto md:h-[640px]">
-          {/* the app's colour glowing behind the phone */}
-          <div
-            className="absolute inset-0 transition-[background] duration-1000"
-            style={{ background: `radial-gradient(ellipse 42% 48% at 50% 52%, ${current.tint}3d, transparent 72%)` }}
-          />
-          {warm && (
-            <Quiet>
-              <Suspense fallback={null}>
-                <div className="absolute inset-0 animate-[fade-in_0.8s_ease-out]">
-                  <AppsPhone images={images} shown={at} app={app} active={active} still={still} />
-                </div>
-              </Suspense>
-            </Quiet>
-          )}
+        {/* the phone's place: the scene behind draws it here */}
+        <div ref={stage} data-flow="apps" className="relative order-1 aspect-[4/5] md:order-2 md:aspect-auto md:h-[640px]">
           <p className="sr-only" aria-live="polite">
             {current.label}: {shots[at].alt}
           </p>
@@ -127,17 +105,17 @@ export function AppsSection() {
   );
 }
 
-// A card of the deck: the app's tagline, its name, its screens (the one on the phone lit) and what it's built with,
-// in the app's colour.
-// `depth` is its place in the deck, 0 on top: the cards under it peek out below, turned a little. The top card can
-// be dragged aside; let go far enough (or flung) and it flips (`onFlip`, -1 back, 1 on) and slides under the deck;
-// otherwise it springs back. Turned by the phone (or the arrows), the top card swings out and under all the same.
-function Card({ app, depth, count, shown, stack, onScreen, onFlip, onHold }: {
+// A card of the deck, drawn like the web projects' cards: its number, the app's tagline and name, and its screens
+// (the one on the phone lit). `depth` is its place in the deck, 0 on top: the cards under it peek out below, turned
+// a little. The top card can be dragged aside; let go far enough (or flung) and it flips (`onFlip`, -1 back, 1 on)
+// and slides under the deck; otherwise it springs back. Turned by the phone (or the arrows), the top card swings out
+// and under all the same.
+function Card({ app, index, depth, count, shown, onScreen, onFlip, onHold }: {
   app: PhoneApp;
+  index: number;
   depth: number;
   count: number;
   shown: number; // the screen on the phone, if this app is on it (-1 if not)
-  stack: string[];
   onScreen: (k: number) => void;
   onFlip: (way: number) => void;
   onHold: (held: boolean) => void;
@@ -162,7 +140,7 @@ function Card({ app, depth, count, shown, stack, onScreen, onFlip, onHold }: {
       inert={!top}
       aria-hidden={!top}
     >
-      <motion.div
+      <motion.article
         drag={top ? 'x' : false}
         dragSnapToOrigin
         dragElastic={0.85}
@@ -174,39 +152,37 @@ function Card({ app, depth, count, shown, stack, onScreen, onFlip, onHold }: {
           flung.current = true;
           onFlip(swing < 0 ? 1 : -1);
         }}
-        style={{ x, rotate: tilt, touchAction: 'pan-y', background: `linear-gradient(155deg, ${app.tint}33 0%, transparent 55%), #131418` }}
-        className={`relative overflow-hidden rounded-[28px] border border-white/[0.12] p-6 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)] sm:p-8 ${top ? 'cursor-grab active:cursor-grabbing' : ''}`}
+        style={{ x, rotate: tilt, touchAction: 'pan-y' }}
+        className={`relative border-2 border-[#D7E2EA] bg-[#0C0C0C] p-6 sm:p-8 ${RADIUS} ${top ? 'cursor-grab active:cursor-grabbing' : ''}`}
       >
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full blur-3xl" style={{ background: `${app.tint}40` }} />
-        <p className="relative text-xs uppercase tracking-[0.25em] text-[#D7E2EA]/55">{app.tagline}</p>
-        <p className="hero-heading relative mt-2 select-none font-black leading-none" style={{ fontSize: 'clamp(2.6rem, 5vw, 4.6rem)' }}>
-          {app.label}
-        </p>
-        <ol className="relative mt-6 space-y-1">
+        <div className="flex min-w-0 items-center gap-4 md:gap-6">
+          <span className="hero-heading shrink-0 select-none font-black leading-none" style={{ fontSize: 'clamp(3rem, 7vw, 96px)' }}>
+            {String(index + 1).padStart(2, '0')}
+          </span>
+          <div className="min-w-0">
+            <p className="text-xs uppercase tracking-widest text-[#D7E2EA]/60 sm:text-sm">{app.tagline}</p>
+            <h3 className="select-none font-medium uppercase leading-tight text-[#D7E2EA]" style={{ fontSize: 'clamp(1.25rem, 2.6vw, 2.4rem)' }}>
+              {app.label}
+            </h3>
+          </div>
+        </div>
+        <ol className="mt-6 flex flex-wrap gap-2">
           {app.screens.map((screen, k) => (
             <li key={screen.image}>
               <button
                 type="button"
                 onClick={() => onScreen(k)}
                 aria-current={k === shown ? 'true' : undefined}
-                className={`flex items-center gap-3 py-1 text-left transition-colors ${k === shown ? 'text-white' : 'text-[#D7E2EA]/45 hover:text-[#D7E2EA]/80'}`}
+                className={`whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-colors sm:px-4 sm:text-sm ${
+                  k === shown ? 'bg-[#D7E2EA] text-[#0C0C0C]' : 'border border-[#D7E2EA]/30 text-[#D7E2EA]/70 hover:border-[#D7E2EA]/70 hover:text-white'
+                }`}
               >
-                <span className="w-6 text-xs tabular-nums" style={k === shown ? { color: app.tint } : undefined}>
-                  {String(k + 1).padStart(2, '0')}
-                </span>
                 {screen.caption}
               </button>
             </li>
           ))}
         </ol>
-        <ul className="relative mt-6 flex flex-wrap gap-2">
-          {stack.map((tool) => (
-            <li key={tool} className="rounded-full bg-white/[0.07] px-3 py-1 text-xs text-[#D7E2EA]/70">
-              {tool}
-            </li>
-          ))}
-        </ul>
-      </motion.div>
+      </motion.article>
     </motion.div>
   );
 }

@@ -1,10 +1,12 @@
 import { Play, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { SectionTitle } from '../components/SectionTitle';
 import { SpeedNumber } from '../components/SpeedNumber';
 import { VIDEO_ORDER, VIDEO_UNDER, VIDEO_VIEWS, YOUTUBE_FILMS } from '../content';
 import { LOCALE, fill, t } from '../i18n';
-import { ParticlePlay, PhonePlayer } from './VideoPlayer';
+import { flow, phoneLayout } from '../three/flow';
+import { VideoFeed, type FeedHandle } from './VideoFeed';
 import films from '../videos.json';
 
 // Bogdan's films (scripts/prepare-media.py writes their list, the films, their posters and their strips of frames)
@@ -37,7 +39,7 @@ const millions = (tenths: number) => compact.format(tenths * 100_000); // VIDEO_
 // a film's credit in the visitor's language, where it is words rather than names
 const credited = (credit: string) => t.video.credits[credit] ?? credit;
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-// touch screens (no hover): their own player (VideoPlayer.tsx), and PLAY on the film in the middle of the screen
+// touch screens (no hover): no frames flipping
 const touch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
@@ -46,19 +48,26 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60))
  * wide and tall ones taking turns, dealt to the shortest column so the order still reads across (or kept right under
  * another, where he asked). A film shows its poster; hovered, it loads a strip of ten of its frames (one small image; YouTube's
  * three stills for the music videos there) and flips through them. Clicked, it plays on the full screen with its
- * sound (YouTube's player for those), and the music player stops. On touch screens the film in the middle of the
- * screen shows PLAY in particles, and a tap opens the card into the section's own player (VideoPlayer.tsx).
+ * sound (YouTube's player for those), and the music player stops. Its first films are built out of the particles
+ * the Apps section's iPhone breaks into (three/FlowScene.tsx). Phones get no grid: those particles build the iPhone
+ * again here, the first film's picture on its screen, and PLAY floats out over it, pulsing; tapped, the camera flies
+ * into the screen and the films open in a feed like TikTok's (VideoFeed.tsx).
  */
 export function VideoSection() {
   const [columns, setColumns] = useState(3);
   const [open, setOpen] = useState<number | null>(null);
-  const [phone, setPhone] = useState<{ i: number; from: DOMRect } | null>(null);
-  const [middle, setMiddle] = useState(-1); // touch screens: the film nearest the middle of the screen
+  const [phone, setPhone] = useState(phoneLayout);
+  const [feed, setFeed] = useState(false);
+  const [flying, setFlying] = useState(false);
   const theater = useRef<HTMLDivElement>(null);
-  const grid = useRef<HTMLDivElement>(null);
+  const feeder = useRef<FeedHandle>(null);
+  const fallback = useRef(0);
 
   useEffect(() => {
-    const fit = () => setColumns(window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3);
+    const fit = () => {
+      setColumns(window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3);
+      setPhone(phoneLayout());
+    };
     fit();
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
@@ -77,44 +86,33 @@ export function VideoSection() {
     return stacked;
   }, [columns]);
 
-  // touch screens: which film is nearest the middle of the screen, as the page scrolls
+  // phones: the first film's picture on the iPhone's screen; PLAY flies the camera into it and opens the feed,
+  // whose first film starts in the tap itself (so it plays with its sound)
   useEffect(() => {
-    const el = grid.current;
-    if (!touch || !el) return;
-    let frame = 0;
-    const find = () => {
-      frame = 0;
-      const mid = window.innerHeight / 2;
-      let best = -1;
-      let near = Infinity;
-      el.querySelectorAll<HTMLElement>('[data-film]').forEach((tile) => {
-        const box = tile.getBoundingClientRect();
-        const off = box.bottom < 0 || box.top > window.innerHeight ? Infinity : Math.abs((box.top + box.bottom) / 2 - mid);
-        if (off < near) [near, best] = [off, Number(tile.dataset.film)];
-      });
-      setMiddle(best);
-    };
-    const onScroll = () => (frame ||= requestAnimationFrame(find));
-    const around = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        window.addEventListener('scroll', onScroll, { passive: true });
-        onScroll();
-      } else {
-        window.removeEventListener('scroll', onScroll);
-        setMiddle(-1);
-      }
-    });
-    around.observe(el);
-    return () => {
-      around.disconnect();
-      window.removeEventListener('scroll', onScroll);
-      cancelAnimationFrame(frame);
-    };
+    flow.poster = poster(FILMS[0]);
   }, []);
+  const play = () => {
+    feeder.current?.start();
+    if (still) return setFeed(true); // no flying
+    setFlying(true);
+    flow.flown = () => setFeed(true);
+    flow.fly = performance.now();
+    fallback.current = window.setTimeout(() => setFeed(true), 1400); // no scene to fly (no WebGL): open all the same
+  };
+  const closeFeed = () => {
+    window.clearTimeout(fallback.current);
+    setFeed(false);
+    setFlying(false);
+    flow.fly = 0;
+    flow.flown = null;
+  };
+  // the scene: over the page while the phone flies, resting under the feed
+  useEffect(() => {
+    flow.layer?.(feed ? 'feed' : flying ? 'fly' : 'page');
+  }, [feed, flying]);
 
-  const show = (i: number, from: DOMRect) => {
+  const show = (i: number) => {
     document.querySelectorAll('audio').forEach((audio) => audio.pause());
-    if (touch) return setPhone({ i, from });
     setOpen(i);
     theater.current?.requestFullscreen?.().catch(() => {}); // where it can't (iPhone), the theatre fills the window
   };
@@ -138,62 +136,84 @@ export function VideoSection() {
   const film = open === null ? null : FILMS[open];
 
   return (
-    <section id="video" className="bg-[#0C0C0C] px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
+    <section id="video" className="px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
       <SectionTitle text={t.video.title} className="mb-4 md:mb-6" />
       <Views />
-      <div ref={grid} className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">
-        {stacks.map((stack, c) => (
-          <div key={c} className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-            {stack.map((i) => (
-              <Tile key={FILMS[i].slug} film={FILMS[i]} index={i} active={i === middle && !phone} onOpen={(from) => show(i, from)} />
-            ))}
+      {phone ? (
+        <>
+          {/* the iPhone's place (the scene behind builds it), and PLAY over its screen once it has (tapped, it bursts
+              towards the camera as the camera flies in) */}
+          <div data-flow="phone" data-ready="1" className="group relative mx-auto aspect-[4/5] w-full max-w-[440px]">
+            <button
+              type="button"
+              onClick={play}
+              aria-label={fill(t.video.play, { title: FILMS[0].title })}
+              className="absolute left-1/2 top-[42%] grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 scale-50 place-items-center rounded-full text-white opacity-0 shadow-[0_0_40px_rgba(255,45,85,0.6)] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-data-[ready=1]:-translate-y-[70%] group-data-[ready=1]:scale-100 group-data-[ready=1]:opacity-100"
+              style={{ background: '#FF2D55', ...(flying && { opacity: 0, transform: 'translate(-50%, -70%) scale(1.8)', transitionDuration: '300ms' }) }}
+            >
+              <span className="absolute inset-0 rounded-full group-data-[ready=1]:animate-[play-ring_1.6s_ease-out_infinite]" />
+              <Play className="h-8 w-8 translate-x-0.5 group-data-[ready=1]:animate-[play-pulse_1.6s_ease-in-out_infinite]" fill="currentColor" />
+            </button>
           </div>
-        ))}
-      </div>
-      {phone && (
-        <PhonePlayer
-          film={{ ...FILMS[phone.i], credit: FILMS[phone.i].credit && credited(FILMS[phone.i].credit!), poster: poster(FILMS[phone.i]) }}
-          from={phone.from}
-          onClose={() => setPhone(null)}
-        />
+          <p className="mt-2 text-balance text-center text-xs uppercase tracking-[0.18em] text-[#D7E2EA]/60">{t.video.tap}</p>
+          <VideoFeed
+            ref={feeder}
+            open={feed}
+            onClose={closeFeed}
+            films={FILMS.map((f) => ({ ...f, credit: f.credit && credited(f.credit), poster: poster(f) }))}
+          />
+        </>
+      ) : (
+        <div data-flow="films" className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">
+          {stacks.map((stack, c) => (
+            <div key={c} className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
+              {stack.map((i) => (
+                <Tile key={FILMS[i].slug} film={FILMS[i]} index={i} onOpen={() => show(i)} />
+              ))}
+            </div>
+          ))}
+        </div>
       )}
 
-      <div
-        ref={theater}
-        role="dialog"
-        aria-modal="true"
-        aria-label={film ? film.title : undefined}
-        aria-hidden={!film}
-        className={`fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-300 ${film ? 'opacity-100' : 'pointer-events-none invisible opacity-0'}`}
-      >
-        {film?.youtube ? (
-          <iframe
-            key={film.slug}
-            src={`https://www.youtube-nocookie.com/embed/${film.youtube}?autoplay=1&rel=0&playsinline=1`}
-            title={film.title}
-            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-            allowFullScreen
-            className="h-full w-full"
-          />
-        ) : (
-          film && <video key={film.slug} src={`/video/${film.slug}.mp4`} poster={poster(film)} controls autoPlay playsInline className="h-full w-full object-contain" />
-        )}
-        <button
-          type="button"
-          onClick={close}
-          aria-label={t.buttons.close}
-          className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+      {/* in the body, over everything (the sections round this one keep their own layers) */}
+      {createPortal(
+        <div
+          ref={theater}
+          role="dialog"
+          aria-modal="true"
+          aria-label={film ? film.title : undefined}
+          aria-hidden={!film}
+          className={`fixed inset-0 z-[100] flex items-center justify-center bg-black transition-opacity duration-300 ${film ? 'opacity-100' : 'pointer-events-none invisible opacity-0'}`}
         >
-          <X className="h-5 w-5" />
-        </button>
-      </div>
+          {film?.youtube ? (
+            <iframe
+              key={film.slug}
+              src={`https://www.youtube-nocookie.com/embed/${film.youtube}?autoplay=1&rel=0&playsinline=1`}
+              title={film.title}
+              allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+              allowFullScreen
+              className="h-full w-full"
+            />
+          ) : (
+            film && <video key={film.slug} src={`/video/${film.slug}.mp4`} poster={poster(film)} controls autoPlay playsInline className="h-full w-full object-contain" />
+          )}
+          <button
+            type="button"
+            onClick={close}
+            aria-label={t.buttons.close}
+            className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>,
+        document.body,
+      )}
     </section>
   );
 }
 
 // A film in the grid: its poster, its frames flipping while the pointer is on it (loaded the first time), its name.
-// Touch screens can't hover: there the film in the middle of the screen (`active`) shows PLAY, in particles.
-function Tile({ film, index, active, onOpen }: { film: Film; index: number; active: boolean; onOpen: (from: DOMRect) => void }) {
+function Tile({ film, index, onOpen }: { film: Film; index: number; onOpen: () => void }) {
   const [strip, setStrip] = useState(false); // the strip asked for
   const [frame, setFrame] = useState(-1); // -1: the poster
   const count = film.youtube ? 3 : FRAMES;
@@ -233,7 +253,7 @@ function Tile({ film, index, active, onOpen }: { film: Film; index: number; acti
     <button
       type="button"
       data-film={index}
-      onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())}
+      onClick={onOpen}
       {...hover}
       aria-label={`${fill(t.video.play, { title: film.title })}${film.credit ? `, ${credited(film.credit)}` : ''}`}
       className="group relative block w-full overflow-hidden rounded-[24px] bg-white/[0.04] text-left"
@@ -271,7 +291,6 @@ function Tile({ film, index, active, onOpen }: { film: Film; index: number; acti
           </span>
         )}
       </div>
-      {touch && <ParticlePlay on={active} className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2" />}
     </button>
   );
 }

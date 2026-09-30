@@ -231,6 +231,8 @@ const ru: Copy = {
     views: '{n} просмотров',
     viewsOn: '{n}+ просмотров на {platform}',
     play: 'Смотреть «{title}»',
+    tap: 'Нажми, чтобы воспроизвести видео',
+    swipe: 'Листай вверх, чтобы смотреть дальше',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'ИИ-фильм',

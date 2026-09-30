@@ -120,7 +120,7 @@ export type Chapter = { label: string; scene: string };
 // its first frame as the image) and its address while it is live.
 // A native app on the Mobile Apps section's 3D iPhone: its screens (simulator screenshots, fictional data), a
 // caption for each.
-export type PhoneApp = { label: string; tagline: string; tint: string; screens: { image: string; caption: string; alt: string }[] };
+export type PhoneApp = { label: string; tagline: string; screens: { image: string; caption: string; alt: string }[] };
 export type Slide = { label: string; url?: string; frames: { image: string; alt: string; page?: boolean; video?: string; focus?: string }[] };
 
 export type Project = {
@@ -293,30 +293,26 @@ export const MUSIC = {
 // real screens from the iOS Simulator with demo data (scripts/prepare-media.py). SIMBIA CRM's app is left out:
 // Russian only, live data only.
 const screens = (images: string[], words: { caption: string; alt: string }[]) => images.map((image, i) => ({ image, ...words[i] }));
-export const MOBILE_APPS: { title: string; drag: string; previous: string; next: string; caption: string; stack: string[]; apps: PhoneApp[] } = {
+export const MOBILE_APPS: { title: string; drag: string; previous: string; next: string; caption: string; apps: PhoneApp[] } = {
   title: t.apps.title,
   drag: t.apps.drag,
   previous: t.apps.previous,
   next: t.apps.next,
   caption: t.apps.caption,
-  stack: ['Swift 6', 'SwiftUI', 'SwiftData', 'WidgetKit', 'Live Activities'],
   apps: [
     {
       label: 'iApply',
       tagline: t.apps.iapply.tagline,
-      tint: '#4C6EF5',
       screens: screens(['/work/app-iapply-0.webp', '/work/app-iapply-1.webp', '/work/app-iapply-2.webp', '/work/app-iapply-3.webp'], t.apps.iapply.screens),
     },
     {
       label: 'TAXI BOSS',
       tagline: t.apps.taxi.tagline,
-      tint: '#F5B301',
       screens: screens(['/work/app-taxi-0.webp', '/work/app-taxi-1.webp', '/work/app-taxi-2.webp', '/work/app-taxi-3.webp'], t.apps.taxi.screens),
     },
     {
       label: 'CashFlow',
       tagline: t.apps.cashflow.tagline,
-      tint: '#14B8A6',
       screens: screens(
         ['/work/app-cashflow-0.webp', '/work/app-cashflow-1.webp', '/work/app-cashflow-2.webp', '/work/app-cashflow-3.webp'],
         t.apps.cashflow.screens,

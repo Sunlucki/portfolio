@@ -232,6 +232,8 @@ const it: Copy = {
     views: '{n} visualizzazioni',
     viewsOn: '{n}+ visualizzazioni su {platform}',
     play: 'Riproduci {title}',
+    tap: 'Tocca per riprodurre i video',
+    swipe: 'Scorri verso l’alto per il prossimo',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'Film AI',

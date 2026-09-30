@@ -45,3 +45,23 @@ body {
     scroll-behavior: auto;
   }
 }
+
+/* The Video section's PLAY on phones: it pulses, a ring spreading from it */
+@keyframes play-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.14);
+  }
+}
+
+@keyframes play-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.6);
+  }
+  100% {
+    box-shadow: 0 0 0 26px rgba(255, 45, 85, 0);
+  }
+}

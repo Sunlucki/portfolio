@@ -10,6 +10,7 @@ import { AppsSection } from './sections/AppsSection';
 import { VideoSection } from './sections/VideoSection';
 import { MusicSection } from './sections/MusicSection';
 import { ContactSection } from './sections/ContactSection';
+import { FlowSections } from './sections/FlowSections';
 
 // Far below the fold and brings matter-js along, so it stays out of the first bundle.
 const StackSection = lazy(() => import('./sections/StackSection').then((m) => ({ default: m.StackSection })));
@@ -45,9 +46,11 @@ export default function App() {
       </Suspense>
       <ServicesSection />
       <ProjectsSection />
-      <AppsSection />
-      <MarqueeSection />
-      <VideoSection />
+      <FlowSections>
+        <AppsSection />
+        <MarqueeSection />
+        <VideoSection />
+      </FlowSections>
       <MusicSection />
       <ContactSection />
     </main>
