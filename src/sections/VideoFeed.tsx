@@ -1,145 +1,26 @@
 import { Pause, Play, X } from 'lucide-react';
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
-import * as THREE from 'three';
+import { createPortal, flushSync } from 'react-dom';
 import { t } from '../i18n';
-import { NOISE_GLSL } from '../three/noise';
 
-// The Video section's feed on phones, like TikTok's: one film at a time on the whole screen, with its sound; swipe
-// up for the next, down for the one before. Swiped, the film breaks into particles that follow the finger away while
-// the next one's gather from the other side (WebGL, over the film only while it moves). Tap to pause or play; the
-// play buttons and the timeline, a line of particles like the music player's, are red. The feed is over when the
-// last film has played or is swiped past: it closes as if closed, saying so (`onClose`'s `end`).
+// The Video section's feed on phones, like TikTok's or Reels': one film at a time on the whole screen, with its
+// sound; swipe up for the next, down for the one before. The films lie in a column the height of the screen: the
+// finger drags it, the next film's picture coming in under the one that plays, and let go far enough (or flicked)
+// it snaps on to it, else back. Tap to pause or play; the play buttons and the timeline, a line of particles like the
+// music player's, are red. The feed is over when the last film has played or is swiped past: it closes as if
+// closed, saying so (`onClose`'s `end`).
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 const RED = '#FF2D55';
+const SNAP_MS = 320; // a film sliding into place
+const CAPTION_BOTTOM = 'calc(max(0.75rem, env(safe-area-inset-bottom)) + 3.4rem)'; // (over the controls)
 
 export type FeedFilm = { slug: string; title: string; credit?: string; width: number; height: number; seconds: number; youtube?: string; poster: string };
 export type FeedHandle = { start: () => void };
 
 // Tall films fill the screen; wide ones fit its width.
 const covers = (film: FeedFilm) => film.height > film.width;
-// Where the screen (0-1 across and down) shows in the film's picture: tex = (screen - xy) / zw.
-function fit(film: FeedFilm, width: number, height: number) {
-  const screen = width / height;
-  const picture = film.width / film.height;
-  if (covers(film)) {
-    return picture > screen ? [(1 - picture / screen) / 2, 0, picture / screen, 1] : [0, (1 - screen / picture) / 2, 1, screen / picture];
-  }
-  const tall = screen / picture; // the picture's share of the screen's height
-  return [0, (1 - tall) / 2, 1, tall];
-}
-
-// ——— the particles, for a swipe ———
-const vertexShader = /* glsl */ `
-  attribute vec2 aGrid; // where on the screen, 0-1 across and down
-  attribute vec4 aRand; // x: its layer (0 the film leaving, 1 the one coming), the rest random
-  uniform float uProgress, uWay, uTime, uSize;
-  uniform vec4 uFitA, uFitB;
-  varying vec2 vUv;
-  varying float vAlpha, vLayer, vMove;
-  ${NOISE_GLSL}
-  void main() {
-    float coming = step(0.5, aRand.x);
-    // the rows at the swipe's front go first (up: the top ones), each particle a little in its own time
-    float lead = uWay > 0.0 ? aGrid.y : 1.0 - aGrid.y;
-    float own = clamp(uProgress * 1.7 - lead * 0.55 - aRand.y * 0.15, 0.0, 1.0);
-    own = own * own * (3.0 - 2.0 * own);
-    float apart = mix(own, 1.0 - own, coming); // how far from its place
-    vec3 q = vec3(aGrid * 5.0, uTime * 0.6 + aRand.z * 3.0);
-    vec2 p = aGrid + vec2(snoise(q), snoise(q + 11.0)) * 0.09 * apart;
-    p.y -= uWay * mix(own, own - 1.0, coming) * 1.15;
-    vUv = (aGrid - mix(uFitA.xy, uFitB.xy, coming)) / mix(uFitA.zw, uFitB.zw, coming);
-    vAlpha = mix(1.0 - own * own, own, coming);
-    vLayer = coming;
-    vMove = apart * (1.0 - apart) * 4.0 + 0.6 * apart;
-    gl_Position = vec4(p.x * 2.0 - 1.0, 1.0 - p.y * 2.0, 0.0, 1.0);
-    gl_PointSize = uSize * (1.0 + 0.9 * vMove);
-  }
-`;
-const fragmentShader = /* glsl */ `
-  uniform sampler2D tA;
-  uniform sampler2D tB;
-  varying vec2 vUv;
-  varying float vAlpha, vLayer, vMove;
-  vec3 look(sampler2D t, vec2 uv, float split) {
-    return vec3(texture2D(t, uv + vec2(split, 0.0)).r, texture2D(t, uv).g, texture2D(t, uv - vec2(split, 0.0)).b);
-  }
-  void main() {
-    if (vUv.x < 0.0 || vUv.x > 1.0 || vUv.y < 0.0 || vUv.y > 1.0) discard;
-    float r = length(gl_PointCoord - 0.5);
-    float shape = mix(1.0, 1.0 - smoothstep(0.25, 0.5, r), clamp(vMove, 0.0, 1.0)); // square at rest, round in flight
-    if (shape * vAlpha < 0.01) discard;
-    vec2 uv = vec2(vUv.x, 1.0 - vUv.y);
-    float split = 0.006 * clamp(vMove, 0.0, 1.0); // its colours pulled apart as it flies
-    vec3 c = vLayer < 0.5 ? look(tA, uv, split) : look(tB, uv, split);
-    gl_FragColor = vec4(c, vAlpha * shape);
-  }
-`;
-
-function particles(canvas: HTMLCanvasElement) {
-  const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: 'high-performance' });
-  const scene = new THREE.Scene();
-  const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, -1, 1);
-  const material = new THREE.ShaderMaterial({
-    vertexShader,
-    fragmentShader,
-    transparent: true,
-    depthTest: false,
-    uniforms: {
-      tA: { value: null as THREE.Texture | null },
-      tB: { value: null as THREE.Texture | null },
-      uFitA: { value: new THREE.Vector4(0, 0, 1, 1) },
-      uFitB: { value: new THREE.Vector4(0, 0, 1, 1) },
-      uProgress: { value: 0 },
-      uWay: { value: 1 },
-      uTime: { value: 0 },
-      uSize: { value: 4 },
-    },
-  });
-  let points: THREE.Points | null = null;
-  const resize = (width: number, height: number) => {
-    const dpr = Math.min(2, window.devicePixelRatio || 1);
-    renderer.setPixelRatio(dpr);
-    renderer.setSize(width, height, false);
-    const cols = 84;
-    const rows = Math.round((cols * height) / width);
-    const grid = new Float32Array(cols * rows * 2 * 2);
-    const rand = new Float32Array(cols * rows * 2 * 4);
-    let i = 0;
-    for (let layer = 0; layer < 2; layer++) {
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++, i++) {
-          grid.set([(x + 0.5) / cols, (y + 0.5) / rows], i * 2);
-          rand.set([layer, Math.random(), Math.random(), Math.random()], i * 4);
-        }
-      }
-    }
-    if (points) {
-      points.geometry.dispose();
-      scene.remove(points);
-    }
-    const geometry = new THREE.BufferGeometry()
-      .setAttribute('position', new THREE.BufferAttribute(new Float32Array(i * 3), 3))
-      .setAttribute('aGrid', new THREE.BufferAttribute(grid, 2))
-      .setAttribute('aRand', new THREE.BufferAttribute(rand, 4));
-    points = new THREE.Points(geometry, material);
-    points.frustumCulled = false;
-    scene.add(points);
-    material.uniforms.uSize.value = (width / cols) * dpr * 1.12;
-  };
-  return {
-    material,
-    resize,
-    render: () => renderer.render(scene, camera),
-    dispose: () => {
-      points?.geometry.dispose();
-      material.dispose();
-      renderer.dispose();
-    },
-  };
-}
 
 // ——— YouTube's films: its player without its controls, through its IFrame API ———
 type YTPlayer = { playVideo(): void; pauseVideo(): void; seekTo(s: number, ahead: boolean): void; getCurrentTime(): number; getDuration(): number; destroy(): void };
@@ -174,7 +55,7 @@ function dot(r: number, g: number, b: number) {
   }
   return sprite;
 }
-function Timeline({ progress, playing, onSeek }: { progress: () => number; playing: boolean; onSeek: (at: number) => void }) {
+function Timeline({ progress, playing, open, onSeek }: { progress: () => number; playing: boolean; open: boolean; onSeek: (at: number) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const live = useRef({ progress, playing });
   useEffect(() => {
@@ -182,7 +63,7 @@ function Timeline({ progress, playing, onSeek }: { progress: () => number; playi
   });
   useEffect(() => {
     const el = canvas.current;
-    if (!el) return;
+    if (!el || !open) return; // (drawn only while the feed is open)
     const ctx = el.getContext('2d')!;
     const seeds = Array.from({ length: 420 }, () => [Math.random(), Math.random()]);
     let frame = 0;
@@ -212,7 +93,7 @@ function Timeline({ progress, playing, onSeek }: { progress: () => number; playi
     };
     frame = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(frame);
-  }, []);
+  }, [open]);
   const seek = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const box = e.currentTarget.getBoundingClientRect();
     onSeek(clamp01((e.clientX - box.left - 8) / (box.width - 16)));
@@ -237,19 +118,45 @@ function Timeline({ progress, playing, onSeek }: { progress: () => number; playi
   );
 }
 
+// A film's title and who it's for, at the foot of its page in the column, over a shade.
+function Caption({ film }: { film: FeedFilm }) {
+  return (
+    <>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/75 via-black/35 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 px-4" style={{ bottom: CAPTION_BOTTOM }}>
+        <p className="truncate text-lg font-black uppercase leading-tight text-white [text-shadow:0_1px_12px_rgba(0,0,0,0.6)]">{film.title}</p>
+        {film.credit && <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-white/70">{film.credit}</p>}
+      </div>
+    </>
+  );
+}
+
+// A film's page in the column: its picture, as the player will show it, and its caption. The page of the film that
+// plays lies over the player: its picture shows till the player shows the film (`cover`), then fades.
+function Page({ film, at, cover }: { film: FeedFilm; at: number; cover: boolean }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 h-full" style={{ top: `${at * 100}%` }}>
+      <img
+        src={film.poster}
+        alt=""
+        decoding="async"
+        className={`absolute inset-0 h-full w-full ${covers(film) ? 'object-cover' : 'object-contain'}`}
+        style={{ opacity: cover ? 1 : 0, transition: cover ? 'none' : 'opacity 200ms' }}
+      />
+      <Caption film={film} />
+    </div>
+  );
+}
+
 // The feed. It is in the page (hidden) as soon as the Video section comes near, so `start` can play the first film
-// in the very tap on PLAY (phones let a page play sound only in a tap); `open` shows it. It sits right in the body,
-// over everything (the sections round it keep their own layers).
+// in the very tap on PLAY (phones let a page play sound only in a tap; after that, the same player may play on);
+// `open` shows it. It sits right in the body, over everything (the sections round it keep their own layers).
 export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boolean; onClose: (end: boolean) => void }>(function VideoFeed({ films, open, onClose }, ref) {
-  const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const holder = useRef<HTMLDivElement>(null);
-  const canvas = useRef<HTMLCanvasElement>(null);
+  const column = useRef<HTMLDivElement>(null);
   const tube = useRef<YTPlayer | null>(null);
-  const engine = useRef<ReturnType<typeof particles> | null>(null);
-  const posters = useRef(new Map<string, THREE.Texture>());
-  const snapshot = useRef<{ canvas: HTMLCanvasElement; texture: THREE.CanvasTexture } | null>(null);
-  const swipe = useRef({ y: 0, at: 0, moved: false, dragging: false, way: 1, progress: 0, anim: 0 });
+  const swipe = useRef({ y: 0, at: 0, moved: false, offset: 0, speed: 0, last: 0, lastAt: 0, anim: 0, busy: false });
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(true); // YouTube: until it plays, a tap goes to its own button
@@ -257,6 +164,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
   const [time, setTime] = useState(0);
   const [length, setLength] = useState(films[0].seconds);
   const [swiped, setSwiped] = useState(false);
+  const [framed, setFramed] = useState(false); // the player shows the film (till then its poster covers it)
   const film = films[index];
   const last = index === films.length - 1;
   const over = useRef(() => {}); // the last film has played: the feed is over
@@ -291,22 +199,6 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
       html.style.overflow = overflow;
     };
   }, [open]);
-
-  // the particles' canvas, made once the feed opens
-  useEffect(() => {
-    const el = canvas.current;
-    if (!open || !el || engine.current) return;
-    try {
-      engine.current = particles(el);
-      engine.current.resize(window.innerWidth, window.innerHeight);
-    } catch {
-      engine.current = null; // no WebGL: films just change
-    }
-    const resize = () => engine.current?.resize(window.innerWidth, window.innerHeight);
-    window.addEventListener('resize', resize);
-    return () => window.removeEventListener('resize', resize);
-  }, [open]);
-  useEffect(() => () => engine.current?.dispose(), []);
 
   // YouTube's films: its player in place (asked to play; if the phone won't, its own button shows)
   useEffect(() => {
@@ -346,117 +238,92 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
     };
   }, [open, film.youtube, film.seconds]);
 
-  // a film's picture, for the particles: the frame on the screen now, or its poster
-  const poster = (f: FeedFilm) => {
-    let texture = posters.current.get(f.slug);
-    if (!texture) {
-      texture = new THREE.TextureLoader().load(f.poster);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      posters.current.set(f.slug, texture);
-    }
-    return texture;
+  // the column, where the finger (or a snap) has it: 0 the film that plays, a screen's height up the next
+  const place = (offset: number) => {
+    swipe.current.offset = offset;
+    if (column.current) column.current.style.transform = offset ? `translate3d(0, ${offset.toFixed(1)}px, 0)` : '';
   };
-  const frameNow = () => {
-    const el = video.current;
-    if (film.youtube || !el || el.readyState < 2) return poster(film);
-    const snap = (snapshot.current ??= (() => {
-      const c = document.createElement('canvas');
-      return { canvas: c, texture: new THREE.CanvasTexture(c) };
-    })());
-    const scale = Math.min(1, 540 / el.videoWidth);
-    snap.canvas.width = Math.round(el.videoWidth * scale);
-    snap.canvas.height = Math.round(el.videoHeight * scale);
-    snap.canvas.getContext('2d')!.drawImage(el, 0, 0, snap.canvas.width, snap.canvas.height);
-    snap.texture.colorSpace = THREE.SRGBColorSpace;
-    snap.texture.needsUpdate = true;
-    return snap.texture;
-  };
-
-  // the swipe: the particles follow the finger; let go far enough (or fast) and the next film comes, else the
-  // film goes back together
-  const draw = () => {
+  // slides to `to` (a screen up the next film, down the one before, 0 back), then `done`
+  const slide = (to: number, done: () => void) => {
     const s = swipe.current;
-    const e = engine.current;
-    if (!e) return;
-    e.material.uniforms.uProgress.value = s.progress;
-    e.material.uniforms.uTime.value = performance.now() / 1000;
-    e.render();
-  };
-  const begin = (way: number) => {
-    const s = swipe.current;
-    const e = engine.current;
-    const next = films[index + way];
-    if (!e || !next) return false;
-    s.way = way;
-    e.material.uniforms.uWay.value = way;
-    e.material.uniforms.tA.value = frameNow();
-    e.material.uniforms.tB.value = poster(next);
-    e.material.uniforms.uFitA.value.fromArray(fit(film, window.innerWidth, window.innerHeight));
-    e.material.uniforms.uFitB.value.fromArray(fit(next, window.innerWidth, window.innerHeight));
-    setMoving(true);
-    return true;
-  };
-  const settle = (to: number, done: () => void) => {
-    const s = swipe.current;
-    const from = s.progress;
-    const t0 = performance.now();
+    const from = s.offset;
+    const start = performance.now();
+    const ms = SNAP_MS * Math.min(1, Math.max(0.45, Math.abs(to - from) / window.innerHeight));
     cancelAnimationFrame(s.anim);
-    const step = () => {
-      const k = clamp01((performance.now() - t0) / 380);
-      s.progress = from + (to - from) * (1 - (1 - k) ** 3);
-      draw();
+    s.busy = true;
+    const step = (now: number) => {
+      const k = clamp01((now - start) / ms);
+      place(from + (to - from) * (1 - (1 - k) ** 3));
       if (k < 1) s.anim = requestAnimationFrame(step);
-      else done();
+      else {
+        s.busy = false;
+        done();
+      }
     };
     s.anim = requestAnimationFrame(step);
   };
-  const go = (to: number) => {
+  // on to film `to`: it slides in, then it plays (the player is the one the tap on PLAY started, so it may)
+  const turnTo = (to: number) => {
     const next = films[to];
-    const el = video.current;
-    setIndex(to);
-    setTime(0);
-    setLength(next.seconds);
-    setSwiped(true);
-    // in the finger's own lift, so the phone lets it play with its sound
-    if (!next.youtube && el) {
-      el.src = source(next);
-      void el.play().catch(() => {});
-    } else el?.pause();
+    if (!next) return;
+    setMoving(true);
+    slide((to > index ? -1 : 1) * window.innerHeight, () => {
+      flushSync(() => {
+        setIndex(to);
+        setTime(0);
+        setLength(next.seconds);
+        setSwiped(true);
+        setMoving(false);
+        setFramed(false);
+      });
+      place(0);
+      const el = video.current;
+      if (!next.youtube && el) {
+        el.src = source(next);
+        void el.play().catch(() => {});
+      } else el?.pause();
+    });
   };
+
   const onDown = (e: React.PointerEvent) => {
-    if ((e.target as HTMLElement).closest('[data-control]')) return;
     const s = swipe.current;
-    s.y = e.clientY;
-    s.at = performance.now();
-    s.moved = s.dragging = false;
+    if ((e.target as HTMLElement).closest('[data-control]') || s.busy) return;
+    s.y = s.last = e.clientY;
+    s.at = s.lastAt = performance.now();
+    s.moved = false;
+    s.speed = 0;
     e.currentTarget.setPointerCapture(e.pointerId);
   };
   const onMove = (e: React.PointerEvent) => {
     const s = swipe.current;
-    if (!e.buttons && e.pointerType === 'mouse') return;
+    if ((!e.buttons && e.pointerType === 'mouse') || s.busy || !s.at) return;
     const dy = e.clientY - s.y;
-    if (!s.moved && Math.abs(dy) > 10) {
+    if (!s.moved && Math.abs(dy) > 8) {
       s.moved = true;
-      s.dragging = begin(dy < 0 ? 1 : -1); // (not past the first film or the last)
+      setMoving(true);
     }
-    if (!s.dragging) return;
-    s.progress = clamp01((-dy * s.way) / window.innerHeight);
-    draw();
+    if (!s.moved) return;
+    const now = performance.now();
+    s.speed = (e.clientY - s.last) / Math.max(1, now - s.lastAt);
+    [s.last, s.lastAt] = [e.clientY, now];
+    // past the first film or the last, it gives only a little
+    const edge = (dy > 0 && !films[index - 1]) || (dy < 0 && !films[index + 1]);
+    place(edge ? dy * 0.3 : dy);
   };
   const onUp = (e: React.PointerEvent) => {
     const s = swipe.current;
-    if (!s.dragging) {
-      if (!s.moved && !(e.target as HTMLElement).closest('[data-control]') && started) toggle();
-      else if (s.moved && last && s.y - e.clientY > 60) close(true); // up past the last film: the feed is over
+    if (!s.at) return;
+    s.at = 0;
+    if (!s.moved) {
+      if (!(e.target as HTMLElement).closest('[data-control]') && started) toggle();
       return;
     }
-    s.dragging = false;
-    const speed = Math.abs(e.clientY - s.y) / Math.max(1, performance.now() - s.at);
-    const to = index + s.way;
-    if (s.progress > 0.18 || speed > 0.6) {
-      go(to);
-      settle(1, () => setMoving(false));
-    } else settle(0, () => setMoving(false));
+    const dy = e.clientY - s.y;
+    const way = dy < 0 ? 1 : -1;
+    const far = Math.abs(dy) > window.innerHeight * 0.18 || Math.abs(s.speed) > 0.45;
+    if (far && films[index + way]) return turnTo(index + way);
+    if (far && way === 1 && last) close(true); // up past the last film: the feed is over
+    slide(0, () => setMoving(false));
   };
 
   const toggle = () => {
@@ -492,7 +359,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
     if (!open) return;
     const key = (e: KeyboardEvent) => {
       if (e.key === 'Escape') close();
-      else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && films[index + (e.key === 'ArrowDown' ? 1 : -1)]) go(index + (e.key === 'ArrowDown' ? 1 : -1));
+      else if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !swipe.current.busy) turnTo(index + (e.key === 'ArrowDown' ? 1 : -1));
     };
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
@@ -500,39 +367,48 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
 
   return createPortal(
     <div
-      ref={root}
       role="dialog"
       aria-modal="true"
       aria-label={film.title}
       aria-hidden={!open}
-      className={`fixed inset-0 z-[100] touch-none select-none overscroll-contain bg-black transition-opacity duration-200 ${open ? 'opacity-100' : 'pointer-events-none invisible opacity-0'}`}
+      className={`fixed inset-0 z-[100] touch-none select-none overflow-hidden overscroll-contain bg-black transition-opacity duration-200 ${open ? 'opacity-100' : 'pointer-events-none invisible opacity-0'}`}
       onPointerDown={onDown}
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
     >
-      <video
-        ref={video}
-        playsInline
-        preload="metadata"
-        poster={films[index].youtube ? undefined : films[index].poster}
-        className={`absolute inset-0 h-full w-full ${covers(film) ? 'object-cover' : 'object-contain'} ${film.youtube ? 'hidden' : ''}`}
-        loop={!last}
-        onEnded={() => over.current()}
-        onPlay={() => setPlaying(true)}
-        onPause={() => setPlaying(false)}
-        onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
-        onLoadedMetadata={(e) => setLength(e.currentTarget.duration || film.seconds)}
-      />
-      {/* (YouTube's player the picture's size, so its own title and logo sit on the picture, not on the feed's) */}
-      {film.youtube && (
-        <div
-          ref={holder}
-          className="absolute inset-x-0 top-1/2 max-h-full -translate-y-1/2 [&>iframe]:h-full [&>iframe]:w-full"
-          style={{ aspectRatio: `${film.width} / ${film.height}`, pointerEvents: started ? 'none' : 'auto' }}
-        />
-      )}
-      <canvas ref={canvas} className="pointer-events-none absolute inset-0 h-full w-full" style={{ visibility: moving ? 'visible' : 'hidden' }} />
+      {/* the column: the player, where the film that plays is (always the same player), and the pages of the film before,
+          that one and the one after (a page keeps its picture as it moves on to be the one that plays: no blink) */}
+      <div ref={column} className="absolute inset-0" style={{ willChange: 'transform' }}>
+        <div className="absolute inset-0">
+          <video
+            ref={video}
+            playsInline
+            preload="metadata"
+            poster={film.youtube ? undefined : film.poster}
+            className={`absolute inset-0 h-full w-full ${covers(film) ? 'object-cover' : 'object-contain'} ${film.youtube ? 'hidden' : ''}`}
+            loop={!last}
+            onEnded={() => over.current()}
+            onPlay={() => setPlaying(true)}
+            onPlaying={() => setFramed(true)}
+            onPause={() => setPlaying(false)}
+            onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
+            onLoadedMetadata={(e) => setLength(e.currentTarget.duration || film.seconds)}
+          />
+          {/* (YouTube's player the picture's size, so its own title and logo sit on the picture, not on the feed's) */}
+          {film.youtube && (
+            <div
+              ref={holder}
+              className="absolute inset-x-0 top-1/2 max-h-full -translate-y-1/2 [&>iframe]:h-full [&>iframe]:w-full"
+              style={{ aspectRatio: `${film.width} / ${film.height}`, pointerEvents: started ? 'none' : 'auto' }}
+            />
+          )}
+        </div>
+        {[-1, 0, 1].map((at) => {
+          const page = films[index + at];
+          return page && <Page key={page.slug} film={page} at={at} cover={at !== 0 || (!page.youtube && !framed)} />;
+        })}
+      </div>
 
       {/* paused: PLAY in the middle, red */}
       <div className="pointer-events-none absolute inset-0 grid place-items-center">
@@ -559,11 +435,13 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
         </button>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 via-black/40 to-transparent px-4 pt-16" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
-        {!swiped && <p className="mb-3 text-center text-[11px] uppercase tracking-[0.25em] text-white/60 [animation:fade-in_0.6s_ease-out]">{t.video.swipe}</p>}
-        <p className="truncate text-lg font-black uppercase leading-tight text-white">{film.title}</p>
-        {film.credit && <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-white/60">{film.credit}</p>}
-        <div className="pointer-events-auto mt-2 flex items-center gap-2">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 px-4" style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))' }}>
+        {!swiped && (
+          <p className="absolute inset-x-0 text-center text-[11px] uppercase tracking-[0.25em] text-white/60 [animation:fade-in_0.6s_ease-out]" style={{ bottom: `calc(${CAPTION_BOTTOM} + 3.2rem)` }}>
+            {t.video.swipe}
+          </p>
+        )}
+        <div className="pointer-events-auto flex items-center gap-2">
           <button
             type="button"
             data-control
@@ -574,7 +452,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
           >
             {playing ? <Pause className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4 translate-x-px" fill="currentColor" />}
           </button>
-          <Timeline progress={progress} playing={playing} onSeek={seek} />
+          <Timeline progress={progress} playing={playing} open={open} onSeek={seek} />
           <span className="shrink-0 text-xs tabular-nums text-white/70">
             {clock(time)} / {clock(length)}
           </span>

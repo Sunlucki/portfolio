@@ -44,8 +44,9 @@ const smooth = (a: number, b: number, x: number) => {
 };
 
 // The display: a screenshot as it is (the display is a light source), laid across the display's face by where each
-// point of it is (its UVs are shifted, with a seam); a new one pushes in from the right. `uSplit` pulls its red and
-// blue apart (the camera flying into it), `uOpacity` fades it with the phone.
+// point of it is (its UVs are shifted, with a seam); a new one pushes in from the right. Or (uGrid, the Video
+// section's phone) the films' grid under a status bar, running up without end. `uSplit` pulls its red and blue
+// apart (the camera flying into it), `uOpacity` fades it with the phone.
 const screenVertex = /* glsl */ `
   varying vec2 vFace;
   void main() {
@@ -60,6 +61,7 @@ const screenFragment = /* glsl */ `
   uniform float uSplit;
   uniform float uOpacity;
   uniform vec4 uBox; // the display's face: its corner and size
+  uniform float uGrid, uScroll, uGridScale, uGridTop; // the grid: on, how far it has run, its scale, the status bar
   varying vec2 vFace;
   vec3 split(sampler2D t, vec2 uv) {
     vec2 off = (uv - 0.5) * uSplit;
@@ -67,6 +69,11 @@ const screenFragment = /* glsl */ `
   }
   void main() {
     vec2 uv = 1.0 - (vFace - uBox.xy) / uBox.zw;
+    if (uGrid > 0.5) {
+      vec3 films = uv.y < uGridTop ? vec3(0.0) : split(tFrom, vec2(uv.x, fract((uv.y - uGridTop) * uGridScale + uScroll)));
+      gl_FragColor = vec4(films, uOpacity);
+      return;
+    }
     float m = uPush * uPush * (3.0 - 2.0 * uPush);
     vec3 color = uv.x > 1.0 - m ? split(tTo, vec2(uv.x - (1.0 - m), uv.y)) : split(tFrom, vec2(uv.x + 0.3 * m, uv.y)) * (1.0 - 0.45 * m);
     gl_FragColor = vec4(color, uOpacity);
@@ -294,35 +301,41 @@ function silvered(materials: THREE.MeshStandardMaterial[]) {
 }
 
 // ——— phones: the Video section's phone ———
-// On its screen the films as a grid, like a profile's: three across, each 9:16, under its status bar, as many rows
-// as it takes, the last cut off (there are more). Drawn as their pictures come in.
-function filmGrid(sources: string[], aspect: number) {
-  const width = 600;
-  const height = Math.round(width / aspect);
+// On its screen the films as a grid, like a profile's: three across, each 9:16, under its status bar, running up
+// without end (the screen's shader scrolls it: GRID_ROW_S a row). Drawn as their pictures come in: rows only, so it
+// tiles.
+const GRID_WIDTH = 600;
+const GRID_GAP = 4;
+const GRID_CELL = [(GRID_WIDTH - GRID_GAP * 2) / 3, ((GRID_WIDTH - GRID_GAP * 2) / 3) * (16 / 9)];
+const GRID_TOP = 0.075; // the status bar, in the screen's height
+const GRID_ROW_S = 2.4;
+function filmGrid(sources: string[]) {
+  const rows = Math.ceil(sources.length / 3);
+  const pitch = GRID_CELL[1] + GRID_GAP;
   const canvas = document.createElement('canvas');
-  [canvas.width, canvas.height] = [width, height];
+  [canvas.width, canvas.height] = [GRID_WIDTH, Math.round(rows * pitch)];
   const ctx = canvas.getContext('2d')!;
   ctx.fillStyle = '#000';
-  ctx.fillRect(0, 0, width, height);
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   const texture = new THREE.CanvasTexture(canvas);
   texture.flipY = false; // (as the screens are)
   texture.colorSpace = THREE.NoColorSpace;
-  const gap = 4;
-  const top = Math.round(height * 0.075);
-  const cell = [(width - gap * 2) / 3, ((width - gap * 2) / 3) * (16 / 9)];
+  texture.generateMipmaps = false; // (it wraps in the shader: no seams)
+  texture.minFilter = THREE.LinearFilter;
+  const [w, h] = GRID_CELL;
   sources.forEach((src, i) => {
     const image = new Image();
     image.crossOrigin = 'anonymous';
     image.onload = () => {
-      const [w, h] = [image.naturalWidth, image.naturalHeight];
-      const scale = Math.max(cell[0] / w, cell[1] / h); // (cover: its middle)
-      const [sw, sh] = [cell[0] / scale, cell[1] / scale];
-      ctx.drawImage(image, (w - sw) / 2, (h - sh) / 2, sw, sh, (i % 3) * (cell[0] + gap), top + Math.floor(i / 3) * (cell[1] + gap), cell[0], cell[1]);
+      const [iw, ih] = [image.naturalWidth, image.naturalHeight];
+      const scale = Math.max(w / iw, h / ih); // (cover: its middle)
+      const [sw, sh] = [w / scale, h / scale];
+      ctx.drawImage(image, (iw - sw) / 2, (ih - sh) / 2, sw, sh, (i % 3) * (w + GRID_GAP), Math.floor(i / 3) * pitch, w, h);
       texture.needsUpdate = true;
     };
     image.src = src;
   });
-  return texture;
+  return { texture, height: canvas.height, row: pitch / canvas.height };
 }
 
 // PLAY in particles, standing out in front of its screen: a red disc and PLAY's white triangle in it (in the disc's
@@ -420,7 +433,18 @@ function Scene() {
         fragmentShader: screenFragment,
         side: THREE.DoubleSide,
         transparent: true,
-        uniforms: { tFrom: { value: null }, tTo: { value: null }, uPush: { value: 1 }, uSplit: { value: 0 }, uOpacity: { value: 0 }, uBox: { value: new THREE.Vector4(0, 0, 1, 1) } },
+        uniforms: {
+          tFrom: { value: null },
+          tTo: { value: null },
+          uPush: { value: 1 },
+          uSplit: { value: 0 },
+          uOpacity: { value: 0 },
+          uBox: { value: new THREE.Vector4(0, 0, 1, 1) },
+          uGrid: { value: 0 },
+          uScroll: { value: 0 },
+          uGridScale: { value: 1 },
+          uGridTop: { value: GRID_TOP },
+        },
       }),
     [],
   );
@@ -552,8 +576,8 @@ function Scene() {
   }, []);
 
   // phones: the films, as a grid, for the Video section's phone's screen
-  const grid = useRef<THREE.CanvasTexture | null>(null);
-  useEffect(() => () => grid.current?.dispose(), []);
+  const grid = useRef<ReturnType<typeof filmGrid> | null>(null);
+  useEffect(() => () => grid.current?.texture.dispose(), []);
   const run = useRef({ time: 0, shown: -1, app: -1, push: 1, turn: 1, assemble: 0, leave: 0, land: 0, onward: 0, play: 0, flown: false, landed: false, cards: -1, ready: '' });
   const tools = useMemo(
     () => ({
@@ -725,15 +749,23 @@ function Scene() {
       }
     }
 
-    // what's on the display: the apps' screens in the Apps section, the films as a grid in the Video section
+    // what's on the display: the apps' screens in the Apps section, the films as a grid in the Video section, running
+    // up as it plays on
     const s = screen.uniforms;
     if (atB) {
-      if (!grid.current && flow.posters.length) grid.current = filmGrid(flow.posters, model.glass.size.x / model.glass.size.y);
-      if (grid.current) s.tFrom.value = s.tTo.value = grid.current;
+      if (!grid.current && flow.posters.length) grid.current = filmGrid(flow.posters);
+      const films = grid.current;
+      s.uGrid.value = films ? 1 : 0;
+      if (films) {
+        s.tFrom.value = s.tTo.value = films.texture;
+        s.uGridScale.value = GRID_WIDTH / (model.glass.size.x / model.glass.size.y) / films.height; // (the screen's height, in the grid's)
+        s.uScroll.value = (r.time / GRID_ROW_S) * films.row;
+      }
       s.uPush.value = 1;
       r.shown = -1;
       r.app = -1;
     } else {
+      s.uGrid.value = 0;
       const { shown, app } = flow.phone;
       if (r.shown < 0) {
         s.tFrom.value = s.tTo.value = shots[shown];

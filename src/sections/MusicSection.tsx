@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { LayoutGroup, motion } from 'framer-motion';
 import { Pause, Play } from 'lucide-react';
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
@@ -130,13 +130,8 @@ export function MusicSection() {
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 items-center gap-4 md:mt-10 md:grid-cols-[1.3fr_1fr] md:gap-10">
         <div className="min-w-0">
-          {/* (its floor built by the particles from the Video section: three/FlowScene.tsx). On phones no taller than
-              leaves room under it for the playlist's four cards, so the stage and they are on the screen together. */}
-          <div
-            ref={stage}
-            data-flow="music"
-            className="relative mx-auto aspect-[4/5] h-[max(260px,min(calc((100vw_-_32px)_*_1.25),calc(100lvh_-_390px)))] max-w-full sm:aspect-[5/4] sm:h-auto md:aspect-auto md:h-[520px]"
-          >
+          {/* (its floor built by the particles from the Video section: three/FlowScene.tsx) */}
+          <div ref={stage} data-flow="music" className="relative aspect-[4/5] sm:aspect-[5/4] md:aspect-auto md:h-[520px]">
             {warm && (
               <Quiet>
                 <Suspense fallback={null}>
@@ -204,7 +199,16 @@ const GAP = 10;
 const PITCH = STRIP + GAP;
 const GROW = OPEN - STRIP;
 const SPRING = { type: 'spring', bounce: 0.42, duration: 0.6 } as const;
-const EDGE = 'linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent)';
+// The list fades into the page at its top and bottom: a shade in the page's colour over it, which the card that is
+// on stays above (a mask would fade it too).
+function Shade() {
+  return (
+    <>
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-[1] h-[18%] bg-gradient-to-b from-[#0C0C0C] to-transparent" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[18%] bg-gradient-to-t from-[#0C0C0C] to-transparent" />
+    </>
+  );
+}
 
 type PlaylistProps = { current: number; playing: boolean; time: number; onPick: (k: number) => void };
 
@@ -257,7 +261,6 @@ function Playlist({ current, playing, time, onPick }: PlaylistProps) {
         role="list"
         aria-label={t.music.playlist}
         className="h-full overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{ maskImage: EDGE, WebkitMaskImage: EDGE }}
         onMouseLeave={() => setHover(null)}
       >
         <div className="relative" style={{ height: pad * 2 + (TRACKS.length - 1) * PITCH + STRIP }}>
@@ -270,7 +273,7 @@ function Playlist({ current, playing, time, onPick }: PlaylistProps) {
               <motion.div
                 key={track.title}
                 role="listitem"
-                className="absolute inset-x-0 top-0"
+                className={`absolute inset-x-0 top-0 ${on ? 'z-[2]' : ''}`}
                 initial={false}
                 animate={{ y, height: isOpen ? OPEN : STRIP }}
                 transition={SPRING}
@@ -282,35 +285,41 @@ function Playlist({ current, playing, time, onPick }: PlaylistProps) {
           })}
         </div>
       </div>
+      <Shade />
     </div>
   );
 }
 
 // A track's card: its number, title and length and PLAY (or PAUSE, if it plays); open, its artist and album under
 // them and, if it is the one on, how far it has played.
-type CardProps = { track: (typeof TRACKS)[number]; k: number; on: boolean; open: boolean; playing: boolean; time: number; onPick: (k: number) => void; onFocus?: () => void; onBlur?: () => void };
+// `morph`: it changes place and size by morphing (the phone list's), its rows moved rather than stretched.
+type CardProps = { track: (typeof TRACKS)[number]; k: number; on: boolean; open: boolean; playing: boolean; time: number; onPick: (k: number) => void; onFocus?: () => void; onBlur?: () => void; morph?: boolean };
 
-function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur }: CardProps) {
+function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur, morph = false }: CardProps) {
   return (
-    <button
+    <motion.button
       type="button"
+      layout={morph}
+      transition={SPRING}
       onClick={() => onPick(k)}
       onFocus={onFocus}
       onBlur={onBlur}
       aria-current={on ? 'true' : undefined}
-      className={`flex h-full w-full flex-col overflow-hidden rounded-[22px] border-2 bg-[#0C0C0C] px-4 text-left transition-[border-color,box-shadow] duration-300 sm:px-5 ${
+      style={{ borderRadius: 22 }}
+      className={`flex h-full w-full flex-col overflow-hidden border-2 bg-[#0C0C0C] px-4 text-left transition-[border-color,box-shadow] duration-300 sm:px-5 ${
         on ? 'border-[#5B9BFF] shadow-[0_0_28px_rgba(91,155,255,0.35)]' : open ? 'border-[#D7E2EA]' : 'border-[#D7E2EA]/25'
       }`}
     >
-      <span className="flex w-full shrink-0 items-center gap-3" style={{ height: STRIP - 4 }}>
+      <motion.span layout={morph ? 'position' : false} transition={SPRING} className="flex w-full shrink-0 items-center gap-3" style={{ height: STRIP - 4 }}>
         <span className="hero-heading w-9 shrink-0 text-[26px] font-black leading-none">{String(k + 1).padStart(2, '0')}</span>
         <span className={`min-w-0 flex-1 truncate text-sm font-medium uppercase tracking-wide ${on || open ? 'text-white' : 'text-[#D7E2EA]/70'}`}>{track.title}</span>
         <span className="shrink-0 text-xs tabular-nums text-[#D7E2EA]/50">{clock(track.seconds)}</span>
         <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${on ? 'bg-[#5B9BFF] text-white' : 'bg-white/10 text-[#D7E2EA]'}`}>
           {on && playing ? <Pause className="h-3 w-3" fill="currentColor" /> : <Play className="h-3 w-3 translate-x-px" fill="currentColor" />}
         </span>
-      </span>
+      </motion.span>
       <motion.span
+        layout={morph ? 'position' : false}
         className="flex w-full items-center gap-3 pl-12 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/45"
         initial={false}
         animate={{ opacity: open ? 1 : 0, y: open ? 0 : -6 }}
@@ -323,42 +332,48 @@ function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur 
           </span>
         )}
       </motion.span>
-    </button>
+    </motion.button>
   );
 }
 
-// Phones: the playlist as a short column right under the stage, four cards in view (the fifth peeking in, fading)
-// and scrolling within: its first eight tracks, or all of them when asked (or once one past the eighth is on). The
-// track that is on is open, and comes into view within the list.
+// Phones: the playlist as a short column right under the stage, scrolling within: the card that is on pinned over
+// its top and the others running in under it, three in view (the fourth peeking in), shaded where they go under
+// and at the bottom; its first eight tracks, or all of them when asked (or once one past the eighth is on). A track
+// picked morphs up into the pinned place with a bounce, and the one that was there back into its own.
 const FIRST = 8;
 const PEEK = 22;
-const PEEKING = `linear-gradient(to bottom, #000 calc(100% - ${PEEK + 8}px), transparent)`;
+const UNDER = OPEN + GAP; // the pinned card and the gap under it
 
 function PhoneList({ current, playing, time, onPick }: PlaylistProps) {
-  const list = useRef<HTMLDivElement>(null);
   const [all, setAll] = useState(false);
   const count = all || current >= FIRST ? TRACKS.length : FIRST;
-  useEffect(() => {
-    const el = list.current;
-    const card = el?.children[current] as HTMLElement | undefined;
-    if (!el || !card) return;
-    if (card.offsetTop < el.scrollTop || card.offsetTop + OPEN > el.scrollTop + el.clientHeight - PEEK) el.scrollTo({ top: Math.max(0, card.offsetTop - PITCH), behavior: 'smooth' });
-  }, [current, count]);
+  const others = Array.from({ length: count }, (_, k) => k).filter((k) => k !== current);
   return (
     <div>
-      <div
-        ref={list}
-        role="list"
-        aria-label={t.music.playlist}
-        className="relative flex flex-col gap-2.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        style={{ height: OPEN + 3 * PITCH + PEEK, maskImage: PEEKING, WebkitMaskImage: PEEKING }}
-      >
-        {TRACKS.slice(0, count).map((track, k) => (
-          <motion.div key={track.title} role="listitem" className="shrink-0" initial={false} animate={{ height: k === current ? OPEN : STRIP }} transition={SPRING}>
-            <TrackCard track={track} k={k} on={k === current} open={k === current} playing={playing} time={time} onPick={onPick} />
+      <LayoutGroup id="tracks">
+        <div className="relative" style={{ height: OPEN + 3 * PITCH + PEEK }}>
+          <motion.div
+            layoutScroll
+            role="list"
+            aria-label={t.music.playlist}
+            className="flex h-full flex-col gap-2.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            style={{ paddingTop: UNDER }}
+          >
+            {others.map((k) => (
+              <motion.div key={TRACKS[k].title} layoutId={`track-${k}`} layout transition={SPRING} role="listitem" className="shrink-0" style={{ height: STRIP }}>
+                <TrackCard track={TRACKS[k]} k={k} on={false} open={false} playing={playing} time={time} onPick={onPick} morph />
+              </motion.div>
+            ))}
           </motion.div>
-        ))}
-      </div>
+          {/* where the tracks go under the pinned card: the page's colour, then a shade; and a shade at the bottom */}
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 z-[1] bg-[#0C0C0C]" style={{ height: UNDER - GAP / 2 }} />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 z-[1] h-10 bg-gradient-to-b from-[#0C0C0C] to-transparent" style={{ top: UNDER - GAP / 2 }} />
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-[18%] bg-gradient-to-t from-[#0C0C0C] to-transparent" />
+          <motion.div key={TRACKS[current].title} layoutId={`track-${current}`} layout transition={SPRING} className="absolute inset-x-0 top-0 z-[2]" style={{ height: OPEN }}>
+            <TrackCard track={TRACKS[current]} k={current} on open playing={playing} time={time} onPick={onPick} morph />
+          </motion.div>
+        </div>
+      </LayoutGroup>
       {current < FIRST && (
         <button
           type="button"

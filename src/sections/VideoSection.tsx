@@ -2,7 +2,6 @@ import { Play, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SectionTitle } from '../components/SectionTitle';
-import { DrumNumber } from '../components/DrumNumber';
 import { VIDEO_ORDER, VIDEO_UNDER, VIDEO_VIEWS, YOUTUBE_FILMS } from '../content';
 import { LOCALE, fill, t } from '../i18n';
 import { flow, phoneLayout } from '../three/flow';
@@ -110,10 +109,10 @@ export function VideoSection() {
     return stacked;
   }, [columns]);
 
-  // phones: the films on the iPhone's screen, as a grid (there are many); PLAY flies the camera into it and opens
-  // the feed, whose first film starts in the tap itself (so it plays with its sound)
+  // phones: the films on the iPhone's screen, as a grid running up without end (there are many); PLAY flies the
+  // camera into it and opens the feed, whose first film starts in the tap itself (so it plays with its sound)
   useEffect(() => {
-    flow.posters = FILMS.slice(0, 15).map(poster);
+    flow.posters = FILMS.map(poster);
   }, []);
   const play = () => {
     if (flying || gliding) return;
@@ -335,37 +334,19 @@ function Tile({ film, index, onOpen }: { film: Film; index: number; onOpen: () =
   );
 }
 
-// The views of his videos on each platform, in a row under the title: each with its icon, fading in as the row
-// comes into view, its count's digits on drums that spin to it (DrumNumber), again each time it does.
+// The views of his videos on each platform, in one thin line under the title: each its icon and its count (and,
+// where there is room, the platform's name).
 function Views() {
-  const row = useRef<HTMLUListElement>(null);
-  const [run, setRun] = useState(false);
-  useEffect(() => {
-    const el = row.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(([entry]) => setRun(entry.isIntersecting), { threshold: 0.6 });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
   return (
-    <ul ref={row} className="mb-8 flex items-start justify-center gap-x-5 sm:items-center sm:gap-x-8 md:mb-12 md:gap-x-14">
-      {VIDEO_VIEWS.map(({ platform, views: count }, i) => (
-        <li
-          key={platform}
-          className="flex flex-col items-center gap-1.5 transition-[opacity,transform] duration-700 sm:flex-row sm:gap-3"
-          style={{ opacity: run || still ? 1 : 0, transform: run || still ? 'none' : 'translateY(12px)', transitionDelay: `${i * 120}ms` }}
-        >
-          <span className="sr-only">
-            {fill(t.video.viewsOn, { n: millions(count), platform })}
+    <ul className="mb-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:gap-x-10 md:mb-12">
+      {VIDEO_VIEWS.map(({ platform, views: count }) => (
+        <li key={platform} className="flex items-center gap-2 whitespace-nowrap">
+          <span className="sr-only">{fill(t.video.viewsOn, { n: millions(count), platform })}</span>
+          <Platform name={platform} />
+          <span aria-hidden className="text-sm font-light tabular-nums tracking-wide text-[#D7E2EA]">
+            {millions(count)}+
           </span>
-          {/* on phones the icon over the count, so the three fit side by side in any language's numbers */}
-          <span aria-hidden className="flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3">
-            <Platform name={platform} />
-            <span className="whitespace-nowrap text-xl font-black leading-none sm:text-2xl md:text-3xl">
-              <DrumNumber text={`${millions(count)}+`} run={run} />
-            </span>
-          </span>
-          <span aria-hidden className="text-[10px] uppercase tracking-[0.2em] text-[#D7E2EA]/60 sm:text-xs">
+          <span aria-hidden className="hidden text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/45 sm:inline">
             {platform}
           </span>
         </li>
@@ -376,7 +357,7 @@ function Views() {
 
 // A platform's icon, small, in the text's colour.
 function Platform({ name }: { name: (typeof VIDEO_VIEWS)[number]['platform'] }) {
-  const icon = 'h-6 w-6 shrink-0 text-[#D7E2EA]/85';
+  const icon = 'h-4 w-4 shrink-0 text-[#D7E2EA]/70';
   if (name === 'YouTube') {
     return (
       <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" fillRule="evenodd" className={icon}>
