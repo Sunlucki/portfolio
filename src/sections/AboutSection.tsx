@@ -157,7 +157,8 @@ function Story() {
 
 // Over the handle, written by hand: "Why?" above the line over it, then an arrow drawn from the word down through
 // that line to the handle, a stroke at a time (the word wiped in from the left with room round its letters so none is
-// cut, the arrow's line, its head); `drawn` false wipes it all out at once.
+// cut, the arrow's line, its head); `drawn` false wipes it all out at once. It is part of the handle's button: a tap
+// on it opens the story as a tap on the handle does.
 const INK = '#B38BFF';
 function Why({ drawn: show }: { drawn: boolean }) {
   const stroke = (delay: number, ms: number) => ({
@@ -166,7 +167,7 @@ function Why({ drawn: show }: { drawn: boolean }) {
     transition: show && !still ? `stroke-dashoffset ${ms}ms cubic-bezier(0.5, 0, 0.3, 1) ${delay}ms` : 'none',
   });
   return (
-    <span aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 -rotate-3" style={{ bottom: 'calc(100% + 1.3em)' }}>
+    <span aria-hidden className="absolute left-1/2 -translate-x-1/2 -rotate-3 cursor-pointer" style={{ bottom: 'calc(100% + 1.3em)', pointerEvents: show ? 'auto' : 'none' }}>
       <span
         className="block whitespace-nowrap text-[1.6em] font-bold leading-none"
         style={{

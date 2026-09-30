@@ -14,8 +14,9 @@ import uk from './src/i18n/uk.ts'
 const SITE = 'https://sunlucki.pl'
 const COPIES: Record<Lang, Copy> = { en, ru, uk, pl, de, it, fr }
 const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-// the handwritten "Why?" over the handle in About, in every language: just those letters of Caveat
-const HINTS = encodeURIComponent([...new Set(LANGS.flatMap((lang) => [...COPIES[lang].about.hint]))].join(''))
+// the handwritten "Why?" over the handle in About and the word the hero's finger writes, in every language: just
+// those letters of Caveat
+const HINTS = encodeURIComponent([...new Set(LANGS.flatMap((lang) => [...COPIES[lang].about.hint, ...COPIES[lang].hero.swipe]))].join(''))
 
 // What search engines and link previews read of a language's page: its title and description, where its
 // translations are, the share card, and who it's about (schema.org).
