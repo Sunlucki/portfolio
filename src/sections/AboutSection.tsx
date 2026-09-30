@@ -4,6 +4,7 @@ import { ContactButton } from '../components/Buttons';
 import { DepthImage } from '../components/DepthImage';
 import { SectionTitle } from '../components/SectionTitle';
 import { ABOUT_HELLO, ABOUT_TEXT, NAME_STORY, phraseRuns } from '../content';
+import { t } from '../i18n';
 import { PORTRAIT, handoff } from '../three/aboutStage';
 
 // The sides feather into the page and the hoodie fades out at the bottom, into the text that follows.
@@ -167,7 +168,7 @@ export function AboutSection() {
       className="relative isolate overflow-hidden px-5 py-24 sm:px-8 md:px-10 md:py-32"
       style={{ marginTop: 'calc(-1 * var(--handoff, 0px))' }}
     >
-      <SectionTitle text="About me" className="mx-auto max-w-6xl" />
+      <SectionTitle text={t.about.title} className="mx-auto max-w-6xl" />
 
       {/* The portrait, full width. It is pulled up under the title, whose letters sit on the photo's dark top,
           so the head (its crown 16% down the photo) starts just below them; phones get a taller crop. */}
@@ -178,7 +179,7 @@ export function AboutSection() {
       >
         <img
           src={PORTRAIT.image}
-          alt="Bogdan Nenadović, a low-angle portrait in a hoodie"
+          alt={t.about.portraitAlt}
           loading="lazy"
           className="absolute inset-0 h-full w-full object-cover"
           style={{ objectPosition: `${PORTRAIT.focus[0] * 100}% ${PORTRAIT.focus[1] * 100}%` }}

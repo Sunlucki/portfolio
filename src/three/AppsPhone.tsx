@@ -14,10 +14,12 @@ const HEIGHT = 2; // the phone, scaled to this height
 const PUSH_S = 0.55;
 const TURN_S = 1.3;
 
+// The display's own UVs are no good (shifted, with a seam through them), so the screens go across its face by
+// where each point of it is: across its width (the mesh's y) and up its height (z).
 const vertexShader = /* glsl */ `
-  varying vec2 vUv;
+  varying vec2 vFace;
   void main() {
-    vUv = uv;
+    vFace = position.yz;
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
   }
 `;
@@ -26,9 +28,10 @@ const fragmentShader = /* glsl */ `
   uniform sampler2D tFrom;
   uniform sampler2D tTo;
   uniform float uPush;
-  varying vec2 vUv;
+  uniform vec4 uBox; // the display's face: its corner and size
+  varying vec2 vFace;
   void main() {
-    vec2 uv = 1.0 - fract(vUv); // the model's screen UVs run the other way round, a whole tile off (glTF repeats)
+    vec2 uv = 1.0 - (vFace - uBox.xy) / uBox.zw;
     float m = uPush * uPush * (3.0 - 2.0 * uPush);
     vec3 color = uv.x > 1.0 - m
       ? texture2D(tTo, vec2(uv.x - (1.0 - m), uv.y)).rgb
@@ -47,7 +50,12 @@ function Phone({ images, shown, app, still }: PhoneProps) {
 
   const screen = useMemo(
     () =>
-      new THREE.ShaderMaterial({ vertexShader, fragmentShader, side: THREE.DoubleSide, uniforms: { tFrom: { value: null }, tTo: { value: null }, uPush: { value: 1 } } }),
+      new THREE.ShaderMaterial({
+        vertexShader,
+        fragmentShader,
+        side: THREE.DoubleSide,
+        uniforms: { tFrom: { value: null }, tTo: { value: null }, uPush: { value: 1 }, uBox: { value: new THREE.Vector4(0, 0, 1, 1) } },
+      }),
     [],
   );
   useEffect(() => () => screen.dispose(), [screen]);
@@ -60,13 +68,18 @@ function Phone({ images, shown, app, still }: PhoneProps) {
     }
   }, [textures]);
 
-  // the model, its display given the screens, scaled to HEIGHT and centred, facing the camera
+  // the model, its display given the screens (across its face), scaled to HEIGHT and centred, facing the camera
   const model = useMemo(() => {
     const root = scene.clone(true);
+    const face = new THREE.Box3();
     root.traverse((node) => {
       const mesh = node as THREE.Mesh;
-      if (mesh.isMesh && (mesh.material as THREE.Material).name.startsWith('screen')) mesh.material = screen;
+      if (!mesh.isMesh || !(mesh.material as THREE.Material).name.startsWith('screen')) return;
+      mesh.material = screen;
+      mesh.geometry.computeBoundingBox();
+      face.union(mesh.geometry.boundingBox!);
     });
+    screen.uniforms.uBox.value.set(face.min.y, face.min.z, face.max.y - face.min.y, face.max.z - face.min.z);
     root.rotation.y = Math.PI / 2; // authored with the screen facing −X
     const box = new THREE.Box3().setFromObject(root);
     const size = box.getSize(new THREE.Vector3());

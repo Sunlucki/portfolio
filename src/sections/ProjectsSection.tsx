@@ -4,6 +4,7 @@ import { ArrowUpRight } from 'lucide-react';
 import { SectionTitle } from '../components/SectionTitle';
 import { LiveProjectButton } from '../components/Buttons';
 import { PROJECTS, type Project, type Slide } from '../content';
+import { fill, t } from '../i18n';
 
 const RADIUS = 'rounded-[40px] sm:rounded-[50px] md:rounded-[60px]';
 // The products' promos (src/promo): Remotion and four films, loaded as the section comes near.
@@ -57,7 +58,7 @@ export function ProjectsSection() {
       id="projects"
       className={`relative z-10 -mt-10 bg-[#0C0C0C] px-4 pb-24 pt-20 sm:-mt-12 sm:px-6 md:-mt-14 md:px-10 md:pt-28 rounded-t-[40px] sm:rounded-t-[50px] md:rounded-t-[60px]`}
     >
-      <SectionTitle text="Web Projects" className="mb-8 md:mb-12" />
+      <SectionTitle text={t.projects.title} className="mb-8 md:mb-12" />
       <div ref={containerRef} className="relative">
         {PROJECTS.map((project, i) => (
           <ProjectCard
@@ -117,7 +118,7 @@ function ProjectCard({ project, index, progress, range, targetScale, playing, ca
             <LiveProjectButton href={project.live} label={project.liveLabel} />
           ) : project.slides ? null : (
             <span className="rounded-full border-2 border-[#D7E2EA]/30 px-8 py-3 text-sm uppercase tracking-widest text-[#D7E2EA]/50 sm:px-10 sm:py-3.5">
-              Case study on request
+              {t.projects.caseStudy}
             </span>
           )}
         </div>
@@ -132,7 +133,7 @@ function ProjectCard({ project, index, progress, range, targetScale, playing, ca
             className={`relative aspect-video w-full overflow-hidden md:aspect-auto md:h-[var(--gallery)] ${RADIUS}`}
             style={{ ['--gallery' as string]: GALLERY }}
             role="region"
-            aria-label={`${project.name}: product demo`}
+            aria-label={fill(t.projects.demo, { name: project.name })}
           >
             <img src={project.images[2]} alt={project.alts[2]} loading="lazy" className="absolute inset-0 h-full w-full object-cover object-left-top" />
             {playing && (
@@ -221,7 +222,7 @@ function Slides({ slides, playing }: { slides: Slide[]; playing: boolean }) {
       >
         <MacBook>{near.filter((i) => frames[i].page).map(frame)}</MacBook>
       </div>
-      <nav aria-label="Sites" className="absolute inset-x-0 top-0 flex gap-2 overflow-x-auto bg-gradient-to-b from-black/45 to-transparent p-3 sm:p-4 [scrollbar-width:none]">
+      <nav aria-label={t.projects.sites} className="absolute inset-x-0 top-0 flex gap-2 overflow-x-auto bg-gradient-to-b from-black/45 to-transparent p-3 sm:p-4 [scrollbar-width:none]">
         {slides.map((slide, i) => (
           <button
             key={slide.label}

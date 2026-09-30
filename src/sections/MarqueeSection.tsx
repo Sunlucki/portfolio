@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
+import { t } from '../i18n';
 import { TILES } from '../content';
 
 // Four rows, dealt like cards so neighbouring covers differ.
@@ -42,7 +43,7 @@ export function MarqueeSection() {
 
   return (
     <section id="graphics" ref={sectionRef} className="bg-[#0C0C0C] pt-16 md:pt-24">
-      <SectionTitle text="Graphics" className="mb-2 px-4 sm:px-6 md:mb-4 md:px-10" />
+      <SectionTitle text={t.graphics.title} className="mb-2 px-4 sm:px-6 md:mb-4 md:px-10" />
       <div className="flex flex-col gap-3 overflow-hidden py-10 md:py-16" style={{ maskImage: FADE, WebkitMaskImage: FADE }}>
         {ROWS.map((tiles, i) => (
           <div

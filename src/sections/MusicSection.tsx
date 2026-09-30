@@ -1,11 +1,13 @@
 import { motion } from 'framer-motion';
 import { Pause, Play } from 'lucide-react';
-import { Component, lazy, Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
 import { MUSIC } from '../content';
+import { t } from '../i18n';
 
 const MusicStage = lazy(() => import('../three/MusicStage'));
 const source = (i: number) => `/music/${String(i).padStart(3, '0')}.m4a`;
+const spectrum = (i: number) => `/music/${String(i).padStart(3, '0')}.bands`; // scripts/prepare-bands.mjs
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const TRACKS = MUSIC.tracks;
 
@@ -23,15 +25,15 @@ class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
 /**
  * Music: a player for Bogdan's playlist. On the left his stage, which is the player (three/MusicStage): he stands
  * on a round floor of blue particles, its rim the progress, its middle the play or pause button, moved by the music. On the right the tracks, as cards
- * like the projects' only smaller (Playlist). The sound runs through Web Audio (wired on the first play, as
- * browsers ask) so the stage can hear it; it keeps playing while the page scrolls on, and the phone's lock screen
- * shows the track.
+ * like the projects' only smaller (Playlist). The music plays straight from an <audio> element, so it keeps playing
+ * while the page scrolls on and while a phone's screen is locked (sound run through Web Audio stops there), the lock
+ * screen showing the track and its controls; the stage moves to the track's spectrum, worked out beforehand.
  */
 export function MusicSection() {
   const audio = useRef<HTMLAudioElement>(null);
-  const graph = useRef<AudioContext | null>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const [analyser, setAnalyser] = useState<AnalyserNode | null>(null);
+  const [bands, setBands] = useState<{ track: number; data: Uint8Array } | null>(null);
+  const [started, setStarted] = useState(false);
   const [current, setCurrent] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [time, setTime] = useState(0);
@@ -51,22 +53,27 @@ export function MusicSection() {
     };
   }, []);
 
+  // the playing track's spectrum, for the stage
+  useEffect(() => {
+    if (!started) return;
+    let alive = true;
+    fetch(spectrum(current))
+      .then((response) => (response.ok ? response.arrayBuffer() : null))
+      .then((data) => alive && data && setBands({ track: current, data: new Uint8Array(data) }))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [current, started]);
+  const clock = useCallback(() => audio.current?.currentTime ?? 0, []);
+
   const play = (i: number) => {
     const el = audio.current;
     if (!el) return;
-    if (!graph.current) {
-      const context = new AudioContext();
-      const node = context.createAnalyser();
-      node.fftSize = 4096;
-      node.smoothingTimeConstant = 0.72;
-      node.minDecibels = -88;
-      node.maxDecibels = -18;
-      context.createMediaElementSource(el).connect(node);
-      node.connect(context.destination);
-      graph.current = context;
-      setAnalyser(node);
-    }
-    void graph.current.resume();
+    // music, like a player's (Safari: it plays on with the screen locked and the ringer off)
+    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
+    if (session) session.type = 'playback';
+    setStarted(true);
     if (i !== current || !el.getAttribute('src')) {
       el.src = source(i);
       setCurrent(i);
@@ -112,7 +119,7 @@ export function MusicSection() {
 
   return (
     <section id="music" className="bg-[#0C0C0C] px-4 pb-24 pt-16 sm:px-6 md:px-10 md:pt-24">
-      <SectionTitle text="Music" className="mb-4 md:mb-6" />
+      <SectionTitle text={t.music.title} className="mb-4 md:mb-6" />
 
       <div className="mx-auto mt-6 grid max-w-6xl items-center gap-8 md:mt-10 md:grid-cols-[1.3fr_1fr] md:gap-10">
         <div className="min-w-0">
@@ -121,13 +128,13 @@ export function MusicSection() {
               <Quiet>
                 <Suspense fallback={null}>
                   <div className="absolute inset-0 [animation:fade-in_1s_ease-out]">
-                    <MusicStage analyser={analyser} playing={playing} active={active} progress={time / track.seconds} onToggle={toggle} onSeek={(at) => seek(at * track.seconds)} />
+                    <MusicStage bands={bands?.track === current ? bands.data : null} clock={clock} playing={playing} active={active} progress={time / track.seconds} onToggle={toggle} onSeek={(at) => seek(at * track.seconds)} />
                   </div>
                 </Suspense>
               </Quiet>
             )}
             <div className="pointer-events-none absolute left-0 top-0">
-              <p className="text-[11px] uppercase tracking-[0.25em] text-[#D7E2EA]/50">{playing ? 'Now playing' : MUSIC.album}</p>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-[#D7E2EA]/50">{playing ? t.music.nowPlaying : MUSIC.album}</p>
               <p className="mt-1 text-2xl font-black uppercase leading-tight text-white sm:text-3xl">{track.title}</p>
               <p className="mt-1 text-sm text-[#D7E2EA]/60">{track.artist ?? MUSIC.artist}</p>
             </div>
@@ -136,15 +143,15 @@ export function MusicSection() {
           {/* the stage is the player: its twins for the keyboard and screen readers */}
           <div className="sr-only">
             <button type="button" onClick={toggle}>
-              {playing ? 'Pause' : 'Play'}
+              {playing ? t.buttons.pause : t.buttons.play}
             </button>
             <button type="button" onClick={() => step(-1)}>
-              Previous track
+              {t.music.previous}
             </button>
             <button type="button" onClick={() => step(1)}>
-              Next track
+              {t.music.next}
             </button>
-            <input type="range" min={0} max={track.seconds} step={1} value={Math.min(time, track.seconds)} onChange={(e) => seek(Number(e.target.value))} aria-label="Seek" />
+            <input type="range" min={0} max={track.seconds} step={1} value={Math.min(time, track.seconds)} onChange={(e) => seek(Number(e.target.value))} aria-label={t.music.seek} />
           </div>
           <p className="mt-4 flex justify-center gap-6 text-sm text-[#D7E2EA]/60">
             {MUSIC.links.map((link) => (
@@ -231,7 +238,7 @@ function Playlist({ current, playing, time, onPick }: PlaylistProps) {
       <div
         ref={list}
         role="list"
-        aria-label="Playlist"
+        aria-label={t.music.playlist}
         className="h-full overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         style={{ maskImage: EDGE, WebkitMaskImage: EDGE }}
         onMouseLeave={() => setHover(null)}

@@ -3,6 +3,7 @@ import { FadeIn } from '../components/FadeIn';
 import { SectionTitle } from '../components/SectionTitle';
 import FolderFloat, { type FolderFloatTrigger } from '../vendor/react-bits/FolderFloat';
 import { STACK } from '../content';
+import { fill, t } from '../i18n';
 
 // Hoodie-blue folders; the notes inside are the tools.
 const FOLDER = {
@@ -36,21 +37,21 @@ export function StackSection() {
   const hover = useMedia('(hover: hover) and (pointer: fine)');
   const trigger: FolderFloatTrigger = hover ? 'hover' : 'click';
   const hint = hover
-    ? 'Hover a folder to open it. The notes can be dragged around.'
+    ? t.stack.hover
     : wide
-      ? 'Tap a folder to open it.'
-      : 'Swipe: the folder in the middle opens.';
+      ? t.stack.tap
+      : t.stack.swipe;
 
   return (
     <section id="stack" className="relative px-5 pb-20 pt-24 sm:px-8 md:px-10 md:pb-28 md:pt-32">
-      <SectionTitle text="Stack" className="mx-auto max-w-6xl" />
+      <SectionTitle text={t.stack.title} className="mx-auto max-w-6xl" />
       <FadeIn
         as="p"
         delay={0.1}
         className="mx-auto mt-2 max-w-[520px] text-center font-light leading-relaxed text-[#D7E2EA]/70"
         style={{ fontSize: 'clamp(0.95rem, 1.6vw, 1.15rem)' }}
       >
-        Everything I ship with, sorted into folders. {hint}
+        {t.stack.intro} {hint}
       </FadeIn>
       {wide ? <Shelf trigger={trigger} /> : <Carousel trigger={trigger} />}
       <ul className="sr-only">
@@ -73,7 +74,7 @@ function Shelf({ trigger }: { trigger: FolderFloatTrigger }) {
             {...FOLDER}
             trigger={trigger}
             label={folder.name}
-            sublabel={`${folder.items.length} tools`}
+            sublabel={fill(t.stack.tools, { n: folder.items.length })}
             items={folder.items}
             width={160}
             height={118}
@@ -129,7 +130,7 @@ function Carousel({ trigger }: { trigger: FolderFloatTrigger }) {
             {...FOLDER}
             trigger={trigger}
             label={folder.name}
-            sublabel={`${folder.items.length} tools`}
+            sublabel={fill(t.stack.tools, { n: folder.items.length })}
             items={folder.items}
             width={180}
             height={132}

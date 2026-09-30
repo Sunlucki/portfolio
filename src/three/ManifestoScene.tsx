@@ -4,6 +4,7 @@ import { BlendFunction, Effect, type ChromaticAberrationEffect, type NoiseEffect
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import * as THREE from 'three';
 import { PHRASES, PHRASE_SHAPES, SHAPE_SCROLL, phraseRuns, type Run } from '../content';
+import { FONT } from '../i18n';
 import heroPupil from '../heroPupil.json';
 import { coverCrop } from '../components/coverCrop';
 import { PORTRAIT, handoff, handoffLength } from './aboutStage';
@@ -12,14 +13,20 @@ import { KeepSize } from './KeepSize';
 
 /**
  * The manifesto after the hero: one cloud of particles that takes a shape for every phrase (a galaxy, the
- * Earth, the Earth lit where people live, a beating heart, a bulb the hands reach for and don't quite touch,
- * a brain with signals running through it, a laptop, and an eye that follows the cursor), with the phrase
- * itself written in particles underneath. It starts as an iris gathering over the hero's pupil, which winds
- * into a galaxy, holds the first phrase and collapses into the planet. The shapes flow into each other as the page scrolls: particles lift
- * off, swirl through depth towards the lens and settle into the next one; only into the laptop the camera
- * dives, through its keys, down to its chip, whose brain then turns into the letters AI. Points sit mostly on outlines
+ * Earth, the Earth lit where people live, a beating heart, a brain with signals running through it, a bulb
+ * the hands reach for, a laptop, and an eye that follows the cursor), with the phrase itself written in
+ * particles underneath. It starts as an iris gathering over the hero's pupil; as the hero's camera flies into
+ * the pupil it winds out into a whirl, and the camera flies on down it to the galaxy it winds into ahead, which
+ * holds the first phrase. Then the camera flies from shape to shape as the page scrolls (FLIGHTS): into the galaxy's
+ * core, where the Earth is; nearer the Earth, turned to Europe, as its lights come on and arcs rise between its
+ * cities; into it, as its lights gather into a heart; back from the heart, which dissolves into the signals of a
+ * brain closing in round it; into the brain, charged up, to a bulb; the hands reach for the bulb from opposite
+ * corners, it flares as they touch it and the camera flies in as its bolt folds into a laptop's screen and the
+ * bulb into the laptop; it dives through the laptop's keys, down to its chip, whose brain then turns into the
+ * letters AI; and it flies at the chip as the letters form an eye. On the way each shape bursts apart, its
+ * points swirling past the lens, and the next gathers out of the depth. Points sit mostly on outlines
  * and flicker like current (after React Bits' Electric Logo), a light pulse sweeps across, dust streams
- * past. Bloom, grain and a chromatic aberration that follows the scroll speed and the morph do the lens
+ * past. Bloom, grain and a chromatic aberration that follows the scroll speed and the flight do the lens
  * work. All motion runs on the GPU.
  *
  * At the end the About section slides over this one and the eye breaks up into Bogdan's portrait: the
@@ -53,12 +60,14 @@ const IRIS_INNER = 0.12; // iris pupil radius, in world heights at the formation
 const IRIS_FROM = 55; // hero frames over which the particle iris gathers over the real one
 const IRIS_FULL = 64;
 // The phrase each shape carries, from the galaxy (the iris, wound up) to the eye: the Earth, its lights, heart,
-// idea, brain, laptop, the chip with a brain and the chip with AI (both under one phrase); then the portrait.
+// brain, idea, laptop, the chip with a brain and the chip with AI; then the portrait.
 const PHRASE_OF = PHRASE_SHAPES.flatMap((n, k) => Array<number>(n).fill(k));
 const STAGE = SHAPE_SCROLL; // scroll from each shape to the next, in shapes
 const STAGES = STAGE.length; // pairs of shapes before the hand-over
 const TRACK = STAGE.reduce((sum, n) => sum + n);
 const DIVE = 6; // the pair the camera dives through: into the laptop, down to its chip
+const SPARK = 4; // brain → idea: the brain charges up, then the camera flies into it
+const TOUCH = 5; // idea → laptop: the hands reach the bulb; as they touch it, it flares and folds into the laptop
 const S = 4; // floats per point: x, y, z and the part of its shape
 // Parts of a shape that move or shine on their own (read by the vertex shader).
 // A part's id is a whole number; its fraction (below 0.5) can carry data: a spark's run, a model's shade.
@@ -66,8 +75,36 @@ const PART = {
   loose: 0, iris: 1, lid: 2, line: 3, white: 4, glint: 5, portrait: 6,
   land: 10, coast: 11, ocean: 12, air: 13, city: 14, heart: 15, cortex: 16, signal: 17, shell: 18, key: 19, screen: 20, code: 21,
   hand: 22, nail: 23, glass: 24, base: 25, bolt: 26, caret: 27, board: 28, trace: 29, metal: 30, pad: 31, neon: 32, sparkU: 33, sparkV: 34,
+  arc: 35,
 };
 const IDEA_PARTS = [PART.hand, PART.nail, PART.glass, PART.base, PART.bolt]; // as scripts/prepare-models.py tags them
+// How the camera goes from each shape to the next, pair by pair. 'in' flies `k` times nearer the point `from` of
+// the shape (a centre, as the vertex shader has it): the shape bursts past the lens and the next grows out of
+// the depth there, drifting to its own point `to`. 'out' pulls back `k` times: the shape shrinks away and the
+// next closes in round it. 'near' nears the Earth `k` times, at Europe (EUROPE, which it turns to the camera),
+// drawing it down to NEAR_AT. The parts named in `keep` (of either shape, up to four) travel on into the next
+// shape instead, setting off once the camera is on its way: the Earth's lights make the heart, the heart's
+// points the brain's signals, the bulb's bolt the laptop's screen and its glass and base the rest of the laptop
+// (the idea's points are paired with the laptop's to match, pairOrder), and the letters AI the eye. The laptop's
+// is the dive (DIVE); between the chip's brain and its AI the camera stays and the points flow.
+type Focus = 'uEarth' | 'uHeart' | 'uBrain' | 'uBulb' | 'uChip' | 'europe' | 'eye';
+type Flight = { kind: 'in' | 'out' | 'near'; k: number; from: Focus; to: Focus; keep?: number[] };
+const FLIGHTS: (Flight | null)[] = [
+  { kind: 'in', k: 8, from: 'uEarth', to: 'uEarth' }, // into the galaxy's core, where the Earth is
+  { kind: 'near', k: 1.9, from: 'europe', to: 'europe' },
+  { kind: 'in', k: 6, from: 'europe', to: 'uHeart', keep: [PART.city] },
+  { kind: 'out', k: 3, from: 'uHeart', to: 'uBrain', keep: [PART.signal] },
+  { kind: 'in', k: 8, from: 'uBrain', to: 'uBulb' },
+  { kind: 'in', k: 4, from: 'uBulb', to: 'uChip', keep: [PART.bolt, PART.glass, PART.base] }, // the laptop is centred where its chip is
+  null,
+  null,
+  { kind: 'in', k: 4, from: 'uChip', to: 'eye', keep: [PART.neon] },
+];
+const NEAR_AT = 0.3; // how high Europe ends up as the camera nears it, in the Earth's radii above its middle
+const GALAXY_FAR = 8; // how many times farther off the galaxy is as it starts to gather
+const SPACE_FROM = 66; // the hero frame from which, flying into the pupil, the iris strews into stars
+const HOLD_PUSH = 1.6; // how much nearer the camera gets to a shape while it holds
+const WIND = 4; // radians the iris winds on as the hero's camera flies into its pupil (twice that on, to the Earth)
 const LAPTOP_TILT = 1.0; // radians the laptop's deck leans back from facing the viewer: it is seen from 33° above
 const CHIP_TILT = 0.82; // the chip's board, seen more from above: diving in, the camera pitches down
 const YAW = -0.32; // both turned a little
@@ -178,6 +215,22 @@ type Uniforms = {
   uChip: { value: THREE.Vector4 }; // centre of the chip and half its board
   uDive: { value: THREE.Vector4 }; // where the chip sits in the laptop, and how many times nearer the camera gets
   uDiveOn: { value: number }; // the camera is diving into the laptop
+  uFlyOn: { value: number }; // it flies between the pair (FLIGHTS): the points change shapes rather than travel
+  uFlyFrom: { value: THREE.Vector4 }; // the first shape: the point the camera flies at, in its own space, and its scale now
+  uFlyTo: { value: THREE.Vector4 }; // the next shape: its point and its scale
+  uFlyAt: { value: THREE.Vector3 }; // where both points are now, in the world
+  uKeep: { value: THREE.Vector4 }; // parts that travel on into the next shape instead (-1: none)
+  uIgnite: { value: number }; // the Earth's lights come on where they are, flaring
+  uCharge: { value: number }; // 0 → 1: the brain charges up, its points racing and glowing
+  uReach: { value: number }; // 0 → 1: the hands come in from opposite corners and reach the bulb
+  uReachOff: { value: THREE.Vector2 }; // how far off the right hand starts (the left one the other way)
+  uBoom: { value: number }; // 0 → 1: as they touch it, the bulb flares and they are blown away
+  uSpace: { value: number }; // 0 → 1: through the pupil, the points are strewn as stars; back to 0 as they gather into the galaxy
+  uWarp: { value: number }; // how far the camera has flown through those stars
+  uRise: { value: number }; // 0 → 1: the arcs between the lit Earth's cities rise off it
+  uWind: { value: number }; // how far the whirl from the pupil to the galaxy has turned, one way
+  uHandLeft: { value: THREE.Vector3 }; // the middle of each of the idea's hands, which they turn about
+  uHandRight: { value: THREE.Vector3 };
   uSpinFrom: { value: number };
   uSpinTo: { value: number };
   uEye: { value: THREE.Vector4 }; // centre and half extents of the eye's opening
@@ -190,7 +243,7 @@ type Uniforms = {
   uPlaneZ: { value: number }; // depth of the formation plane in clip space
   uAboutDot: { value: number }; // size of the portrait's dots, in pixels
 };
-type Morph = { pair: number };
+type Morph = { pair: number; earth: number }; // the pair of shapes shown; how far the Earth has turned
 type Lens = {
   aberration: RefObject<ChromaticAberrationEffect | null>;
   noise: RefObject<NoiseEffect | null>;
@@ -265,6 +318,30 @@ function permute(points: Float32Array, order: Uint32Array) {
 }
 
 const hilbertSort = (points: Float32Array, half: number, uv?: (i: number) => [number, number]) => permute(points, hilbertOrder(points, half, uv));
+
+// An order for a shape's points (for permute) in which, index for index, each group of its parts meets its
+// group of the next shape's parts: the fewer points spread evenly over the more, in order (both shapes are sorted
+// along the Hilbert curve, so a group lands in the same arrangement). The rest pair up in order.
+function pairOrder(from: Float32Array, to: Float32Array, groups: [number[], number[]][]) {
+  const all = [...Array(COUNT).keys()];
+  const groupOf = (points: Float32Array, side: 0 | 1) => all.map((i) => groups.findIndex((group) => group[side].includes(Math.round(points[i * S + 3]))));
+  const [fromGroup, toGroup] = [groupOf(from, 0), groupOf(to, 1)];
+  const order = new Uint32Array(COUNT);
+  const [usedFrom, usedTo] = [new Uint8Array(COUNT), new Uint8Array(COUNT)];
+  const put = (f: number, t: number) => {
+    order[t] = f;
+    usedFrom[f] = usedTo[t] = 1;
+  };
+  groups.forEach((_, g) => {
+    const f = all.filter((i) => fromGroup[i] === g);
+    const t = all.filter((i) => toGroup[i] === g);
+    const n = Math.min(f.length, t.length);
+    for (let k = 0; k < n; k++) put(f[Math.floor((k * f.length) / n)], t[Math.floor((k * t.length) / n)]);
+  });
+  const restTo = all.filter((i) => !usedTo[i]);
+  all.filter((i) => !usedFrom[i]).forEach((f, k) => put(f, restTo[k]));
+  return order;
+}
 
 // Picks items at random, each as likely as its weight.
 function weighted<T>(items: T[], weight: (item: T) => number) {
@@ -360,9 +437,28 @@ function earth(radius: number, lift: number) {
   return hilbertSort(out, radius * 2);
 }
 
+// Cities (latitude, longitude) and the arcs over the lit Earth between them: Poznań, Bogdan's, out to the world,
+// and across Europe and the continents.
+const CITIES: Record<string, [number, number]> = {
+  poznan: [52.41, 16.93], london: [51.51, -0.13], paris: [48.86, 2.35], berlin: [52.52, 13.4], madrid: [40.42, -3.7],
+  rome: [41.9, 12.5], warsaw: [52.23, 21.01], stockholm: [59.33, 18.07], istanbul: [41.01, 28.98], newYork: [40.71, -74.01],
+  sanFrancisco: [37.77, -122.42], toronto: [43.65, -79.38], saoPaulo: [-23.55, -46.63], lagos: [6.52, 3.38], cairo: [30.04, 31.24],
+  dubai: [25.2, 55.27], mumbai: [19.08, 72.88], singapore: [1.35, 103.82], tokyo: [35.68, 139.69], sydney: [-33.87, 151.21],
+  nairobi: [-1.29, 36.82], capeTown: [-33.92, 18.42],
+};
+const ARCS = [
+  ['poznan', 'london'], ['poznan', 'newYork'], ['poznan', 'sanFrancisco'], ['poznan', 'tokyo'], ['poznan', 'dubai'],
+  ['poznan', 'stockholm'], ['poznan', 'madrid'], ['poznan', 'rome'], ['london', 'newYork'], ['london', 'lagos'],
+  ['london', 'mumbai'], ['toronto', 'stockholm'], ['paris', 'saoPaulo'], ['paris', 'cairo'], ['berlin', 'singapore'],
+  ['warsaw', 'istanbul'], ['rome', 'nairobi'], ['madrid', 'newYork'], ['istanbul', 'dubai'], ['dubai', 'mumbai'],
+  ['mumbai', 'singapore'], ['singapore', 'sydney'], ['tokyo', 'sanFrancisco'], ['newYork', 'saoPaulo'], ['cairo', 'capeTown'],
+];
+
 // "Our hearts beat in every corner of the world": the same Earth at night, its loose dust and air gathered into red points where people
-// live, scattered by the Earth's lights at night (NASA Black Marble, scripts/prepare-lights.py). Every other
-// point keeps its index and place, so only the lights move, while the land dims (NIGHT).
+// live, scattered by the Earth's lights at night (NASA Black Marble, scripts/prepare-lights.py), and some of its
+// ocean's points into arcs from city to city (ARCS), higher the farther they reach; a point's way along its arc
+// rides in its part's fraction. Every other point keeps its index and place, so only these move, while the
+// land dims (NIGHT).
 function earthLights(globe: Float32Array, lights: ImageData | null, radius: number, lift: number) {
   const out = globe.slice();
   for (let i = 0; i < COUNT; i++) if (out[i * S + 3] >= PART.land && out[i * S + 3] <= PART.air) out[i * S + 3] += NIGHT;
@@ -398,6 +494,26 @@ function earthLights(globe: Float32Array, lights: ImageData | null, radius: numb
       placed++;
     }
   }
+  const unit = ([lat, lon]: [number, number]) => {
+    const [a, b] = [(lat * Math.PI) / 180, (lon * Math.PI) / 180];
+    return [Math.cos(a) * Math.sin(b), Math.sin(a), Math.cos(a) * Math.cos(b)];
+  };
+  const arcs = ARCS.map(([a, b]) => {
+    const [from, to] = [unit(CITIES[a]), unit(CITIES[b])];
+    return { from, to, angle: Math.acos(Math.min(1, from[0] * to[0] + from[1] * to[1] + from[2] * to[2])) };
+  });
+  const arc = weighted(arcs, ({ angle }) => angle);
+  let ocean = 0;
+  for (let i = 0; i < COUNT; i++) if (out[i * S + 3] === PART.ocean + NIGHT) ocean++;
+  const share = (COUNT * 0.05) / Math.max(1, ocean);
+  for (let i = 0; i < COUNT; i++) {
+    if (out[i * S + 3] !== PART.ocean + NIGHT || Math.random() > share) continue;
+    const { from, to, angle } = arc();
+    const u = Math.random();
+    const [a, b] = [Math.sin((1 - u) * angle) / Math.sin(angle), Math.sin(u * angle) / Math.sin(angle)];
+    const r = radius * (1.006 + (0.05 + (0.3 * angle) / Math.PI) * Math.sin(Math.PI * u));
+    out.set([(from[0] * a + to[0] * b) * r, (from[1] * a + to[1] * b) * r + lift, (from[2] * a + to[2] * b) * r, PART.arc + 0.45 * u], i * S);
+  }
   return out;
 }
 
@@ -422,22 +538,65 @@ function heartShape(points: Uint8Array | null, size: number, lift: number) {
   return hilbertSort(out, size);
 }
 
-// "Some of those dreams become ideas": a bulb between two hands that reach for it and don't quite touch
-// it, after the Creation of Adam. Bogdan's Spline scene, baked with each point tagged by its part (hand, nail,
-// glass, base, the bolt inside). The bolt glows: the dream, lit. `size` is the scene's width.
+// "And we look for a way to make them real": a bulb, and two hands that reach for it from opposite corners
+// until they touch it (the vertex shader brings them in), after the Creation of Adam. Bogdan's Spline scene, baked
+// with each point tagged by its part (hand, nail, glass, base, the bolt inside); there the hands don't quite
+// touch the bulb, so here they are moved the rest of the way. The bolt glows: the dream, lit. `size` is the
+// scene's width.
 function ideaShape(points: Uint8Array | null, size: number, lift: number) {
   const out = new Float32Array(COUNT * S);
   const solid = Math.round(COUNT * (1 - AMBIENT));
+  const [bulbX] = bulbOf(points, size, lift);
+  const touch = points ? touchOf(points) : [];
   for (let i = 0; i < solid; i++) {
     if (!points) {
       out.set([gaussian() * size * 0.2, gaussian() * size * 0.2 + lift, gaussian() * size * 0.05, PART.glass], i * S);
       continue;
     }
     const [x, y, z, tag] = modelPoint(points, size / 2, lift, 0.003);
-    out.set([x, y, z, IDEA_PARTS[Math.round(tag * 255)] ?? PART.hand], i * S);
+    const part = IDEA_PARTS[Math.round(tag * 255)] ?? PART.hand;
+    const [dx, dy, dz] = part === PART.hand || part === PART.nail ? touch[x < bulbX ? 0 : 1] : [0, 0, 0];
+    out.set([x + (dx * size) / 2, y + (dy * size) / 2, z + (dz * size) / 2, part], i * S);
   }
   ambient(out, size * 0.9, lift);
   return hilbertSort(out, size * 0.7);
+}
+
+// How far each hand, left and right of the bulb, has to move to touch its glass: from the hand's point nearest
+// the bulb's centre to the glass nearest that point. In the model's units.
+function touchOf(points: Uint8Array) {
+  const unit = (k: number) => [0, 1, 2].map((j) => points[k + j] / 127.5 - 1);
+  const glass: number[][] = [];
+  const hands: number[][] = [];
+  for (let k = 0; k < points.length; k += 4) {
+    if (points[k + 3] === 2) glass.push(unit(k));
+    else if (points[k + 3] < 2) hands.push(unit(k));
+  }
+  const centre = [0, 1, 2].map((j) => glass.reduce((sum, g) => sum + g[j], 0) / glass.length);
+  const nearest = (to: number[], among: number[][]) => {
+    let best = among[0];
+    for (const q of among) if (Math.hypot(q[0] - to[0], q[1] - to[1], q[2] - to[2]) < Math.hypot(best[0] - to[0], best[1] - to[1], best[2] - to[2])) best = q;
+    return best;
+  };
+  return [-1, 1].map((side) => {
+    const tip = nearest(centre, hands.filter((h) => Math.sign(h[0] - centre[0]) === side));
+    return nearest(tip, glass).map((v, j) => v - tip[j]);
+  });
+}
+
+// The middle of each of the idea's hands, left and right of its bulb: they turn about them as they come in.
+function handsOf(points: Float32Array, bulbX: number) {
+  const sums = [
+    [0, 0, 0, 0],
+    [0, 0, 0, 0],
+  ];
+  for (let i = 0; i < COUNT; i++) {
+    if (points[i * S + 3] !== PART.hand && points[i * S + 3] !== PART.nail) continue;
+    const sum = sums[points[i * S] < bulbX ? 0 : 1];
+    for (let j = 0; j < 3; j++) sum[j] += points[i * S + j];
+    sum[3]++;
+  }
+  return sums.map(([x, y, z, n]) => [x, y, z].map((v) => v / Math.max(1, n)));
 }
 
 // The centre and radius of the idea's bulb, for the glass's rim light.
@@ -459,7 +618,7 @@ function bulbOf(points: Uint8Array | null, size: number, lift: number) {
   return [(x * size) / 2, (y * size) / 2 + lift, (z * size) / 2, ((r / n) * size) / 2];
 }
 
-// "And we look for a way to make them real": a human brain, front to the right, its gyri light and the sulci
+// "Some of those dreams become ideas": a human brain, front to the right, its gyri light and the sulci
 // left dark; inside, red sparks, the signals, which the vertex shader sends along short paths. Baked from
 // "Low-Poly Human Brain Model" by moaazzizo123 (CC BY 4.0). `size` is its length, front to back.
 function brainShape(points: Uint8Array | null, size: number, lift: number) {
@@ -953,12 +1112,17 @@ function portraitShape(image: HTMLImageElement | null, crop: number[]) {
   return hilbertSort(out, 1, (i) => [(out[i * S] - x0) / w, (out[i * S + 1] - y0) / h]);
 }
 
-// How each shape turns over time: the Earth (lit and unlit alike) spins; the heart, the brain, the idea, the
-// laptop and its chip sway (the laptop and the chip alike, as the camera dives from one into the other), so
-// they are never seen edge on; the rest face the viewer.
-const SPIN = [0, 0.22, 0.22, 0, 0, 0, 0, 0, 0, 0, 0]; // radians per second
-const SWAY = [0, 0, 0, 0.5, 0.35, 0.55, 0.2, 0.2, 0.2, 0, 0]; // radians either way
-const turn = (shape: number, time: number) => SPIN[shape] * time + SWAY[shape] * Math.sin(time * 0.35);
+// How each shape turns over time: the Earth (lit and unlit alike) spins, by `earth` radians so far (the rig turns
+// it, and brings Europe round as the camera nears it); the heart, the brain, the idea, the laptop and its chip
+// sway (the laptop and the chip alike, as the camera dives from one into the other), so they are never seen
+// edge on; the rest face the viewer.
+const GLOBES = [1, 2]; // the Earth's shapes
+const SPIN = 0.22; // the Earth's, radians per second
+const SWAY = [0, 0, 0, 0.5, 0.55, 0.35, 0.2, 0.2, 0.2, 0, 0]; // radians either way
+const turn = (shape: number, time: number, earth: number) => (GLOBES.includes(shape) ? earth : SWAY[shape] * Math.sin(time * 0.35));
+// Where the camera nears the Earth: Europe, its latitude and longitude in radians (it faces the camera once the
+// Earth has turned by minus its longitude).
+const EUROPE = [50, 15].map((degrees) => (degrees * Math.PI) / 180);
 const LIGHTS = '/manifesto/lights.webp'; // the Earth at night (scripts/prepare-lights.py)
 const HEART = '/manifesto/heart.bin'; // baked models (scripts/prepare-models.py)
 const BRAIN = '/manifesto/brain.bin';
@@ -1021,23 +1185,36 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
   const layout = useMemo(() => {
     if (!media) return null;
     const fit = Math.min(1, aspect * 1.1);
-    const lift = worldHeight * (portrait ? 0.17 : 0.12);
+    const lift = worldHeight * (portrait ? 0.17 : 0.135);
     const s = worldHeight * fit;
     const w = s * (portrait ? 0.44 : 0.32);
     const eye = { x: 0, y: lift + worldHeight * (portrait ? 0.02 : 0.06), w, h: w * 0.42 };
     const up = lift + s * 0.035; // the Earth a little higher, its rim clear of its phrases' three lines
     const globe = earth(s * 0.3, up);
+    // the heart, as big as the camera gets to it, a little smaller and higher on wide screens, clear of its phrase
+    const heart = { lift: lift + (portrait ? 0 : s * 0.02), size: s * (portrait ? 0.62 : 0.57) };
     // the laptop and its chip a little higher, clear of the phrase; on phones, where the phrase is far below,
     // larger instead, so the brain on the chip reads
     const chipLift = lift + (portrait ? 0 : s * 0.07);
     const chipSize = s * (portrait ? 1 : 0.72);
     const laptop = laptopShape(s * (portrait ? 0.66 : 0.5), chipLift);
-    const [chipBrain, chipAI] = chipShapes(chipSize, chipLift);
+    // the bulb's bolt folds into the laptop's screen, its glass and base into the rest of it; the chip's letters
+    // AI into the eye's lids and iris (FLIGHTS)
+    const bulb = ideaShape(media.idea, s * 0.7, lift);
+    const idea = permute(bulb, pairOrder(bulb, laptop.points, [
+      [[PART.bolt], [PART.screen, PART.code, PART.caret]],
+      [[PART.glass, PART.base], [PART.shell, PART.key]],
+    ]));
+    const eyePoints = eyeShape(eye);
+    const chips = chipShapes(chipSize, chipLift);
+    const chipOrder = pairOrder(chips[1], eyePoints, [[[PART.neon], [PART.lid, PART.line, PART.iris, PART.glint]]]);
+    const [chipBrain, chipAI] = chips.map((chip) => permute(chip, chipOrder));
     return {
       eye,
       earth: [0, up, 0, s * 0.3],
-      heart: [0, lift, 0, s * 0.62],
+      heart: [0, heart.lift, 0, heart.size],
       bulb: bulbOf(media.idea, s * 0.7, lift),
+      hands: handsOf(idea, bulbOf(media.idea, s * 0.7, lift)[0]),
       brain: [0, lift, 0, s * 0.66],
       chip: [0, chipLift, 0, chipSize / 2], // half the board
       dive: [...laptop.chip, 10], // where the chip sits in the laptop, and how many times nearer the camera gets
@@ -1045,13 +1222,13 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         iris(worldHeight),
         globe,
         earthLights(globe, media.lights, s * 0.3, up),
-        heartShape(media.heart, s * 0.62, lift),
-        ideaShape(media.idea, s * 0.7, lift),
+        heartShape(media.heart, heart.size, heart.lift),
         brainShape(media.brain, s * 0.66, lift),
+        idea,
         laptop.points,
         chipBrain,
         chipAI,
-        eyeShape(eye),
+        eyePoints,
         portraitShape(media.photo, coverCrop(stageAspect, PORTRAIT.aspect, PORTRAIT.focus)),
       ],
     };
@@ -1063,6 +1240,8 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
     uniforms.uEarth.value.fromArray(layout.earth);
     uniforms.uHeart.value.fromArray(layout.heart);
     uniforms.uBulb.value.fromArray(layout.bulb);
+    uniforms.uHandLeft.value.fromArray(layout.hands[0]);
+    uniforms.uHandRight.value.fromArray(layout.hands[1]);
     uniforms.uBrain.value.fromArray(layout.brain);
     uniforms.uChip.value.fromArray(layout.chip);
     uniforms.uDive.value.fromArray(layout.dive);
@@ -1092,8 +1271,8 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
     if (!layout || !m) return;
     const { shapes } = layout;
     const j = Math.min(shapes.length - 2, m.pair);
-    uniforms.uSpinFrom.value = turn(j, uniforms.uTime.value);
-    uniforms.uSpinTo.value = turn(j + 1, uniforms.uTime.value);
+    uniforms.uSpinFrom.value = turn(j, uniforms.uTime.value, m.earth);
+    uniforms.uSpinTo.value = turn(j + 1, uniforms.uTime.value, m.earth);
     if (j === pair.current) return;
     pair.current = j;
     const from = geometry.getAttribute('aFrom') as THREE.BufferAttribute;
@@ -1107,8 +1286,10 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
   const vertexShader = /* glsl */ `
     uniform float uTime, uMorph, uFade, uPixel, uSpeed, uIrisOn, uIrisScale, uSpinFrom, uSpinTo;
     uniform float uBlink, uAboutOn, uPlaneZ, uAboutDot, uIrisOuter, uGather, uTwist, uDiveOn;
-    uniform vec2 uIrisCenter, uGaze;
-    uniform vec4 uEye, uEarth, uCrop, uHeart, uBulb, uBrain, uChip, uDive;
+    uniform float uFlyOn, uIgnite, uCharge, uReach, uBoom, uSpace, uWarp, uRise, uWind;
+    uniform vec2 uIrisCenter, uGaze, uReachOff;
+    uniform vec3 uFlyAt, uHandLeft, uHandRight;
+    uniform vec4 uEye, uEarth, uCrop, uHeart, uBulb, uBrain, uChip, uDive, uFlyFrom, uFlyTo, uKeep;
     uniform mat4 uAbout, uUnproject;
     attribute vec4 aFrom;
     attribute vec4 aTo;
@@ -1128,6 +1309,10 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
     }
     float part(float w, float value) {
       return 1.0 - step(0.5, abs(w - value));
+    }
+    // a point of either shape of the pair of a part a flight keeps (uKeep)
+    float kept(float value) {
+      return max(part(aFrom.w, value), part(aTo.w, value));
     }
     vec2 turn(vec2 p, float a) {
       float c = cos(a);
@@ -1168,10 +1353,38 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
     float run(float speed, float offset) {
       return fract(uTime * speed + offset);
     }
-    // The living shapes: the heart beats, the brain's signals flit along short paths, the chip's sparks run
-    // in along their traces (a run's length is in the part's fraction).
+    // how far behind its hand, 0 → 1, a point of the share that trails it is (0 for the rest)
+    float trailing() {
+      return step(0.7, aRand.w) * (aRand.w - 0.7) / 0.3;
+    }
+    // how far along its arc a point of the lit Earth's arcs is, 0 → 1 (in its part's fraction)
+    float along(vec4 a) {
+      return (a.w - floor(a.w + 0.5)) / 0.45;
+    }
+    // The living shapes: the arcs over the Earth rise off it (uRise), the heart beats, the brain's signals flit
+    // along short paths, the idea's hands come in from opposite corners (the right one from the top) until they
+    // touch the bulb (their pose), the chip's sparks run in along their traces (a run's length is in the part's
+    // fraction).
     vec3 alive(vec4 a, vec3 p) {
+      if (part(a.w, ${PART.arc}.0) > 0.5) {
+        vec3 up = p - uEarth.xyz;
+        float ground = uEarth.w * 1.006;
+        return uEarth.xyz + normalize(up) * (ground + (length(up) - ground) * uRise);
+      }
       if (part(a.w, ${PART.heart}.0) > 0.5) return uHeart.xyz + (p - uHeart.xyz) * (1.0 + 0.06 * heartbeat());
+      if (part(a.w, ${PART.hand}.0) + part(a.w, ${PART.nail}.0) > 0.5) {
+        // turning a little about the way it comes (the top one left to right, the other right to left), a share
+        // of its points trailing behind it
+        float side = sign(p.x - uBulb.x);
+        float reach = clamp(uReach - trailing() * 0.3 * (1.0 - uReach), 0.0, 1.0);
+        vec3 way = normalize(vec3(-side * uReachOff, 0.0));
+        vec3 centre = side > 0.0 ? uHandRight : uHandLeft;
+        vec3 q = p - centre;
+        float roll = 0.6 * (1.0 - reach);
+        q = q * cos(roll) + cross(way, q) * sin(roll) + way * dot(way, q) * (1.0 - cos(roll));
+        vec3 drift = vec3(snoise(p * 0.7 + uTime * 0.5), snoise(p * 0.7 + 9.0 + uTime * 0.5), 0.0) * trailing() * (1.0 - reach) * uBulb.w;
+        return centre + q + vec3(side * (1.0 - reach) * uReachOff, 0.0) + drift;
+      }
       if (part(a.w, ${PART.signal}.0) > 0.5) {
         vec3 dir = normalize(vec3(aRand.y, aRand.w, aRand.x) - 0.5 + 0.001);
         return p + dir * (run(0.4 + 0.5 * aRand.z, aRand.w * 5.0) - 0.5) * uBrain.w * 0.16;
@@ -1191,6 +1404,15 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       vec3 centre = mix(uDive.xyz, uChip.xyz, smoothstep(0.0, 0.75, d));
       float lean = ${(CHIP_TILT - LAPTOP_TILT).toFixed(4)} * (smoothstep(0.05, 0.9, d) - chip);
       return centre + pitch(p - mix(uDive.xyz, uChip.xyz, chip), lean) * pow(uDive.w, d - chip);
+    }
+    // A flight (FLIGHTS) scales each shape about the point the camera flies at, which is the same as the camera
+    // flying there: a point of the first shape (f = uFlyFrom) or of the next (uFlyTo), where it is now.
+    vec3 flown(vec3 p, vec4 f) {
+      return uFlyAt + (p - f.xyz) * f.w;
+    }
+    // where a shape's centre is now, as the first shape's (e = 0) or the next one's (e = 1)
+    vec3 placed(vec3 c, float e) {
+      return mix(flown(c, uFlyFrom), flown(c, uFlyTo), e);
     }
     // a code token's colour, by the tone in its part's fraction: plain, keyword, call, comment
     vec3 syntax(vec4 a) {
@@ -1220,11 +1442,24 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         grown = pow(uDive.w, uMorph - 1.0);
         dived = m > 0.5 ? spin(dive(alive(aTo, aTo.xyz), uMorph, 1.0), uSpinTo) : l;
       }
-      float flight = sin(3.14159265 * m);
-      float e = m * m * (3.0 - 2.0 * m);
       float seenFrom = 1.0;
       float seenTo = 1.0;
+      // parts a flight keeps travel on into the next shape, setting off once the camera is on its way
+      float keep = max(max(kept(uKeep.x), kept(uKeep.y)), max(kept(uKeep.z), kept(uKeep.w))) * uFlyOn;
+      if (keep > 0.5) {
+        float start = 0.15 + aRand.x * 0.25 + 0.2 * part(aFrom.w, ${PART.bolt}.0); // the bulb's bolt, bared as its glass bursts, last
+        m = smoothstep(start, start + 0.4, uMorph);
+      }
       vec3 from = alive(aFrom, eye(aFrom, seenFrom));
+      // the brain charging up: its points race about (and glow, below)
+      float charged = uCharge * (part(aFrom.w, ${PART.cortex}.0) + part(aFrom.w, ${PART.signal}.0));
+      if (charged > 0.0) {
+        vec3 race = aFrom.xyz * 0.9 + uTime * 3.0;
+        from += vec3(snoise(race), snoise(race + 11.0), snoise(race + 23.0)) * uBrain.w * 0.03 * charged;
+      }
+      // the hands touching the bulb: they and the dust round it are blown away (the bulb flares, below)
+      vec3 away = from - uBulb.xyz;
+      from += away / max(length(away), 0.001) * uBoom * uBulb.w * (1.5 + 8.0 * aRand.y) * (1.0 - keep);
       float rr = 1.0; // radius in the galaxy, 0 at its core
       vec2 local = vec2(0.0); // place in the galaxy, in iris radii (for its clumps and lanes)
       float halo = 0.0;
@@ -1241,7 +1476,8 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         float bend = snoise(vec3(rr * 2.6, cos(th) * 1.3, sin(th) * 1.3 + 4.0));
         // the core, the attractor, turns faster than the arms and draws the stars round it into a whirl
         float whirl = uTwist * uTime * 1.2 * (1.0 - smoothstep(0.05, 0.35, rr));
-        float angle = loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.0 / (rr + 0.25) + uTime * 0.35 + 0.5 * bend + (aRand.y - 0.5) * 0.4) + whirl;
+        // (everything here turns it the same way, anticlockwise: gathering, winding, the time going by)
+        float angle = -loose * (1.2 + aRand.z * 1.5) + uTwist * (1.2 + 2.0 / (rr + 0.25) + uTime * 0.35 + 0.5 * bend + (aRand.y - 0.5) * 0.4) + whirl + uTime * 0.12;
         float radius = rr * (1.0 + uTwist * ((aRand.z - 0.5) * 0.18 + 0.08 * bend));
         from.xy = turn(normalize(from.xy) * radius * uIrisOuter * (1.0 + loose * (0.6 + aRand.y)), angle);
         // a sparse halo of stars round the disc
@@ -1252,21 +1488,66 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       }
       from = spin(from, uSpinFrom);
       from.xy = mix(from.xy, uIrisCenter + from.xy * uIrisScale, uIrisOn); // the iris sits on the real pupil
+      // Through the pupil the camera flies on down a whirl: the galaxy the iris winds into, wound out into a
+      // vortex of its arms round the line of sight to its core, deep along it and streaming past the lens
+      // (uSpace → 1); then, each at its own time, its points wind back in to the galaxy as it nears (uSpace → 0).
+      // All the way it turns one way, on and on (uWind, and the galaxy's own turning): one flow.
+      float strewn = smoothstep(aRand.x * 0.5, 0.5 + aRand.x * 0.5, uSpace) * uIrisOn;
+      float starlight = 1.0;
+      if (uIrisOn > 0.5) {
+        float s = strewn * strewn * (3.0 - 2.0 * strewn);
+        float deep = mod(aRand.w * 96.0 + uWarp, 96.0) - 82.0;
+        vec2 arm = from.xy - uIrisCenter;
+        float angle = atan(arm.y, arm.x) + uWind + 0.01 * (deep + 82.0) * s; // further round, the nearer the lens
+        float radius = mix(length(arm), 0.4 + 10.0 * length(local), s);
+        vec2 axis = uIrisCenter * (${DISTANCE.toFixed(1)} - s * deep) / ${DISTANCE.toFixed(1)};
+        from = vec3(axis + vec2(cos(angle), sin(angle)) * radius, mix(from.z, deep, s));
+        starlight = mix(1.0, smoothstep(-82.0, -60.0, from.z) * (1.0 - smoothstep(6.0, 13.0, from.z)), s); // in from the dark, out before the lens
+      }
       vec3 to = uAboutOn > 0.5 ? about(aTo.xyz) : spin(alive(aTo, eye(aTo, seenTo)), uSpinTo);
-      float landed = e * uAboutOn; // settled on the portrait: steady, fine dots
-      vec3 p = mix(from, to, e);
-      if (uDiveOn > 0.5) p = dived;
-      // out of the spiral the particles keep circling on their way into the planet
-      vec2 hub = mix(uIrisCenter, uEarth.xy, e);
-      p.xy = mix(p.xy, hub + turn(p.xy - hub, e * (1.0 - e) * 3.0), uIrisOn);
+      float flight = sin(3.14159265 * m);
+      float e = m * m * (3.0 - 2.0 * m);
       // particles with nowhere to go (the Earth, as its lights come on) stay put instead of swirling
       float travel = smoothstep(0.0, 0.03 * uEarth.w, distance(aFrom.xyz, aTo.xyz));
-      // the chip's brain turns into the letters on the chip itself, swirling only a little
-      float swirl = travel * (1.0 - 0.75 * part(aFrom.w, ${PART.neon}.0) * part(aTo.w, ${PART.neon}.0));
-      vec3 q = p * 0.16 + vec3(0.0, 0.0, uTime * 0.15);
-      vec3 curl = vec3(snoise(q), snoise(q + 17.0), snoise(q + 31.0));
-      p += curl * flight * swirl * (1.6 + aRand.y * 1.8) * (1.0 - 0.6 * uIrisOn);
-      p.z += flight * swirl * (1.0 + aRand.y * 5.0); // swirl out towards the lens
+      float fading = 1.0; // a point dips out as it changes shapes on the spot
+      float flare = 0.0; // and an Earth's light flares up as it comes on
+      if (uIgnite > 0.5) {
+        // the Earth's lights come on where they are, as the dust they were fades
+        e = mix(e, step(0.5, m), travel);
+        fading = mix(1.0, abs(2.0 * smoothstep(0.3, 0.7, m) - 1.0), travel);
+        flare = travel * e * (1.0 - smoothstep(0.5, 0.95, m));
+        flight *= 1.0 - travel;
+      }
+      vec3 p;
+      if (uFlyOn > 0.5 && keep < 0.5) {
+        // Flying (FLIGHTS): the point is the first shape's until, the flight begun, it leaves the view (off the
+        // screen or past the lens) or bursts away at its own time; then it is the next one's, gathering out of
+        // the same burst. Both bursts swirl out towards the lens (the galaxy's less).
+        vec3 qf = from * 0.16 + vec3(0.0, 0.0, uTime * 0.15);
+        vec3 scatter = (vec3(snoise(qf), snoise(qf + 17.0), snoise(qf + 31.0)) * (1.6 + aRand.y * 1.8) * (1.0 - 0.6 * uIrisOn) + vec3(0.0, 0.0, 1.0 + aRand.y * 5.0)) * flight;
+        vec3 leaving = flown(from + scatter, uFlyFrom);
+        vec4 clip = projectionMatrix * modelViewMatrix * vec4(leaving, 1.0);
+        float edge = max(abs(clip.x), abs(clip.y)) / max(clip.w, 0.01);
+        float gone = max(max(smoothstep(1.0, 1.6, edge), 1.0 - smoothstep(2.0, 6.0, clip.w)) * step(0.0001, uMorph), smoothstep(0.4, 0.6, m));
+        e = step(0.5, gone);
+        fading = abs(2.0 * gone - 1.0);
+        p = e > 0.5 ? flown(to + scatter, uFlyTo) : leaving;
+      } else {
+        // Morphing (and the parts a flight keeps): from one shape to the next, swirling out towards the lens on
+        // the way; the chip's brain turns into the letters on the chip itself, swirling only a little.
+        vec3 start = flown(from, uFlyFrom);
+        // the bulb's glass bursts on its way into the laptop, baring the bolt
+        vec3 core = flown(spin(uBulb.xyz, uSpinFrom), uFlyFrom);
+        start += normalize(start - core + 0.0001) * sin(3.14159265 * m) * uBulb.w * uFlyFrom.w * (2.0 + 3.0 * aRand.y) * (part(aFrom.w, ${PART.glass}.0) + part(aFrom.w, ${PART.base}.0)) * keep;
+        p = mix(start, flown(to, uFlyTo), e);
+        float swirl = travel * (1.0 - 0.75 * part(aFrom.w, ${PART.neon}.0) * part(aTo.w, ${PART.neon}.0));
+        vec3 q = p * 0.16 + vec3(0.0, 0.0, uTime * 0.15);
+        p += vec3(snoise(q), snoise(q + 17.0), snoise(q + 31.0)) * flight * swirl * (1.6 + aRand.y * 1.8);
+        p.z += flight * swirl * (1.0 + aRand.y * 5.0);
+      }
+      if (uDiveOn > 0.5) p = dived;
+      float landed = e * uAboutOn; // settled on the portrait: steady, fine dots
+      float near = mix(min(1.0, uFlyFrom.w), min(1.0, uFlyTo.w), e); // how near its shape is yet: far off, it is fine and faint
       // settled: a fine crackle along the outlines
       p.xy += vec2(snoise(vec3(aRand.zw * 60.0, uTime * 2.3)), snoise(vec3(aRand.wz * 60.0, uTime * 2.3 + 7.0))) * 0.018 * (1.0 - flight) * (1.0 - landed);
       vec4 mv = modelViewMatrix * vec4(p, 1.0);
@@ -1297,7 +1578,7 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
         light = (0.1 + 1.8 * arms) * (0.55 + 0.9 * clumps) * (1.0 - 0.6 * lanes * (1.0 - glowCore)) * (1.0 + 2.0 * glowCore);
         light = mix(light, 0.35, halo);
       }
-      vAlpha = uFade * mix(1.0, light, gw) * mix(flicker, 0.95, max(landed, gw)) * (0.5 + 0.5 * aRand.w) * (1.0 + sweep * 1.8) * (1.0 - 0.35 * flight * travel) * mix(seenFrom, seenTo, e) * shine;
+      vAlpha = uFade * mix(1.0, light, gw) * mix(flicker, 0.95, max(landed, gw)) * (0.5 + 0.5 * aRand.w) * (1.0 + sweep * 1.8) * (1.0 - 0.35 * flight * travel) * mix(seenFrom, seenTo, e) * shine * starlight;
       float hue = 0.5 + 0.5 * sin(p.x * 0.25 + p.y * 0.18 + uTime * 0.6 + aRand.y * 2.0);
       vec3 blue = vec3(0.12, 0.38, 1.0);
       vec3 cyan = vec3(0.45, 0.95, 1.0);
@@ -1312,12 +1593,13 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       vColor = mix(vColor, vec3(1.0, 0.9, 0.76), glowCore * gw * 0.75); // the core glows warm
       // the Earth: green-teal continents with bright coasts, deep blue oceans, a pale rim of air; its far
       // side fades, so the continents behind don't show through the ones in front
-      float settled = 1.0 - flight * travel; // points that stay put keep their colours
+      float settled = 1.0 - flight * travel * (1.0 - keep); // points that stay put (or are kept) keep their colours
       float land = mix(part(aFrom.w, ${PART.land}.0), part(aTo.w, ${PART.land}.0), e) * settled;
       float coast = mix(part(aFrom.w, ${PART.coast}.0), part(aTo.w, ${PART.coast}.0), e) * settled;
       float ocean = mix(part(aFrom.w, ${PART.ocean}.0), part(aTo.w, ${PART.ocean}.0), e) * settled;
       float air = mix(part(aFrom.w, ${PART.air}.0), part(aTo.w, ${PART.air}.0), e) * settled;
-      float facing = dot(normalize(p - uEarth.xyz), normalize(cameraPosition - uEarth.xyz));
+      vec3 earthAt = placed(uEarth.xyz, e);
+      float facing = dot(normalize(p - earthAt), normalize(cameraPosition - earthAt));
       vAlpha *= mix(1.0, smoothstep(-0.2, 0.3, facing), land + coast + ocean);
       vAlpha *= mix(1.0, 0.35 + smoothstep(0.55, 0.0, abs(facing)), air) * (1.0 - 0.45 * ocean - 0.4 * air);
       vColor = mix(vColor, vec3(0.3, 0.95, 0.62), land * 0.85);
@@ -1334,11 +1616,22 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       vAlpha *= mix(1.0, smoothstep(-0.2, 0.3, facing) * (0.8 + 1.1 * pulse), city);
       gl_PointSize *= mix(1.0, 1.3 + 1.1 * pulse, city);
       vColor = mix(vColor, vec3(1.0, 0.14, 0.2), city);
+      vAlpha *= 1.0 + 2.5 * flare;
+      gl_PointSize *= 1.0 + flare;
+      // the arcs between its cities: pale cyan, drawn out as they rise, a pulse running along them; they fade
+      // behind the Earth
+      float arc = mix(part(aFrom.w, ${PART.arc}.0), part(aTo.w, ${PART.arc}.0), e) * settled;
+      float at = e > 0.5 ? along(aTo) : along(aFrom);
+      float blip = exp(-pow((at - fract(uTime * 0.35 + aRand.w * 0.02)) * 9.0, 2.0));
+      vAlpha *= mix(1.0, step(at, uRise * 1.2) * (0.45 + 1.6 * blip) * smoothstep(-0.35, 0.05, facing), arc);
+      vColor = mix(vColor, mix(vec3(0.45, 0.85, 1.0), vec3(1.0), 0.7 * blip), arc);
+      gl_PointSize *= mix(1.0, 0.9 + 0.5 * blip, arc);
       // the models' shading: their texture's brightness where each point sits
       float shade = mix(shadeOf(aFrom), shadeOf(aTo), e);
       // the heart: deep red muscle, pale fat, brighter on the beat; its far side dim, so it reads solid
       float heart = mix(part(aFrom.w, ${PART.heart}.0), part(aTo.w, ${PART.heart}.0), e) * settled;
-      float heartFacing = dot(normalize(p - uHeart.xyz), normalize(cameraPosition - uHeart.xyz));
+      vec3 heartAt = placed(uHeart.xyz, e);
+      float heartFacing = dot(normalize(p - heartAt), normalize(cameraPosition - heartAt));
       vAlpha *= mix(1.0, (0.75 + 0.6 * heartbeat()) * (0.35 + 0.65 * smoothstep(-0.4, 0.4, heartFacing)) * (0.6 + 0.8 * shade), heart);
       vColor = mix(vColor, mix(vec3(0.95, 0.07, 0.14), vec3(1.0, 0.6, 0.62), smoothstep(0.35, 0.75, shade)), heart);
       // the idea: violet hands, pale nails, the bulb's glass bright at its rim like glass, a dark metal base and
@@ -1348,7 +1641,8 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       float glass = mix(part(aFrom.w, ${PART.glass}.0), part(aTo.w, ${PART.glass}.0), e) * settled;
       float base = mix(part(aFrom.w, ${PART.base}.0), part(aTo.w, ${PART.base}.0), e) * settled;
       float bolt = mix(part(aFrom.w, ${PART.bolt}.0), part(aTo.w, ${PART.bolt}.0), e) * settled;
-      float rim = 1.0 - abs(dot(normalize(p - uBulb.xyz), normalize(cameraPosition - uBulb.xyz)));
+      vec3 bulbAt = mix(flown(spin(uBulb.xyz, uSpinFrom), uFlyFrom), flown(spin(uBulb.xyz, uSpinTo), uFlyTo), e);
+      float rim = 1.0 - abs(dot(normalize(p - bulbAt), normalize(cameraPosition - bulbAt)));
       float glow = 0.75 + 0.35 * sin(uTime * 2.2);
       vColor = mix(vColor, vec3(0.56, 0.4, 1.0), hand * 0.85);
       vColor = mix(vColor, vec3(0.92, 0.95, 1.0), nail);
@@ -1359,16 +1653,30 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       vAlpha *= mix(1.0, 0.2 + 1.1 * rim * rim, glass);
       vAlpha *= mix(1.0, 1.05 * glow, bolt);
       gl_PointSize *= mix(1.0, 1.2, bolt);
+      // the hands show only as they come in; the bulb brightens as they near it and flares white as they touch
+      // it (its points then fold into the laptop)
+      float hands = mix(part(aFrom.w, ${PART.hand}.0) + part(aFrom.w, ${PART.nail}.0), part(aTo.w, ${PART.hand}.0) + part(aTo.w, ${PART.nail}.0), e);
+      vAlpha *= mix(1.0, smoothstep(0.0, 0.3, uReach) * (1.0 - 0.6 * trailing()), hands) * (1.0 + 1.5 * uReach * (1.0 - uBoom) * (glass + bolt));
+      float blaze = uBoom * (1.0 - uBoom) * 4.0 * (1.0 - e) * keep;
+      vAlpha *= 1.0 + 1.5 * blaze;
+      vColor = mix(vColor, vec3(1.0, 0.96, 0.88), blaze * 0.6);
+      gl_PointSize *= 1.0 + 0.4 * blaze;
       // the brain: cool white folds, its far side dim so the near folds read; its signals faint red sparks,
       // fading in and out along their paths
       float cortex = mix(part(aFrom.w, ${PART.cortex}.0), part(aTo.w, ${PART.cortex}.0), e) * settled;
       float signal = mix(part(aFrom.w, ${PART.signal}.0), part(aTo.w, ${PART.signal}.0), e) * settled;
-      float brainFacing = dot(normalize(p - uBrain.xyz), normalize(cameraPosition - uBrain.xyz));
+      vec3 brainAt = placed(uBrain.xyz, e);
+      float brainFacing = dot(normalize(p - brainAt), normalize(cameraPosition - brainAt));
       vAlpha *= mix(1.0, (0.08 + 0.92 * smoothstep(-0.1, 0.5, brainFacing)) * (0.55 + 0.7 * shade), cortex);
       gl_PointSize *= mix(1.0, 0.85, cortex); // finer dots, so the folds read
       vColor = mix(vColor, vec3(0.7, 0.8, 1.0), cortex * 0.75);
       vColor = mix(vColor, vec3(1.0, 0.28, 0.34), signal);
       vAlpha *= mix(1.0, 0.8 * sin(3.14159265 * run(0.4 + 0.5 * aRand.z, aRand.w * 5.0)), signal);
+      // charged, it glows: brighter, whiter, its dots larger
+      float glowing = charged * (1.0 - e);
+      vAlpha *= 1.0 + 1.4 * glowing;
+      vColor = mix(vColor, vec3(0.92, 0.96, 1.0), 0.45 * glowing);
+      gl_PointSize *= 1.0 + 0.4 * glowing;
       // the laptop: a steel shell and keys, the screen's glow, code in its colours and a red caret, blinking
       float shell = mix(part(aFrom.w, ${PART.shell}.0), part(aTo.w, ${PART.shell}.0), e) * settled;
       float key = mix(part(aFrom.w, ${PART.key}.0), part(aTo.w, ${PART.key}.0), e) * settled;
@@ -1404,9 +1712,10 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
       vColor = mix(vColor, vec3(1.0, 0.26, 0.42), spark);
       vAlpha *= mix(1.0, 1.6 * smoothstep(0.0, 0.1, sp) * (1.0 - smoothstep(0.8, 1.0, sp)), spark);
       gl_PointSize *= mix(1.0, 1.3, spark);
-      // diving: the laptop's points fade out, the chip's in, fine and faint while it is far
-      vAlpha *= diving * mix(1.0, pow(grown, 0.6), m * uDiveOn);
-      gl_PointSize *= mix(1.0, max(0.4, sqrt(grown)), m * uDiveOn);
+      // diving and flying: the points fade out and in as they change shapes, the next one's fine and faint while
+      // it is far (or the one shrinking away's)
+      vAlpha *= diving * mix(1.0, pow(grown, 0.6), m * uDiveOn) * fading * pow(near, 0.6);
+      gl_PointSize *= mix(1.0, max(0.4, sqrt(grown)), m * uDiveOn) * max(0.4, sqrt(near));
       // the portrait's colour: the photo's pale white in a cool light
       vColor = mix(vColor, vec3(0.86, 0.9, 0.97), landed * 0.9);
     }
@@ -1419,48 +1728,60 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
 // ——— the phrases, written in particles ———
 
 // Samples every phrase as particles, laid out like centred type above the bottom of the screen: plain
-// words in Kanit SemiBold, highlights in ExtraBold. Returns the geometry (home positions in clip space,
-// phrase, style, reading order) and the particle size in pixels.
+// words in SemiBold, marked ones in ExtraBold (Kanit, or Montserrat for Cyrillic: FONT). Returns the geometry
+// (home positions in clip space, phrase, style, reading order) and the particle size in pixels.
 function writeWords(width: number, height: number) {
   const narrow = width < 768;
-  const fontSize = Math.min(70.4, Math.max(30.4, width * 0.052));
+  // (Montserrat, for Cyrillic, runs wider than Kanit: a size smaller, so the lines hold as many words)
+  const fontSize = Math.min(70.4, Math.max(30.4, width * 0.052)) * (FONT === 'Montserrat' ? 0.9 : 1);
   const lead = fontSize * 1.08;
   const measure = Math.min(width - 48, fontSize * 10.8);
-  const bottom = height * (narrow ? 0.91 : 0.89);
+  const bottom = height * (narrow ? 0.91 : 0.85);
   const step = narrow ? 1.5 : 2.1;
   const canvas = document.createElement('canvas');
   canvas.width = Math.ceil(width);
   canvas.height = Math.ceil(height);
   const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-  const font = (mark: Run['mark']) => `${mark === 'hi' ? 800 : 600} ${fontSize}px Kanit, sans-serif`;
-  const ink = { plain: '#f00', hi: '#0f0', off: '#00f' }; // one channel per style, read back below
+  const font = (mark: Run['mark']) => `${mark === 'plain' || mark === 'off' ? 600 : 800} ${fontSize}px ${FONT}, sans-serif`;
+  const ink = { plain: '#f00', hi: '#0f0', off: '#00f', heart: '#f0f', home: '#0ff' }; // a colour per style, read back below
   const home: number[] = [];
   const info: number[] = [];
   PHRASES.forEach((phrase, k) => {
-    // words as runs: a highlight can end mid-word, before its punctuation
-    const words: Run[][] = [[]];
+    // words as runs: a highlight can end mid-word, before its punctuation; a word after a line break starts a line
+    const words: { runs: Run[]; br: boolean }[] = [{ runs: [], br: false }];
     for (const run of phraseRuns(phrase)) {
-      for (const piece of run.text.split(/( )/)) {
-        if (piece === ' ') words.push([]);
-        else if (piece) words[words.length - 1].push({ text: piece, mark: run.mark });
+      for (const piece of run.text.split(/([ \n])/)) {
+        if (piece === ' ' || piece === '\n') words.push({ runs: [], br: piece === '\n' });
+        else if (piece) words[words.length - 1].runs.push({ text: piece, mark: run.mark });
       }
     }
     ctx.font = font('plain');
     const space = ctx.measureText(' ').width;
+    const widthOf = (runs: Run[]) =>
+      runs.reduce((sum, run) => {
+        ctx.font = font(run.mark);
+        return sum + ctx.measureText(run.text).width;
+      }, 0);
+    // a highlight kept whole (its words joined by no-break spaces) still breaks where the screen is too narrow for it
+    const apart = ({ runs, br }: (typeof words)[number]) => {
+      const parts: typeof words = [{ runs: [], br }];
+      for (const run of runs) {
+        run.text.split('\u00a0').forEach((piece, i) => {
+          if (i) parts.push({ runs: [], br: false });
+          if (piece) parts[parts.length - 1].runs.push({ text: piece, mark: run.mark });
+        });
+      }
+      return parts;
+    };
     const sized = words
-      .filter((word) => word.length)
-      .map((runs) => ({
-        runs,
-        width: runs.reduce((sum, run) => {
-          ctx.font = font(run.mark);
-          return sum + ctx.measureText(run.text).width;
-        }, 0),
-      }));
+      .flatMap((word) => (widthOf(word.runs) > width - 48 ? apart(word) : [word]))
+      .filter((word) => word.runs.length)
+      .map(({ runs, br }) => ({ runs, br, width: widthOf(runs) }));
     const wrap = (limit: number) => {
       const lines: { words: typeof sized; width: number }[] = [];
       for (const word of sized) {
         const line = lines[lines.length - 1];
-        if (line && line.width + space + word.width <= limit) {
+        if (line && !word.br && line.width + space + word.width <= limit) {
           line.words.push(word);
           line.width += space + word.width;
         } else lines.push({ words: [word], width: word.width });
@@ -1468,9 +1789,10 @@ function writeWords(width: number, height: number) {
       return lines;
     };
     // balanced, like CSS text-wrap: balance: the narrowest measure that still takes as few lines, so no word
-    // is left alone on the last one
-    const count = wrap(measure).length;
-    let [lo, hi] = [0, measure];
+    // is left alone on the last one (broken by hand, the lines may run as wide as the screen)
+    const limit = phrase.includes('\n') ? width - 48 : measure;
+    const count = wrap(limit).length;
+    let [lo, hi] = [0, limit];
     for (let i = 0; i < 12; i++) {
       const mid = (lo + hi) / 2;
       if (wrap(mid).length > count) lo = mid;
@@ -1478,7 +1800,9 @@ function writeWords(width: number, height: number) {
     }
     const lines = wrap(hi);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const top = bottom - lines.length * lead;
+    // up from the bottom line, two lines at most: a longer phrase runs on down, keeping clear of its shape (but
+    // never off the screen)
+    const top = Math.min(bottom - Math.min(2, lines.length) * lead, height * 0.97 - lines.length * lead);
     lines.forEach((line, i) => {
       let x = (width - line.width) / 2;
       const baseline = top + i * lead + fontSize * 0.8;
@@ -1498,7 +1822,7 @@ function writeWords(width: number, height: number) {
       }
     });
     const y0 = Math.max(0, Math.floor(top - fontSize * 0.2));
-    const y1 = Math.min(canvas.height, Math.ceil(bottom + fontSize * 0.35));
+    const y1 = Math.min(canvas.height, Math.ceil(top + lines.length * lead + fontSize * 0.35));
     const data = ctx.getImageData(0, y0, canvas.width, y1 - y0).data;
     for (let y = y0; y < y1; y += step) {
       for (let x = 0; x < width; x += step) {
@@ -1507,7 +1831,8 @@ function writeWords(width: number, height: number) {
         if (sx >= canvas.width || sy >= y1) continue;
         const i = ((Math.floor(sy) - y0) * canvas.width + Math.floor(sx)) * 4;
         if (data[i + 3] < 128) continue;
-        const style = data[i] > 127 && data[i + 1] > 127 ? 3 : data[i + 1] > 127 ? 1 : data[i + 2] > 127 ? 2 : 0;
+        const [red, green, blue] = [data[i] > 127, data[i + 1] > 127, data[i + 2] > 127];
+        const style = red && green ? 3 : red && blue ? 4 : green && blue ? 5 : green ? 1 : blue ? 2 : 0;
         const row = Math.min(lines.length - 1, Math.max(0, Math.floor((sy - top) / lead)));
         const left = (width - lines[row].width) / 2;
         home.push((sx / width) * 2 - 1, 1 - (sy / height) * 2, 0);
@@ -1527,10 +1852,10 @@ function writeWords(width: number, height: number) {
 
 // Written straight in clip space, so the type stays put while the camera leans and kicks.
 const WORDS_VERTEX = /* glsl */ `
-  uniform float uTime, uPixel, uDot, uLoose;
+  uniform float uTime, uPixel, uDot, uLoose, uCharge, uReach, uBoom;
   uniform float uShow[${PHRASES.length}];
   uniform vec2 uView;
-  attribute vec3 aInfo; // phrase, style (0 plain, 1 highlight, 2 struck word, 3 its strike), reading order
+  attribute vec3 aInfo; // phrase, style (0 plain, 1 highlight, 2 struck word, 3 its strike, 4 hearts, 5 home), reading order
   attribute vec4 aSeed;
   varying vec3 vColor;
   varying float vAlpha;
@@ -1540,29 +1865,53 @@ const WORDS_VERTEX = /* glsl */ `
     float hi = 1.0 - step(0.5, abs(aInfo.y - 1.0));
     float dim = 1.0 - step(0.5, abs(aInfo.y - 2.0));
     float strike = 1.0 - step(0.5, abs(aInfo.y - 3.0));
+    float heart = 1.0 - step(0.5, abs(aInfo.y - 4.0));
+    float home = 1.0 - step(0.5, abs(aInfo.y - 5.0));
+    float marked = hi + heart + home;
+    // the hearts beat with the heart: two knocks, a little over once a second
+    float beat = fract(uTime * 1.1);
+    float knock = heart * (exp(-pow((beat - 0.1) / 0.045, 2.0)) + 0.6 * exp(-pow((beat - 0.3) / 0.055, 2.0)));
+    // the brain's word (its phrase's highlight) shakes and glows as the brain charges up; the bulb's lights up
+    // as the hands near the bulb and bursts with it
+    float spark = hi * (1.0 - step(0.5, abs(aInfo.x - ${PHRASE_OF[SPARK]}.0))) * uCharge;
+    float lit = hi * (1.0 - step(0.5, abs(aInfo.x - ${PHRASE_OF[TOUCH]}.0)));
+    // the laptop's blinks with the caret at the end of the code on its screen, in its red; the chip's glows in
+    // the cyan neon of the brain on the chip
+    float typed = hi * (1.0 - step(0.5, abs(aInfo.x - ${PHRASE_OF[DIVE]}.0)));
+    float neon = hi * (1.0 - step(0.5, abs(aInfo.x - ${PHRASE_OF[DIVE + 1]}.0)));
     // the words land in reading order, highlights last and the strike after its word (all by show = 1)
-    float start = aInfo.z * 0.36 + aSeed.x * 0.1 + hi * 0.14 + strike * 0.2;
+    float start = aInfo.z * 0.36 + aSeed.x * 0.1 + marked * 0.14 + strike * 0.2;
     float m = smoothstep(start, start + 0.3, show);
     float e = m * m * (3.0 - 2.0 * m);
-    vec2 home = position.xy * 0.5 * uView; // pixels from the centre
+    vec2 at = position.xy * 0.5 * uView; // pixels from the centre
     float a = aSeed.y * 6.2831853;
-    vec2 loose = home + (vec2(cos(a), sin(a)) * (30.0 + aSeed.z * 170.0) - vec2(0.0, 40.0 + aSeed.w * 110.0)) * uLoose;
-    vec3 q = vec3(home * 0.004, uTime * 0.3 + aSeed.x * 4.0);
+    vec2 loose = at + (vec2(cos(a), sin(a)) * (30.0 + aSeed.z * 170.0) - vec2(0.0, 40.0 + aSeed.w * 110.0)) * uLoose;
+    vec3 q = vec3(at * 0.004, uTime * 0.3 + aSeed.x * 4.0);
     loose += vec2(snoise(q), snoise(q + 13.0)) * 80.0 * uLoose;
-    vec2 p = mix(loose, home, e);
+    vec2 p = mix(loose, at, e);
     p += vec2(snoise(vec3(aSeed.zw * 40.0, uTime * 1.3)), snoise(vec3(aSeed.wz * 40.0, uTime * 1.3 + 4.0))) * 0.35; // shimmer
+    p += vec2(snoise(vec3(aSeed.xy * 50.0, uTime * 18.0)), snoise(vec3(aSeed.yx * 50.0, uTime * 18.0 + 3.0))) * 3.0 * spark;
+    float blast = 1.0 - (1.0 - uBoom) * (1.0 - uBoom);
+    p += vec2(cos(a), sin(a)) * (60.0 + aSeed.z * 260.0) * blast * lit;
     gl_Position = vec4(p / (0.5 * uView), 0.0, 1.0);
-    gl_PointSize = uDot * uPixel * (0.85 + aSeed.w * 0.4) * (1.0 + hi * 0.2) * mix(2.2, 1.0, e);
-    // plain words cool white; highlights run cyan → violet → pink across the screen, a glint passing
-    float x = home.x / uView.x + 0.5;
+    gl_PointSize = uDot * uPixel * (0.85 + aSeed.w * 0.4) * (1.0 + marked * 0.2 + 0.3 * knock + 0.25 * neon) * mix(2.2, 1.0, e);
+    // plain words cool white; highlights run cyan → violet → pink across the screen, a glint passing; the
+    // hearts glow red, flaring on every beat; home is the Earth's green
+    float x = at.x / uView.x + 0.5;
     vec3 accent = mix(mix(vec3(0.3, 0.88, 1.0), vec3(0.6, 0.45, 1.0), smoothstep(0.15, 0.55, x)), vec3(1.0, 0.4, 0.78), smoothstep(0.55, 0.9, x));
     float glint = exp(-pow(x * 3.0 - mod(uTime * 0.55, 4.5) + 0.8, 2.0) * 9.0);
     vColor = mix(vec3(0.9, 0.94, 1.0), accent, hi);
     vColor = mix(vColor, vec3(0.62, 0.68, 0.82), dim);
     vColor = mix(vColor, vec3(1.0, 0.36, 0.72), strike); // crossed out in pink
     vColor += vec3(0.7) * glint * hi;
+    vColor = mix(vColor, vec3(1.0, 0.1, 0.2) * (1.3 + 1.2 * knock), heart);
+    vColor = mix(vColor, vec3(0.3, 0.95, 0.62) * 1.25 + vec3(0.5) * glint, home);
+    vColor = mix(vColor, vec3(0.9, 0.96, 1.0) * (1.2 + 0.6 * sin(uTime * 23.0 + aSeed.w * 6.0)), spark);
+    vColor = mix(vColor, vec3(1.0, 0.86, 0.6) * (1.0 + 1.4 * uReach) + 0.8 * uBoom * (1.0 - uBoom) * 4.0, lit * uReach);
+    vColor = mix(vColor, vec3(1.0, 0.24, 0.32), typed);
+    vColor = mix(vColor, vec3(0.42, 0.96, 1.0) * 1.35, neon);
     float flicker = 0.85 + 0.15 * snoise(vec3(aSeed.xy * 20.0, uTime * 2.0));
-    vAlpha = smoothstep(0.0, 0.5, m) * flicker * mix(1.0, 0.7, dim);
+    vAlpha = smoothstep(0.0, 0.5, m) * flicker * mix(1.0, 0.7, dim) * (1.0 + 0.5 * knock + 0.8 * spark + 0.5 * neon) * (1.0 - smoothstep(0.35, 1.0, uBoom) * lit) * mix(1.0, 0.3 + step(0.5, fract(uTime * 1.1)), typed);
   }
 `;
 
@@ -1571,7 +1920,8 @@ function Words({ uniforms, show, onReady }: { uniforms: Uniforms; show: number[]
   const [fonts, setFonts] = useState(false);
   useEffect(() => {
     let alive = true;
-    Promise.all([document.fonts?.load('600 64px Kanit'), document.fonts?.load('800 64px Kanit')]).finally(() => alive && setFonts(true));
+    const sample = PHRASES.join(' '); // loads the subsets their letters need (Cyrillic, Polish…)
+    Promise.all([document.fonts?.load(`600 64px ${FONT}`, sample), document.fonts?.load(`800 64px ${FONT}`, sample)]).finally(() => alive && setFonts(true));
     return () => {
       alive = false;
     };
@@ -1586,6 +1936,9 @@ function Words({ uniforms, show, onReady }: { uniforms: Uniforms; show: number[]
       uView: { value: new THREE.Vector2(1, 1) },
       uDot: { value: 2 },
       uLoose: { value: still ? 0.15 : 1 },
+      uCharge: uniforms.uCharge,
+      uReach: uniforms.uReach,
+      uBoom: uniforms.uBoom,
     }),
     [uniforms, show],
   );
@@ -1636,13 +1989,20 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t);
 };
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
+// Eases a to b in like smooth(), but half of it at an even pace, so the scroll never meets a standstill.
+const flow = (a: number, b: number, x: number) => {
+  const t = clamp01((x - a) / (b - a));
+  return 0.5 * t + 0.5 * t * t * (3 - 2 * t);
+};
+// Turns a point about the vertical axis, as the vertex shader's spin() does.
+const turned = (v: THREE.Vector3, a: number) => v.set(Math.cos(a) * v.x + Math.sin(a) * v.z, v.y, -Math.sin(a) * v.x + Math.cos(a) * v.z);
 
 // ——— scroll → morph, camera, lens, phrases and the hand-over ———
 function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show: number[]; bridge: RefObject<ManifestoBridge | null>; lens: Lens; morph: RefObject<Morph> }) {
   const camera = useThree((state) => state.camera) as THREE.PerspectiveCamera;
   const canvas = useThree((state) => state.gl.domElement);
-  const state = useRef({ started: false, x: 0, h: 0, v: 0, scroll: -1, leanX: 0, leanY: 0, px: -1, py: -1, moved: -1e9, gx: 0, gy: 0, blink: -1, nextBlink: 3, reveal: -1, irisX: 0, irisY: 0, irisScale: 1 });
-  const tools = useMemo(() => ({ frame: new THREE.Matrix4(), fit: new THREE.Matrix4(), v: new THREE.Vector3() }), []);
+  const state = useRef({ started: false, x: 0, h: 0, v: 0, scroll: -1, leanX: 0, leanY: 0, px: -1, py: -1, moved: -1e9, gx: 0, gy: 0, blink: -1, nextBlink: 3, reveal: -1, irisX: 0, irisY: 0, irisScale: 1, earth: 0 });
+  const tools = useMemo(() => ({ frame: new THREE.Matrix4(), fit: new THREE.Matrix4(), v: new THREE.Vector3(), a: new THREE.Vector3(), b: new THREE.Vector3() }), []);
 
   useEffect(() => {
     const st = state.current;
@@ -1700,15 +2060,20 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     st.v = snap ? 0 : st.v + ((st.scroll - scrolled) / dt - st.v) * (1 - Math.exp(-dt * 4));
     const speed = heroDone ? Math.min(1, Math.abs(st.v) / (2.1 * vh)) : 0;
 
-    // galaxy → Earth → its lights → heart → idea → brain → laptop → its chip → AI → eye: every segment holds its
-    // shape first, then morphs; into the laptop's chip the camera dives. Then the eye → the portrait, with the
-    // hand-over.
+    // galaxy → Earth → its lights → heart → brain → idea → laptop → its chip → AI → eye: every segment holds its
+    // shape first, then the camera flies on (FLIGHTS) or dives (into the laptop's chip); past the chip the shapes
+    // morph. Then the eye → the portrait, with the hand-over.
     let pair: number;
     let t: number;
-    // The galaxy winds up while the camera flies into the eye (hero frames), then draws to the middle of
-    // the screen past the hero and collapses into the Earth.
+    let hold = 0; // how far through its hold, before the camera flies on, a shape is (the camera nears it meanwhile)
+    let charge = 0; // the brain charging up (SPARK)
+    let reach = 0; // the hands reaching the bulb (TOUCH)…
+    let boom = 0; // …and its burst
+    // The iris winds up as the camera flies into the pupil (hero frames) and strews into stars; past the hero
+    // the camera flies on through them to the galaxy, which gathers ahead, holds its phrase and takes the
+    // camera into its core, where the Earth is.
     const twist = smooth(IRIS_FULL + 1, 80, frame);
-    let pull = 0;
+    let space = smooth(SPACE_FROM, 82, frame);
     let first = 1; // the galaxy's phrase, gathering as the galaxy settles
     if (st.x < TRACK) {
       pair = 0;
@@ -1716,15 +2081,30 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
       while (pair < STAGES - 1 && f >= STAGE[pair]) f -= STAGE[pair++];
       f = Math.min(1, f / STAGE[pair]);
       if (pair === 0) {
-        // past the hero the galaxy draws to the middle of the screen, holds its phrase a while and collapses
-        // into the Earth
-        pull = heroDone ? smooth(0, 0.25, f) : 0;
-        first = heroDone ? smooth(0.08, 0.4, f) : 0;
-        t = smooth(0.62, 0.97, f);
-      } else t = smooth(0.36, 0.95, f);
+        space = heroDone ? 1 - smooth(0.02, 0.34, f) : space;
+        first = heroDone ? smooth(0.24, 0.44, f) : 0;
+        t = flow(0.56, 1, f);
+        hold = heroDone ? f / 0.56 : 0;
+      } else if (pair === SPARK) {
+        // the brain charges up while its phrase holds, then the camera flies into it
+        charge = smooth(0, 0.34, f);
+        t = flow(0.34, 1, f);
+        hold = f / 0.34;
+      } else if (pair === TOUCH) {
+        // the hands come in and reach the bulb; as they touch it, it flares, they are blown away and the camera
+        // flies in as the bulb folds into the laptop
+        reach = smooth(0, 0.4, f);
+        boom = smooth(0.38, 0.66, f);
+        t = flow(0.4, 1, f);
+        hold = f / 0.4;
+      } else {
+        t = flow(0.25, 1, f);
+        hold = f / 0.25;
+      }
     } else {
       pair = STAGES;
       t = smooth(0, 0.8, st.h);
+      hold = (st.x - TRACK) / (b.track - TRACK); // the eye's phrase, held a little longer
     }
     morph.current.pair = pair;
     uniforms.uMorph.value = t;
@@ -1732,6 +2112,14 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     uniforms.uIrisOn.value = pair === 0 ? 1 : 0;
     uniforms.uAboutOn.value = pair === STAGES ? 1 : 0;
     uniforms.uDiveOn.value = pair === DIVE ? 1 : 0;
+    uniforms.uCharge.value = charge;
+    uniforms.uReach.value = reach;
+    uniforms.uBoom.value = boom;
+    uniforms.uSpace.value = space;
+    // and the whole of it winds on, one way and never pausing, from the iris gathering on the pupil to the camera
+    // flying into the galaxy's core
+    uniforms.uWind.value = WIND * (heroDone ? 1 + 2 * (pair === 0 ? st.x / STAGE[0] : 1) : clamp01((frame - IRIS_FROM) / (82 - IRIS_FROM)));
+    uniforms.uWarp.value = Math.max(0, frame - SPACE_FROM) * 1.5 + st.x * 70 + uniforms.uTime.value * 1.2;
     const flight = Math.sin(Math.PI * t);
     const reveal = pair === STAGES ? smooth(0.76, 0.98, st.h) : 0; // the portrait fades in over the landed particles…
     const leave = pair === STAGES ? smooth(0.84, 1, st.h) : 0; // …and they fade out
@@ -1757,12 +2145,17 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
       st.irisY = -(py - view.top - view.height / 2) * perPx;
       st.irisScale = (r * drawH * zoom * perPx) / (worldTall() * 0.92 * IRIS_INNER);
     }
-    // Past the hero the spiral draws in from the pupil's last place and size to the middle of the screen,
-    // where the Earth forms, small enough to be seen whole.
+    // Past the hero the galaxy gathers in the middle of the screen, where the Earth forms, GALAXY_FAR times
+    // farther off at first, nearing until it is small enough to be seen whole.
     const fit = (Math.min(0.37, 0.42 * (view.width / Math.max(1, view.height))) * worldTall()) / uniforms.uIrisOuter.value;
     const earthAt = uniforms.uEarth.value;
-    uniforms.uIrisCenter.value.set(st.irisX + (earthAt.x - st.irisX) * pull, st.irisY + (earthAt.y - st.irisY) * pull);
-    uniforms.uIrisScale.value = st.irisScale + (fit - st.irisScale) * pull;
+    if (heroDone) {
+      uniforms.uIrisCenter.value.set(earthAt.x, earthAt.y);
+      uniforms.uIrisScale.value = fit * GALAXY_FAR ** -space;
+    } else {
+      uniforms.uIrisCenter.value.set(st.irisX, st.irisY);
+      uniforms.uIrisScale.value = st.irisScale;
+    }
 
     uniforms.uTime.value += still ? dt * 0.2 : dt;
     uniforms.uSpeed.value = speed;
@@ -1773,14 +2166,66 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     uniforms.uFade.value = fade;
     uniforms.uDust.value = smooth(0, 0.18, st.x) * (1 - smooth(0.1, 0.7, st.h));
 
-    // camera: still while it has to match the video; afterwards a slow push during each morph, a lean with
+    // The flight between the pair (FLIGHTS): each shape scaled about the point the camera flies at, in its own
+    // space (as far as the shape has turned), that point at uFlyAt in the world. Otherwise the shapes stay put.
+    const fl = FLIGHTS[pair] ?? undefined;
+    const prev = FLIGHTS[pair - 1] ?? undefined;
+    // The Earth spins, but as the camera nears it (and on, into it) it turns Europe to face the camera.
+    const steer = fl?.kind === 'near' ? smooth(0, 0.6, t) : prev?.kind === 'near' ? 1 : 0;
+    const tick = still ? dt * 0.2 : dt;
+    const behind = -EUROPE[1] - st.earth;
+    st.earth += tick * SPIN * (1 - steer) + (behind - 2 * Math.PI * Math.round(behind / (2 * Math.PI))) * (1 - Math.exp(-tick * 2.5)) * steer;
+    morph.current.earth = st.earth;
+    const [flyFrom, flyTo, flyAt] = [uniforms.uFlyFrom.value, uniforms.uFlyTo.value, uniforms.uFlyAt.value];
+    flyFrom.set(0, 0, 0, 1);
+    flyTo.set(0, 0, 0, 1);
+    flyAt.set(0, 0, 0);
+    if (fl) {
+      const time = uniforms.uTime.value;
+      const eye = uniforms.uEye.value;
+      const focus = (name: Focus, shape: number, v: THREE.Vector3) =>
+        name === 'europe'
+          ? v.set(earthAt.x, earthAt.y + earthAt.w * Math.sin(EUROPE[0]), earthAt.z + earthAt.w * Math.cos(EUROPE[0]))
+          : name === 'eye'
+            ? v.set(eye.x, eye.y, 0)
+            : turned(v.copy(uniforms[name].value), turn(shape, time, st.earth));
+      const from = focus(fl.from, pair, tools.a);
+      const to = focus(fl.to, pair + 1, tools.b);
+      const nearY = earthAt.y + NEAR_AT * earthAt.w; // where Europe ends up as the camera nears it
+      if (fl.kind === 'near') {
+        flyFrom.set(from.x, from.y, from.z, fl.k ** t);
+        flyTo.copy(flyFrom);
+        flyAt.copy(from).setY(from.y + (nearY - from.y) * t);
+      } else if (fl.kind === 'in') {
+        // on from a nearing, the shape starts as near as that left it, and where
+        const base = prev?.kind === 'near' ? prev.k : 1;
+        flyFrom.set(from.x, from.y, from.z, base * fl.k ** t);
+        flyTo.set(to.x, to.y, to.z, fl.k ** (t - 1));
+        flyAt.set(from.x, prev?.kind === 'near' ? nearY : from.y, from.z).lerp(to, smooth(0, 0.75, t));
+      } else {
+        flyFrom.set(from.x, from.y, from.z, fl.k ** -t);
+        flyTo.set(to.x, to.y, to.z, fl.k ** (1 - t));
+        flyAt.copy(from).lerp(to, t);
+      }
+    }
+    uniforms.uFlyOn.value = fl && fl.kind !== 'near' ? 1 : 0;
+    uniforms.uIgnite.value = fl?.kind === 'near' ? 1 : 0;
+    const keep = fl?.keep ?? [];
+    uniforms.uKeep.value.set(keep[0] ?? -1, keep[1] ?? -1, keep[2] ?? -1, keep[3] ?? -1);
+    // the arcs over the lit Earth rise off it as its lights come on
+    uniforms.uRise.value = fl?.kind === 'near' ? smooth(0.25, 1, t) : prev?.kind === 'near' ? 1 : 0;
+    // the hands start just off the screen, beyond opposite corners
+    uniforms.uReachOff.value.set((worldTall() / 2) * (view.width / Math.max(1, view.height)), worldTall() / 2);
+
+    // camera: still while it has to match the video; afterwards it never stops: it nears each shape while it
+    // holds and eases back as it flies on, with a slow push during each flight (a pull, flying back), a lean with
     // the pointer and a kick of FOV while travelling
     const lean = heroDone && !small && !still && st.px >= 0;
     st.leanX += ((lean ? (st.px / window.innerWidth) * 2 - 1 : 0) - st.leanX) * (1 - Math.exp(-dt * 3));
     st.leanY += ((lean ? (st.py / vh) * 2 - 1 : 0) - st.leanY) * (1 - Math.exp(-dt * 3));
     const yaw = st.leanX * 0.16;
     const pitch = -st.leanY * 0.1;
-    const distance = DISTANCE - flight * 1.5;
+    const distance = DISTANCE - HOLD_PUSH * clamp01(hold) * (1 - t) - (fl?.kind === 'out' ? -1 : 1) * flight * 1.5;
     camera.position.set(Math.sin(yaw) * distance, Math.sin(pitch) * distance, Math.cos(yaw) * Math.cos(pitch) * distance);
     camera.lookAt(0, 0, 0);
     const fov = FOV + speed * 6 + flight * 4;
@@ -1867,7 +2312,9 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     // up as its last one leaves (the first half).
     const leaving = PHRASE_OF[pair];
     const coming = pair < STAGES ? PHRASE_OF[pair + 1] : -1;
-    for (let i = 0; i < show.length; i++) show[i] = i === leaving ? (i === coming ? 1 : 1 - smooth(0, 0.55, t)) * first : i === coming ? smooth(0.45, 1, t) : 0;
+    // (The eye's goes as soon as the About section starts to slide over it, clear of its title.)
+    const going = pair === STAGES ? smooth(0, 0.12, st.h) : smooth(0, 0.55, t);
+    for (let i = 0; i < show.length; i++) show[i] = i === leaving ? (i === coming ? 1 : 1 - going) * first : i === coming ? smooth(0.45, 1, t) : 0;
   }, -1); // before the cloud, which uploads the pair of shapes this frame shows
   return null;
 }
@@ -1917,6 +2364,22 @@ function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; 
       uChip: { value: new THREE.Vector4(0, 0, 0, 1) },
       uDive: { value: new THREE.Vector4(0, 0, 0, 1) },
       uDiveOn: { value: 0 },
+      uFlyOn: { value: 0 },
+      uFlyFrom: { value: new THREE.Vector4(0, 0, 0, 1) },
+      uFlyTo: { value: new THREE.Vector4(0, 0, 0, 1) },
+      uFlyAt: { value: new THREE.Vector3() },
+      uKeep: { value: new THREE.Vector4(-1, -1, -1, -1) },
+      uIgnite: { value: 0 },
+      uCharge: { value: 0 },
+      uReach: { value: 0 },
+      uReachOff: { value: new THREE.Vector2() },
+      uBoom: { value: 0 },
+      uSpace: { value: 0 },
+      uWarp: { value: 0 },
+      uRise: { value: 0 },
+      uWind: { value: 0 },
+      uHandLeft: { value: new THREE.Vector3() },
+      uHandRight: { value: new THREE.Vector3() },
       uSpinFrom: { value: 0 },
       uSpinTo: { value: 0 },
       uEye: { value: new THREE.Vector4(0, 0, 1, 0.4) },
@@ -1933,7 +2396,7 @@ function Scene({ bridge, onWarm }: { bridge: RefObject<ManifestoBridge | null>; 
   );
   uniforms.uPixel.value = dpr;
   const show = useMemo(() => PHRASES.map(() => 0), []);
-  const morph = useRef<Morph>({ pair: 0 });
+  const morph = useRef<Morph>({ pair: 0, earth: 0 });
   const lens: Lens = {
     aberration: useRef<ChromaticAberrationEffect>(null),
     noise: useRef<NoiseEffect>(null),

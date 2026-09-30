@@ -13,9 +13,8 @@ import * as THREE from 'three';
  * the pointer; he holds still, the photo shown as it is.
  */
 
-const BANDS = 48; // the spectrum laid out from the floor's middle to its rim
-const LOW = 35; // Hz, the bands' range, spaced by octave fractions
-const HIGH = 16_000;
+const BANDS = 48; // the spectrum laid out from the floor's middle to its rim, 35 Hz to 16 kHz in octave fractions
+const BANDS_FPS = 30; // the track's spectrum, worked out beforehand: this many rows of BANDS a second (scripts/prepare-bands.mjs)
 const RIM = 1.9; // the floor's radius, where the progress runs
 const FIGURE_HEIGHT = 2.1;
 const FIGURE_ASPECT = 501 / 1400; // public/about/listening.webp
@@ -186,9 +185,16 @@ function rim(count: number) {
 
 const additive = { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending } as const;
 
-type StageProps = { analyser: AnalyserNode | null; playing: boolean; progress: number; onToggle: () => void; onSeek: (at: number) => void };
+type StageProps = {
+  bands: Uint8Array | null; // the track's spectrum (BANDS_FPS rows of BANDS a second)
+  clock: () => number; // where the track is, in seconds
+  playing: boolean;
+  progress: number;
+  onToggle: () => void;
+  onSeek: (at: number) => void;
+};
 
-function Stage({ analyser, playing, progress, onToggle, onSeek }: StageProps) {
+function Stage({ bands, clock, playing, progress, onToggle, onSeek }: StageProps) {
   const { camera, size, viewport } = useThree();
   const figure = useTexture('/about/listening.webp');
   const parts = useMemo(() => {
@@ -230,7 +236,6 @@ function Stage({ analyser, playing, progress, onToggle, onSeek }: StageProps) {
     camera.lookAt(0, 0.9, 0);
   }, [camera]);
 
-  const bins = useMemo(() => new Uint8Array(analyser?.frequencyBinCount ?? 0), [analyser]);
   const run = useRef({ time: 0, energy: 0, over: 'none' as 'none' | 'floor' | 'rim' });
 
   useFrame(({ pointer }, delta) => {
@@ -239,17 +244,15 @@ function Stage({ analyser, playing, progress, onToggle, onSeek }: StageProps) {
     s.time += dt;
     const { spectrum } = parts;
 
-    // the spectrum: each band the mean of its bins, the highs lifted, falling back slower than it rises
+    // the spectrum where the track is (its bands' rows either side of the moment, mixed), falling back slower than
+    // it rises
     let all = 0;
-    if (analyser && playing && bins.length) {
-      analyser.getByteFrequencyData(bins);
-      const hz = analyser.context.sampleRate / 2 / bins.length;
+    const row = clock() * BANDS_FPS;
+    const at = Math.floor(row);
+    if (bands && playing && (at + 1) * BANDS < bands.length) {
+      const w = row - at;
       for (let b = 0; b < BANDS; b++) {
-        const lo = Math.floor((LOW * (HIGH / LOW) ** (b / BANDS)) / hz);
-        const hi = Math.max(lo + 1, Math.ceil((LOW * (HIGH / LOW) ** ((b + 1) / BANDS)) / hz));
-        let sum = 0;
-        for (let k = lo; k < hi; k++) sum += bins[k];
-        const v = Math.min(1, Math.pow(sum / (hi - lo) / 255, 1.5) * (1 + 2.2 * (b / BANDS) ** 1.5)); // the highs lifted, to show at the rim
+        const v = (bands[at * BANDS + b] * (1 - w) + bands[(at + 1) * BANDS + b] * w) / 255;
         spectrum[b] = v > spectrum[b] ? spectrum[b] + (v - spectrum[b]) * 0.6 : Math.max(v, spectrum[b] - 1.5 * dt);
         all += v / BANDS;
       }

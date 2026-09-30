@@ -8,6 +8,7 @@ import { B2B_SCENES, SAAS_B2B_FRAMES, SaasB2B } from './saas/b2b/SaasB2B';
 import { CRM_SCENES, SAAS_CRM_FRAMES, SaasCRM } from './saas/crm/SaasCRM';
 import { HR_SCENES, SAAS_HR_FRAMES, SaasHR } from './saas/hr/SaasHR';
 import { SAAS_TAXI_FRAMES, SaasTAXI, TAXI_SCENES } from './saas/taxi/SaasTAXI';
+import { t } from '../i18n';
 
 // The products' 2D promos (SIMBIA repo, promo/wideo-2d at 2ba662f: Claude outputs/promo-remotion/src/saas), 1920 × 1080
 // at 30 fps, played in English: each a pure function of the frame, so any frame shows at once and seeking is exact.
@@ -87,7 +88,7 @@ export default function Promo({ id, chapters }: PromoProps) {
         initiallyMuted
         style={{ position: 'absolute', left: '50%', top: '50%', width: 'max(100cqw, 100cqh * 16 / 9)', aspectRatio: '16 / 9', transform: 'translate(-50%, -50%)' }}
       />
-      <nav aria-label="Scenarios" className="absolute inset-x-0 top-0 flex gap-2 overflow-x-auto bg-gradient-to-b from-black/45 to-transparent p-3 sm:p-4 [scrollbar-width:none]">
+      <nav aria-label={t.projects.scenarios} className="absolute inset-x-0 top-0 flex gap-2 overflow-x-auto bg-gradient-to-b from-black/45 to-transparent p-3 sm:p-4 [scrollbar-width:none]">
         {marks.map((mark, i) => (
           <button
             key={mark.label}
@@ -106,7 +107,7 @@ export default function Promo({ id, chapters }: PromoProps) {
         <button
           type="button"
           onClick={() => player.current?.toggle()}
-          aria-label={playing ? 'Pause' : 'Play'}
+          aria-label={playing ? t.buttons.pause : t.buttons.play}
           className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-black/45 text-white backdrop-blur-md transition-colors hover:bg-black/65"
         >
           {playing ? <Pause className="h-3.5 w-3.5" fill="currentColor" /> : <Play className="h-3.5 w-3.5 translate-x-px" fill="currentColor" />}

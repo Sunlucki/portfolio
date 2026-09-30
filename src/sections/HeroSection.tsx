@@ -3,9 +3,11 @@ import { animate, createTimeline, onScroll } from 'animejs';
 import { FadeIn } from '../components/FadeIn';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
+import { LangSwitch } from '../components/LangSwitch';
 import MicroSlats from '../vendor/react-bits/MicroSlats';
 import TechText from '../vendor/react-bits/TechText';
-import { HERO_FG_FRAMES, HERO_FRAMES, HERO_TAGLINE, NAV, PERSON } from '../content';
+import { HERO_FG_FRAMES, HERO_FRAMES, HERO_TAGLINE, NAV } from '../content';
+import { FONT, fill, t } from '../i18n';
 import heroMotion from '../heroMotion.json';
 import { createHeroVeil } from './heroVeil';
 
@@ -27,11 +29,15 @@ const LOAD_ORDER: Array<[Layer, number]> = [
   ...range(HERO_FRAMES).filter((i) => i % 8 !== 0).map((i): [Layer, number] => ['bg', i]),
 ];
 
-const NAV_TEXT = 'text-sm font-medium uppercase tracking-wider md:text-lg lg:text-[1.4rem]';
+// On narrow phones the links shrink a little to fit side by side (Montserrat, set for Cyrillic, runs wider than
+// Kanit: smaller still, and closer).
+const NAV_TEXT = `${
+  FONT === 'Montserrat' ? 'text-[clamp(10px,3.1vw,0.75rem)] tracking-normal sm:text-sm sm:tracking-wider' : 'text-[clamp(11px,3.6vw,0.875rem)] tracking-wider'
+} whitespace-nowrap font-medium uppercase md:text-lg lg:text-[1.4rem]`;
 const HEADROOM = 0.12; // phones: share of the screen above the subject at the very top of the page
 const LOOSE_UNTIL = 0.12; // phones: scroll progress at which the framing is back to full cover
 const HOODIE_BLUE = '#1261d6'; // sampled from the hoodie
-const HEADLINE = { fontFamily: 'Kanit', fontWeight: 900, fontSize: 400, color: '#BBCCD7', accentColor: '#7FB0FF' } as const;
+const HEADLINE = { fontFamily: FONT, fontWeight: 900, fontSize: 400, color: '#BBCCD7', accentColor: '#7FB0FF' } as const;
 
 /**
  * Scroll-scrubbed hero, back to front:
@@ -324,7 +330,7 @@ export function HeroSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="top" aria-label="Intro" className="relative h-[220vh] md:h-[290vh]">
+    <section ref={sectionRef} id="top" aria-label={t.hero.label} className="relative h-[220vh] md:h-[290vh]">
       <div className="sticky top-0 h-svh w-full overflow-hidden bg-[#040B1C]">
         {/* 1 · animated backdrop */}
         <div ref={slatsRef} aria-hidden className="absolute inset-0" style={{ willChange: 'transform' }}>
@@ -338,19 +344,19 @@ export function HeroSection() {
         <div ref={headingRef} className="absolute inset-x-0 top-0 z-10" style={{ perspective: '1000px' }}>
           <div ref={tiltRef} style={{ willChange: 'transform' }}>
             <div aria-hidden className={`invisible px-6 pt-6 md:px-10 md:pt-8 ${NAV_TEXT}`}>
-              About
+              {t.nav.about}
             </div>
-            <h1 className="sr-only">Hi, I’m {PERSON.name}, {PERSON.role}</h1>
+            <h1 className="sr-only">{fill(t.hero.heading, { name: t.name, role: t.role })}</h1>
             <FadeIn delay={0.15} y={40} className="mt-3 sm:mt-0 md:-mt-8">
               <div aria-hidden className="hidden h-[17.5vw] sm:block">
-                <TechText text="HI, I’M BOGDAN" {...HEADLINE} />
+                <TechText text={`${t.hero.hello} ${t.hero.name}`} {...HEADLINE} />
               </div>
               <div aria-hidden className="sm:hidden">
                 <div className="h-[26vw]">
-                  <TechText text="HI, I’M" {...HEADLINE} />
+                  <TechText text={t.hero.hello} {...HEADLINE} />
                 </div>
                 <div className="-mt-[7vw] h-[26vw]">
-                  <TechText text="BOGDAN" {...HEADLINE} />
+                  <TechText text={t.hero.name} {...HEADLINE} />
                 </div>
               </div>
             </FadeIn>
@@ -367,12 +373,13 @@ export function HeroSection() {
         </div>
 
         <div ref={copyRef} className="pointer-events-none relative z-40 flex h-full flex-col">
-          <FadeIn as="nav" y={-20} aria-label="Main" className="pointer-events-auto flex justify-between px-6 pt-6 md:px-10 md:pt-8">
+          <FadeIn as="nav" y={-20} aria-label={t.nav.main} className="pointer-events-auto flex justify-between gap-x-3 px-6 pt-6 md:px-10 md:pt-8">
             {NAV.map((item) => (
               <a key={item.href} href={item.href} className={`-my-3 py-3 text-[#D7E2EA] transition-opacity duration-200 hover:opacity-70 ${NAV_TEXT}`}>
                 {item.label}
               </a>
             ))}
+            <LangSwitch className={NAV_TEXT} />
           </FadeIn>
 
           <div className="mt-auto flex items-end justify-between gap-6 px-6 pb-7 sm:pb-8 md:px-10 md:pb-10">
@@ -398,7 +405,7 @@ export function HeroSection() {
           aria-hidden
           className="pointer-events-none absolute bottom-8 left-1/2 z-40 hidden -translate-x-1/2 flex-col items-center gap-2 md:flex"
         >
-          <span className="text-xs uppercase tracking-[0.3em] text-[#D7E2EA]/70">Scroll</span>
+          <span className="text-xs uppercase tracking-[0.3em] text-[#D7E2EA]/70">{t.hero.scroll}</span>
           <span className="relative block h-8 w-px overflow-hidden bg-[#D7E2EA]/20">
             <span ref={hintDotRef} className="absolute left-0 top-0 block h-2 w-px bg-[#D7E2EA]" />
           </span>

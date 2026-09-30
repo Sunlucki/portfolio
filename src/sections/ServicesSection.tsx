@@ -1,6 +1,7 @@
 import { FadeIn } from '../components/FadeIn';
 import { SectionTitle } from '../components/SectionTitle';
 import { SERVICES } from '../content';
+import { t } from '../i18n';
 
 export function ServicesSection() {
   return (
@@ -8,7 +9,7 @@ export function ServicesSection() {
       id="services"
       className="rounded-t-[40px] bg-white px-5 py-20 text-[#0C0C0C] sm:rounded-t-[50px] sm:px-8 sm:py-24 md:rounded-t-[60px] md:px-10 md:py-32"
     >
-      <SectionTitle text="Services" light className="mb-12 sm:mb-16 md:mb-24" />
+      <SectionTitle text={t.services.title} light className="mb-12 sm:mb-16 md:mb-24" />
       <ul className="mx-auto max-w-5xl">
         {SERVICES.map((service, i) => (
           <FadeIn

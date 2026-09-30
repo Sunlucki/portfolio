@@ -21,7 +21,7 @@ html {
 }
 
 body {
-  font-family: 'Kanit', sans-serif;
+  font-family: var(--font, 'Kanit'), sans-serif;
   color: #d7e2ea;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

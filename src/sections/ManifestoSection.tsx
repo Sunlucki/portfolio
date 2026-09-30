@@ -1,16 +1,24 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { PHRASES, SHAPE_SCROLL, phraseRuns, phraseText } from '../content';
+import { t } from '../i18n';
 import { handoffLength } from '../three/aboutStage';
 import type { ManifestoBridge } from '../three/ManifestoScene';
 
 const loadScene = () => import('../three/ManifestoScene');
 const ManifestoScene = lazy(loadScene);
 const PHRASE_VH = 70; // scroll length per shape
-const HOLD_VH = 45; // the last phrase, over the eye, stays a little longer
+const HOLD_VH = 80; // the last phrase, over the eye, stays a while before the About section slides over it
 const TRACK_VH = SHAPE_SCROLL.reduce((sum, n) => sum + n) * PHRASE_VH + HOLD_VH;
 // The section starts on top of the hero's last 29% (from frame 58, as the camera nears the pupil) so the
 // particle iris can form over the real one: 29% of the hero's 120vh / 190vh of scroll.
 const OVERLAP = '-mt-[135.2vh] [--overlap:35.2vh] md:-mt-[155.7vh] md:[--overlap:55.7vh]';
+// The marked words of the plain-text phrases (no WebGL), in the scene's colours.
+const MARK_CLASS = {
+  hi: 'font-extrabold text-[#7fc8ff]',
+  heart: 'font-extrabold text-[#ff2d4a]',
+  home: 'font-extrabold text-[#4df29e]',
+  off: 'text-[#eef4ff]/50 line-through decoration-[#ff66c4]',
+};
 
 // Without WebGL the scene throws; the phrases are then shown as plain text.
 class SceneBoundary extends Component<{ children: ReactNode; onError: () => void }, { failed: boolean }> {
@@ -116,15 +124,15 @@ export function ManifestoSection() {
 
   if (failed) {
     return (
-      <section id="manifesto" aria-label="Manifesto" className="bg-[#0C0C0C] px-5 py-24 sm:px-8 md:px-10">
+      <section id="manifesto" aria-label={t.manifesto.label} className="bg-[#0C0C0C] px-5 py-24 sm:px-8 md:px-10">
         <div className="mx-auto flex max-w-3xl flex-col gap-12 text-center">
           {PHRASES.map((phrase) => (
-            <p key={phrase} className="font-semibold leading-tight text-[#eef4ff]" style={{ fontSize: 'clamp(1.8rem, 4.5vw, 3.6rem)' }}>
+            <p key={phrase} className="whitespace-pre-line font-semibold leading-tight text-[#eef4ff]" style={{ fontSize: 'clamp(1.8rem, 4.5vw, 3.6rem)' }}>
               {phraseRuns(phrase).map((run, k) =>
                 run.mark === 'plain' ? (
                   run.text
                 ) : (
-                  <span key={k} className={run.mark === 'hi' ? 'font-extrabold text-[#7fc8ff]' : 'text-[#eef4ff]/50 line-through decoration-[#ff66c4]'}>
+                  <span key={k} className={MARK_CLASS[run.mark]}>
                     {run.text}
                   </span>
                 ),
@@ -140,7 +148,7 @@ export function ManifestoSection() {
     <section
       ref={sectionRef}
       id="manifesto"
-      aria-label="Manifesto"
+      aria-label={t.manifesto.label}
       className={`relative ${OVERLAP}`}
       style={{ height: `calc(var(--overlap) + ${TRACK_VH}vh + var(--handoff, 0px) + 100svh)` }}
     >

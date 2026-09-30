@@ -1,8 +1,9 @@
 import { ArrowUpRight } from 'lucide-react';
+import { t } from '../i18n';
 
 type ContactButtonProps = { label?: string; href?: string };
 
-export function ContactButton({ label = 'Contact Me', href = '#contact' }: ContactButtonProps) {
+export function ContactButton({ label = t.buttons.contact, href = '#contact' }: ContactButtonProps) {
   return (
     <a
       href={href}
@@ -19,7 +20,7 @@ export function ContactButton({ label = 'Contact Me', href = '#contact' }: Conta
   );
 }
 
-export function LiveProjectButton({ href, label = 'Live Project' }: { href: string; label?: string }) {
+export function LiveProjectButton({ href, label = t.buttons.live }: { href: string; label?: string }) {
   return (
     <a
       href={href}

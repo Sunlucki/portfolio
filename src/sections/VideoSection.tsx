@@ -1,7 +1,9 @@
 import { Play, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
+import { SpeedNumber } from '../components/SpeedNumber';
 import { VIDEO_ORDER, VIDEO_UNDER, VIDEO_VIEWS, YOUTUBE_FILMS } from '../content';
+import { LOCALE, fill, t } from '../i18n';
 import films from '../videos.json';
 
 // Bogdan's films (scripts/prepare-media.py writes their list, the films, their posters and their strips of frames)
@@ -27,7 +29,13 @@ const FRAMES = 10; // in a film's strip
 const poster = (film: Film) => (film.youtube ? `https://i.ytimg.com/vi/${film.youtube}/maxresdefault.jpg` : `/video/${film.slug}.webp`);
 // the frames a hovered film flips through: its strip of ten, or YouTube's three stills of it
 const stills = (film: Film) => (film.youtube ? [1, 2, 3].map((k) => `https://i.ytimg.com/vi/${film.youtube}/hq${k}.jpg`) : [`/video/${film.slug}-frames.webp`]);
-const views = (n: number) => (n >= 1e6 ? `${(n / 1e6).toFixed(1)}M views` : `${Math.round(n / 1000)}K views`);
+// counts the short way, as the visitor's language writes them (1.3M, 1,3 млн, 1,3 Mio.)
+const compact = new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 });
+const views = (n: number) => fill(t.video.views, { n: compact.format(n) });
+const millions = (tenths: number) => compact.format(tenths * 100_000); // VIDEO_VIEWS' counts
+// a film's credit in the visitor's language, where it is words rather than names
+const credited = (credit: string) => t.video.credits[credit] ?? credit;
+const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 /**
@@ -88,8 +96,8 @@ export function VideoSection() {
 
   return (
     <section id="video" className="bg-[#0C0C0C] px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
-      <SectionTitle text="Video" className="mb-4 md:mb-6" />
-      <p className="mb-8 text-center text-xs uppercase tracking-[0.25em] text-[#D7E2EA]/60 md:mb-12">{VIDEO_VIEWS}</p>
+      <SectionTitle text={t.video.title} className="mb-4 md:mb-6" />
+      <Views />
       <div className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">
         {stacks.map((stack, c) => (
           <div key={c} className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
@@ -123,7 +131,7 @@ export function VideoSection() {
         <button
           type="button"
           onClick={close}
-          aria-label="Close"
+          aria-label={t.buttons.close}
           className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur-md transition-colors hover:bg-white/20"
         >
           <X className="h-5 w-5" />
@@ -134,7 +142,9 @@ export function VideoSection() {
 }
 
 // A film in the grid: its poster, its frames flipping while the pointer is on it (loaded the first time), its name.
+// Touch screens can't hover: there a film flips through its frames while it crosses the middle of the screen.
 function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
+  const self = useRef<HTMLButtonElement>(null);
   const [strip, setStrip] = useState(false); // the strip asked for
   const [frame, setFrame] = useState(-1); // -1: the poster
   const count = film.youtube ? 3 : FRAMES;
@@ -168,16 +178,25 @@ function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
     setFrame(-1);
   };
   useEffect(() => () => window.clearInterval(flip.current), []);
+  useEffect(() => {
+    const el = self.current;
+    if (!el || still || window.matchMedia('(hover: hover)').matches) return;
+    const observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? enter() : leave()), { rootMargin: '-35% 0px -35% 0px' });
+    observer.observe(el);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <button
+      ref={self}
       type="button"
       onClick={onOpen}
       onMouseEnter={enter}
       onMouseLeave={leave}
       onFocus={enter}
       onBlur={leave}
-      aria-label={`Play ${film.title}${film.credit ? `, ${film.credit}` : ''}`}
+      aria-label={`${fill(t.video.play, { title: film.title })}${film.credit ? `, ${credited(film.credit)}` : ''}`}
       className="group relative block w-full overflow-hidden rounded-[24px] bg-white/[0.04] text-left"
       style={{ aspectRatio: `${film.width} / ${film.height}` }}
     >
@@ -202,7 +221,7 @@ function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
         <div className="min-w-0">
           <p className="truncate text-lg font-black uppercase leading-tight text-white sm:text-xl">{film.title}</p>
           <p className="mt-0.5 truncate text-xs uppercase tracking-[0.18em] text-[#D7E2EA]/60">
-            {film.credit ? `${film.credit} · ` : ''}
+            {film.credit ? `${credited(film.credit)} · ` : ''}
             {film.views ? `${views(film.views)} · ` : ''}
             {clock(film.seconds)}
           </p>
@@ -212,5 +231,70 @@ function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
         </span>
       </div>
     </button>
+  );
+}
+
+// The views of his videos on each platform, in a row under the title: each with its icon, fading in and racing
+// up to its count as the row comes into view (like the numbers), again each time it does.
+function Views() {
+  const row = useRef<HTMLUListElement>(null);
+  const [run, setRun] = useState(false);
+  useEffect(() => {
+    const el = row.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setRun(entry.isIntersecting), { threshold: 0.6 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return (
+    <ul ref={row} className="mb-8 flex items-start justify-center gap-x-5 sm:items-center sm:gap-x-8 md:mb-12 md:gap-x-14">
+      {VIDEO_VIEWS.map(({ platform, views: count }, i) => (
+        <li
+          key={platform}
+          className="flex flex-col items-center gap-1.5 transition-[opacity,transform] duration-700 sm:flex-row sm:gap-3"
+          style={{ opacity: run || still ? 1 : 0, transform: run || still ? 'none' : 'translateY(12px)', transitionDelay: `${i * 120}ms` }}
+        >
+          <span className="sr-only">
+            {fill(t.video.viewsOn, { n: millions(count), platform })}
+          </span>
+          {/* on phones the icon over the count, so the three fit side by side in any language's numbers */}
+          <span aria-hidden className="flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3">
+            <Platform name={platform} />
+            <span className="whitespace-nowrap text-xl font-black leading-none sm:text-2xl md:text-3xl">
+              <SpeedNumber value={count} suffix="+" run={run} format={millions} />
+            </span>
+          </span>
+          <span aria-hidden className="text-[10px] uppercase tracking-[0.2em] text-[#D7E2EA]/60 sm:text-xs">
+            {platform}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// A platform's icon, small, in the text's colour.
+function Platform({ name }: { name: (typeof VIDEO_VIEWS)[number]['platform'] }) {
+  const icon = 'h-6 w-6 shrink-0 text-[#D7E2EA]/85';
+  if (name === 'YouTube') {
+    return (
+      <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" fillRule="evenodd" className={icon}>
+        <path d="M23 7.2a3 3 0 0 0-2.1-2.1C19 4.6 12 4.6 12 4.6s-7 0-8.9.5A3 3 0 0 0 1 7.2 31 31 0 0 0 .5 12a31 31 0 0 0 .5 4.8 3 3 0 0 0 2.1 2.1c1.9.5 8.9.5 8.9.5s7 0 8.9-.5a3 3 0 0 0 2.1-2.1 31 31 0 0 0 .5-4.8 31 31 0 0 0-.5-4.8ZM9.8 15.1V8.9l5.4 3.1Z" />
+      </svg>
+    );
+  }
+  if (name === 'TikTok') {
+    return (
+      <svg aria-hidden viewBox="0 0 24 24" fill="currentColor" className={icon}>
+        <path d="M16.8 2.5c.3 2.4 1.7 3.9 4.2 4.1v2.9c-1.5.1-2.8-.4-4.2-1.3v6.1c0 3.9-3 6.2-6.1 6.2a6 6 0 0 1-6-6.1c0-3.6 3.1-6.3 6.8-5.7v3.1c-1.6-.4-3.7.5-3.7 2.6 0 1.6 1.2 2.8 2.8 2.8 1.8 0 2.9-1.2 2.9-3.1V2.5Z" />
+      </svg>
+    );
+  }
+  return (
+    <svg aria-hidden viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={icon}>
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4.2" />
+      <circle cx="17.4" cy="6.6" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
   );
 }

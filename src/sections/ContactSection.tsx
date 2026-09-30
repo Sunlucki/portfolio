@@ -4,7 +4,9 @@ import { FadeIn } from '../components/FadeIn';
 import { SectionTitle } from '../components/SectionTitle';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
+import { LangLinks } from '../components/LangSwitch';
 import { PERSON } from '../content';
+import { fill, t } from '../i18n';
 
 // three.js and friends: loaded and mounted when the browser is idle after load (see below).
 const PhoneScene = lazy(() => import('../three/PhoneScene'));
@@ -22,6 +24,10 @@ class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean
 
 // Feathered edges (two gradients intersected), so the canvas melts into the page.
 const FEATHER = 'linear-gradient(to right, transparent, #000 12%, #000 88%, transparent), linear-gradient(to bottom, transparent, #000 10%, #000 90%, transparent)';
+
+// the footer's credits, around the names and links
+const C = t.contact.credits;
+const [open, close] = C.quotes;
 
 const LINKS = [
   { label: 'LinkedIn', href: PERSON.linkedin },
@@ -65,7 +71,7 @@ export function ContactSection() {
   return (
     <section id="contact" className="relative overflow-hidden px-5 pb-10 pt-24 sm:px-8 md:px-10 md:pt-32">
       <div className="mx-auto flex max-w-6xl flex-col items-center gap-10 text-center">
-        <SectionTitle text="Let’s talk" className="w-full" />
+        <SectionTitle text={t.contact.title} className="w-full" />
         {/* The phone: let's call. */}
         <div
           ref={stageRef}
@@ -74,7 +80,7 @@ export function ContactSection() {
         >
           <img
             src="/about/scene.webp"
-            alt="Bogdan Nenadović floating above a glowing iPhone"
+            alt={t.contact.sceneAlt}
             loading="lazy"
             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${ready ? 'opacity-0' : 'opacity-100'}`}
           />
@@ -94,12 +100,11 @@ export function ContactSection() {
           className="max-w-[640px] font-light leading-relaxed text-[#D7E2EA]"
           style={{ fontSize: 'clamp(1rem, 1.8vw, 1.3rem)' }}
         >
-          Open to remote product and design-engineering roles and B2B contracts. Based in {PERSON.location}, working with
-          teams across Europe and the US.
+          {fill(t.contact.pitch, { location: PERSON.location })}
         </FadeIn>
         <FadeIn delay={0.3}>
           <Magnet padding={100}>
-            <ContactButton label="Email me" href={`mailto:${PERSON.email}`} />
+            <ContactButton label={t.buttons.email} href={`mailto:${PERSON.email}`} />
           </Magnet>
         </FadeIn>
         <FadeIn delay={0.4} className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm uppercase tracking-widest text-[#D7E2EA] md:text-base">
@@ -121,17 +126,20 @@ export function ContactSection() {
           <span>
             © {new Date().getFullYear()} {PERSON.name}
           </span>
-          <span>B2B contracts via SIMBIA sp. z o.o.</span>
+          <span>{t.contact.b2b}</span>
+        </div>
+        <div className="mt-4 text-[#D7E2EA]/40">
+          <LangLinks />
         </div>
         <p className="mt-4 text-center text-xs normal-case leading-relaxed tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:py-2 [&_a]:underline-offset-2 hover:[&_a]:underline">
-          3D models under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>: “
-          <a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>” by{' '}
-          <a href="https://sketchfab.com/MG990">MajdyModels</a>, recoloured; “
-          <a href="https://sketchfab.com/3d-models/realistic-human-heart-3f8072336ce94d18b3d0d055a1ece089">Realistic Human Heart</a>” by{' '}
-          <a href="https://sketchfab.com/neshallads">neshallads</a> and “
-          <a href="https://sketchfab.com/3d-models/low-poly-human-brain-model-781330cf8c6e40508f0de62e2fef8dec">Low-Poly Human Brain Model</a>” by{' '}
-          <a href="https://sketchfab.com/moaazzizo123">moaazzizo123</a>, turned into particles. Earth at night: NASA Black Marble. Micro Slats, Tech
-          Text and Folder Float from <a href="https://reactbits.dev">React Bits</a>.
+          {C.models} <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>: {open}
+          <a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>
+          {close} {C.by} <a href="https://sketchfab.com/MG990">MajdyModels</a>, {C.recoloured}; {open}
+          <a href="https://sketchfab.com/3d-models/realistic-human-heart-3f8072336ce94d18b3d0d055a1ece089">Realistic Human Heart</a>
+          {close} {C.by} <a href="https://sketchfab.com/neshallads">neshallads</a> {C.and} {open}
+          <a href="https://sketchfab.com/3d-models/low-poly-human-brain-model-781330cf8c6e40508f0de62e2fef8dec">Low-Poly Human Brain Model</a>
+          {close} {C.by} <a href="https://sketchfab.com/moaazzizo123">moaazzizo123</a>, {C.particles}. {C.earth} {C.bits}{' '}
+          <a href="https://reactbits.dev">React Bits</a>.
         </p>
       </footer>
     </section>

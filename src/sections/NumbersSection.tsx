@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScatterText } from '../components/ScatterText';
 import { SpeedNumber } from '../components/SpeedNumber';
 import { NUMBERS, NUMBERS_CAPTION, NUMBERS_TITLE } from '../content';
+import { LOCALE } from '../i18n';
 
 const GAP = 38; // degrees between the numbers on the drum
 const TURN_VH = 55; // scroll per number
@@ -109,7 +110,7 @@ export function NumbersSection() {
         <ul className="sr-only">
           {NUMBERS.map((n) => (
             <li key={n.label}>
-              {n.value.toLocaleString('en-US')}
+              {n.value.toLocaleString(LOCALE)}
               {n.suffix} {n.label}
             </li>
           ))}

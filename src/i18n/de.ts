@@ -1,0 +1,268 @@
+// The site's words in German: a translation of ./en.ts, key for key.
+import type { Copy } from './en.ts';
+
+const de: Copy = {
+  meta: {
+    title: 'Bogdan Nenadović · Full-Stack Design Engineer',
+    description:
+      'Bogdan Nenadović, Full-Stack Design Engineer in Poznań, Polen. Ich gestalte, baue und liefere komplette Produkte: React, Node.js, PostgreSQL, SwiftUI und 3D.',
+    ogDescription: 'Ich gestalte, baue und liefere komplette Produkte: Interfaces, Backends, Infrastruktur und native iOS-Apps.',
+  },
+  language: 'Sprache',
+  name: 'Bogdan Nenadović',
+  role: 'Full-Stack Design Engineer',
+  location: 'Poznań, Polen',
+  nav: { main: 'Hauptnavigation', about: 'Profil', services: 'Angebot', projects: 'Projekte', contact: 'Kontakt' },
+  hero: {
+    label: 'Intro',
+    hello: 'HALLO, ICH BIN',
+    name: 'BOGDAN',
+    heading: 'Hallo, ich bin {name}, {role}',
+    tagline: 'ein Full-Stack Design Engineer, der komplette Produkte gestaltet, baut und ausliefert',
+    scroll: 'Scrollen',
+  },
+  buttons: { contact: 'Kontakt', email: 'Schreiben Sie mir', live: 'Live ansehen', close: 'Schließen', play: 'Abspielen', pause: 'Pause' },
+  manifesto: {
+    label: 'Manifest',
+    phrases: [
+      'Wir leben in einem Universum voller *Möglichkeiten*.',
+      'Auf einem Planeten der *Träume*, unserem +Zuhause+!',
+      'Unsere ^Herzen^ schlagen in jedem Winkel der Welt.',
+      'Und tief in uns werden unsere ^Herzen^ ^von Träumen gewärmt^.',
+      'Manche dieser Träume werden zu *Ideen*.',
+      'Und wir suchen einen Weg, sie zu *verwirklichen*.',
+      'Mit einem *Computer* erwecke ich Träume zum Leben.',
+      'Ich habe mein stärkstes\n*Werkzeug* eingebaut.',
+      'Und ihn mit *KI* verbunden.',
+      'Damit\n*Träume wahr werden*.',
+    ],
+  },
+  about: {
+    title: 'Über mich',
+    portraitAlt: 'Bogdan Nenadović im Hoodie, ein Porträt aus der Froschperspektive',
+    hello: 'Hallo, ich heiße Bogdan Nenadović, aber online kennt man mich als',
+    hint: 'Warum?',
+    close: 'Verstanden',
+    text: 'Seit acht Jahren helfe ich Menschen, ihre Ideen und Träume zum Leben zu erwecken. Design, Video und Marketing haben mich gelehrt, wie Produkte aussehen, sich anfühlen und verkaufen sollten. Heute baue ich sie von A bis Z: Interfaces, Backends, Infrastruktur und native iOS-Apps, KI-nativ ausgeliefert und rigoros geprüft. Bauen wir etwas, das einwandfrei funktioniert und unvergesslich aussieht.',
+    story: {
+      question: 'Warum SUNLUCKI?',
+      text: 'Mein Künstlername verbindet unseren Stern, die *Sonne*, die uns Licht, Wärme und Leben schenkt, mit dem *Glück*, das nur zu denen kommt, die versuchen, ihre Träume wahr zu machen.',
+      philosophy: 'Das ist meine ganze Philosophie: Hingabe an den Kosmos und an das Glück.',
+    },
+  },
+  numbers: {
+    title: 'Hier sind die Zahlen',
+    caption: 'Alle lieben große Zahlen … und ich habe sie.',
+    code: 'ausgelieferte Codezeilen',
+    views: 'Aufrufe auf YouTube, TikTok und Instagram',
+    hours: 'Arbeitsstunden seit 2016',
+    projects: 'umgesetzte Projekte',
+    designs: 'Grafikdesigns',
+    videos: 'produzierte Videos',
+    tracks: 'produzierte Tracks',
+    apps: 'native Apple-Apps',
+    companies: 'gegründete Unternehmen',
+  },
+  stack: {
+    title: 'Stack',
+    intro: 'Alles, womit ich Produkte ausliefere, in Ordnern sortiert.',
+    hover: 'Zum Öffnen mit der Maus über einen Ordner fahren. Die Notizen lassen sich verschieben.',
+    tap: 'Zum Öffnen auf einen Ordner tippen.',
+    swipe: 'Wischen: Der Ordner in der Mitte öffnet sich.',
+    tools: '{n} Tools',
+  },
+  services: {
+    title: 'Leistungen',
+    list: [
+      {
+        name: 'Product Engineering',
+        description:
+          'Komplette Webprodukte in TypeScript, React, Node.js und PostgreSQL, inklusive Datenmodell, APIs, Deployments und Backups. MVPs und SaaS, die dem Produktivbetrieb standhalten.',
+      },
+      {
+        name: 'Design Engineering',
+        description:
+          'Designsysteme, Motion und Interfaces, die sich handgemacht anfühlen: barrierefreie Komponenten, Spring-Animationen und Three.js / WebGL, wenn die Story Tiefe braucht.',
+      },
+      {
+        name: 'KI-Integration',
+        description:
+          'LLM-Features mit Leitplanken (strukturierte Outputs, Dokumenten-KI und Assistenten), KI-nativ umgesetzt, mit Specs, Tests und Adversarial Reviews bei jeder Änderung.',
+      },
+      {
+        name: 'Zahlungen & E-Rechnung',
+        description:
+          'Stripe, PayU, Przelewy24, Marktplätze und das polnische KSeF 2.0: Finanzintegrationen, ausgelegt auf Korrektheit, Idempotenz und Revisionssicherheit.',
+      },
+      {
+        name: 'Native iOS-Apps',
+        description: 'SwiftUI-Apps mit Widgets, Live Activities, Offline-Sync und Push, angebunden an dasselbe Backend wie das Webprodukt.',
+      },
+      {
+        name: 'Branding & Motion',
+        description: 'Markenidentität, Verpackungsdesign und KI-gestützte Videos. Marke und Produkt aus einer Hand.',
+      },
+    ],
+  },
+  projects: {
+    title: 'Webprojekte',
+    caseStudy: 'Case Study auf Anfrage',
+    demo: '{name}: Produktdemo',
+    sites: 'Websites',
+    scenarios: 'Szenarien',
+    crm: {
+      category: 'Eigenes Produkt · SIMBIA CRM',
+      name: 'CRM & Buchhaltung',
+      description: 'Vertriebs-CRM mit vollständiger doppelter Buchführung, KSeF-E-Rechnungen und Open Banking. Mein eigenes Unternehmen läuft darauf.',
+      alts: ['Kanban-Board in SIMBIA CRM', 'Finanzübersicht in SIMBIA CRM', 'Dashboard von SIMBIA CRM'],
+      chapters: ['Dashboard', 'Lead-Scoring', 'Prioritäten', 'Kanban', 'Angebot', 'Follow-up', 'Rechnung & KSeF', 'Mobil'],
+    },
+    b2b: {
+      category: 'Kundenshops · Mind Logistic, PROTECTDENT, XyliMelts',
+      name: 'B2B/B2C-Shopplattform',
+      description:
+        'Eine Commerce-Engine hinter drei Live-Shops: B2B-Großhandel mit Firmenfreigaben, Handelskrediten, 7 Zahlungsanbietern und 6 Marktplatzkanälen sowie B2C-Shops in bis zu 23 Sprachen.',
+      alts: ['Zielgruppenbereich des Großhandelsportals', 'Kennzahlen der Großhandelsplattform', 'Landingpage der Großhandelsplattform'],
+      chapters: ['Registrierung', 'Freigabe', 'Shop', 'Ihr Preis', 'Schnellbestellung', 'Handelskredit', 'Versand', 'Vertriebskanäle'],
+    },
+    hr: {
+      category: 'Eigenes Produkt · iApply',
+      name: 'Workforce-Management',
+      description: 'Schicht- und Zeiterfassung für Personaldienstleister: Einstempeln per QR, GPS und NFC, ein Live-Board für Koordinatoren und eine native iOS-App.',
+      alts: ['QR-Check-in-Zentrale von iApply', 'Schichtplanung in iApply', 'Wochenplan in iApply'],
+      chapters: ['Start', 'QR-Check-in', 'Schichtbörse', 'Dienstplan', 'Aufgaben', 'Überstunden', 'Abwesenheit', 'NFC'],
+    },
+    taxi: {
+      category: 'Kunde · TAXI BOSS',
+      name: 'Flotten­management', // soft hyphen: breaks as FLOTTEN-/MANAGEMENT on narrow phones
+      description: 'Flottenplattform für Uber- und Bolt-Partner: Recruiting-Funnel für Fahrer, digital signierte Verträge, Uber-API-Sync und eine Fahrer-App in SwiftUI.',
+      alts: ['3D-Fahrzeugpräsentation von TAXI BOSS', 'Fahrer-Dashboard von TAXI BOSS', 'Landingpage von TAXI BOSS'],
+      chapters: ['Bewerber', 'Registrierung', 'Dokumente', 'Vertrag', 'Auto', 'Flotte', 'Fahrer-App'],
+    },
+    wordpress: {
+      category: 'Kundenwebsites · WordPress & Elementor',
+      name: 'WordPress-Websites',
+      description:
+        'Websites für kleine Unternehmen, gestaltet und gebaut auf WordPress: eine Pâtisserie, ein Barbershop mit Onlinebuchung, ein Umzugsunternehmen in Kanada, eine medizinische Fachschule, eine Druckerei, ein Friseursalon, eine Streetwear-Marke und Onlineshops.',
+      alts: ['Website der Pâtisserie KREEM auf einem Laptop', 'Website des Barbershops Black Point auf einem Laptop', 'Website von Lizard Moving auf einem Tablet'],
+      // each site's frames, in order
+      slides: {
+        'Lizard Moving': ['Demo der mobilen Website von Lizard Moving', 'Website von Lizard Moving auf einem Tablet', 'Startseite von Lizard Moving'],
+        'Magic Patron': ['Demo der mobilen Website von Magic Patron', 'Onlineshop von Magic Patron auf einem Smartphone', 'Startseite von Magic Patron', 'Produktseite von Magic Patron'],
+        Alibia: ['Demo des mobilen Shops von Alibia', 'Onlineshop von Alibia auf einem Laptop', 'Startseite von Alibia', 'Shopseite von Alibia'],
+        KREEM: ['Website der Pâtisserie KREEM auf einem Laptop', 'Startseite von KREEM', 'Tortenseite von KREEM'],
+        'Black Point': ['Website des Barbershops Black Point auf einem Laptop', 'Preisliste von Black Point auf einem Laptop', 'Startseite von Black Point'],
+        'Nami Clean': ['Website des Reinigungsdienstes Nami Clean auf einem Laptop', 'Startseite von Nami Clean'],
+        Casada: ['Sessel-Website von Casada auf einem Laptop', 'Startseite von Casada', 'Produktseite von Casada'],
+        'ARAB 30': ['Streetwear-Shop von ARAB 30 auf einem Smartphone', 'Startseite von ARAB 30', 'Shopseite von ARAB 30', 'Produktseite von ARAB 30'],
+        'Architect Vision': ['Website des Innenarchitekturstudios Architect Vision auf einem Laptop', 'Startseite von Architect Vision'],
+        Enveloper: ['Startseite von Enveloper', 'Shopkategorien von Enveloper'],
+        Medicus: ['Startseite der medizinischen Fachschule Medicus'],
+        'Hair Hub': ['Startseite des Friseursalons Hair Hub'],
+        Fencing: ['Startseite der Fechtkampfrichter'],
+      },
+    },
+  },
+  apps: {
+    title: 'Mobile Apps',
+    caption:
+      'Native SwiftUI-Apps neben den Webplattformen: Einstempeln per QR, GPS und NFC für Personaldienstleister, eine Fahrer-App für eine Taxiflotte und ein privater Berater für die eigenen Finanzen.',
+    drag: 'Karten ziehen',
+    previous: 'Vorherige App',
+    next: 'Nächste App',
+    iapply: {
+      tagline: 'Zeiterfassung und Schichten für Personaldienstleister',
+      screens: [
+        { caption: 'Eingestempelt', alt: 'iApply-Startseite für Mitarbeitende: eingestempelt, mit laufendem Schicht-Timer, Ausstempeln, Verfügbarkeit, nächster Schicht und Stunden in diesem Monat' },
+        { caption: 'QR-Code am Einsatzort', alt: 'iApply-QR-Code des Koordinators zum Einstempeln am Einsatzort, mit Ablaufzeit und Gültigkeitsoptionen' },
+        { caption: 'Schichtbörse', alt: 'iApply-Schichtbörse: offene Schichten mit freien Plätzen, Anmeldung zur Bereitschaft und Buttons zum Übernehmen' },
+        { caption: 'Koordinatoren-Board', alt: 'iApply-Dashboard für Koordinatoren: Live-Anwesenheit, heutige Schichten, eine zu genehmigende Übernahme und Aufgaben' },
+      ],
+    },
+    taxi: {
+      tagline: 'Die Fahrer-App für eine Taxiflotte',
+      screens: [
+        { caption: 'Dashboard', alt: 'Fahrer-Dashboard von TAXI BOSS: Wochenverdienst, Fahrten, Monatssumme, Bewertung und das gemietete Auto' },
+        { caption: 'Einnahmen', alt: 'Einnahmen in TAXI BOSS: Wochensummen und ein Balkendiagramm nach Tagen' },
+        { caption: 'Dokumente', alt: 'Dokumente in TAXI BOSS: die erforderlichen Nachweise, freigegeben, jeweils mit einem Button zum Ersetzen' },
+        { caption: 'Dienstplan', alt: 'Dienstplan in TAXI BOSS: ein Monatskalender mit Arbeitstagen, freien Tagen und Mietzeiträumen' },
+      ],
+    },
+    cashflow: {
+      tagline: 'Ein privater Berater für die eigenen Finanzen',
+      screens: [
+        { caption: 'Übersicht', alt: 'CashFlow-Übersicht: monatliche Einnahmen, Ausgaben und Verpflichtungen, was übrig bleibt, und Ausgaben nach Kategorie' },
+        { caption: 'Tilgungsplan', alt: 'CashFlow-Tilgungsplan: Schulden mit Schneeball- und Lawinenmethode und dem Datum der Schuldenfreiheit' },
+        { caption: 'Ausgaben nach Kategorie', alt: 'CashFlow-Ausgaben nach Kategorie: ein Ringdiagramm mit dem Anteil jeder Kategorie' },
+        { caption: 'Schulden und Ersparnisse', alt: 'CashFlow-Status von Schulden und Ersparnissen mit einem Sparziel-Ring und einer Karte mit KI-Einblick' },
+      ],
+    },
+  },
+  graphics: {
+    title: 'Grafik',
+    tiles: [
+      'Plakate für die Eventreihe HYPE',
+      'Musikplakat für Ihor Poperechny',
+      'Logo für DC Consulting',
+      'Branding für Touch Coffee',
+      'Visitenkarten für Da Vinci Tattoo',
+      'T-Shirt von Black Point mit dem Print „Ant Might“',
+      'Social Media für den Barbershop Black Point',
+      'Branding für Adaya',
+      'Branding für Soul Nation Tattoo',
+      'Personenbeförderung Strimat',
+      'Branding für Profi Dokument',
+      'Branding für Zero Śladu',
+      'Visitenkarten für Yana Lashes',
+      'Branding für Stories Beauty',
+      'T-Shirt von Black Point',
+      'Visitenkarten für Laser-Haarentfernung',
+      'Flyer für PROTECTDENT',
+      'Logo für Alibia',
+      'Branding für Time Relax Body',
+      'Social Media für das Restaurant Na Serio Na Żarty',
+      'Visitenkarte für Ihor Poperechny',
+    ],
+  },
+  video: {
+    title: 'Video',
+    views: '{n} Aufrufe',
+    viewsOn: '{n}+ Aufrufe auf {platform}',
+    play: '{title} abspielen',
+    // the credits under the films that are words, not names
+    credits: {
+      'AI film': 'KI-Film',
+      'Episode 1': 'Folge 1',
+      'ARAB · co-director': 'ARAB · Co-Regie',
+      'Filming and editing': 'Dreh und Schnitt',
+      'SUNLUCKI production': 'SUNLUCKI-Produktion',
+    },
+  },
+  music: {
+    title: 'Musik',
+    nowPlaying: 'Jetzt läuft',
+    previous: 'Vorheriger Titel',
+    next: 'Nächster Titel',
+    seek: 'Wiedergabeposition',
+    playlist: 'Playlist',
+  },
+  contact: {
+    title: 'Sprechen wir',
+    sceneAlt: 'Bogdan Nenadović schwebt über einem leuchtenden iPhone',
+    pitch: 'Offen für Remote-Positionen im Product- und Design-Engineering sowie für B2B-Verträge. Ich arbeite mit Teams in ganz Europa und den USA, von {location} aus.',
+    b2b: 'B2B-Verträge über SIMBIA sp. z o.o.',
+    // the credits in the footer, around the names and links
+    credits: {
+      models: '3D-Modelle unter',
+      by: 'von',
+      recoloured: 'umgefärbt',
+      and: 'und',
+      particles: 'in Partikel verwandelt',
+      earth: 'Die Erde bei Nacht: NASA Black Marble.',
+      bits: 'Micro Slats, Tech Text und Folder Float von',
+      quotes: ['„', '“'],
+    },
+  },
+};
+
+export default de;

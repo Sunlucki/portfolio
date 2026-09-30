@@ -1,3 +1,4 @@
+import { FONT } from '../i18n';
 import TechText from '../vendor/react-bits/TechText';
 import { FadeIn } from './FadeIn';
 
@@ -11,7 +12,7 @@ export function SectionTitle({ text, light = false, className = '' }: SectionTit
       <div aria-hidden style={{ height: 'clamp(4rem, 14vw, 190px)' }}>
         <TechText
           text={text.toUpperCase()}
-          fontFamily="Kanit"
+          fontFamily={FONT}
           fontWeight={900}
           fontSize={300}
           color={light ? '#0C0C0C' : '#BBCCD7'}

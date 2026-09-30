@@ -1,21 +1,24 @@
 import { useEffect, useRef } from 'react';
+import { LOCALE } from '../i18n';
 
-type SpeedNumberProps = { value: number; suffix?: string; run: boolean; className?: string };
+type SpeedNumberProps = { value: number; suffix?: string; run: boolean; className?: string; format?: (n: number) => string };
 
 const DURATION = 2200;
 const TRAILS = 3;
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const grouped = (n: number) => n.toLocaleString(LOCALE);
 
 // A number that races up to its value when `run` turns on and smears with its speed (after React Bits Pro's
 // Speeding Text): it blurs and stretches, copies of it trail behind, and it settles sharp. A value under 10
 // spins its digit through two laps first, so it races too. It starts over when `run` goes off and on again.
-export function SpeedNumber({ value, suffix = '', run, className = '' }: SpeedNumberProps) {
+// `format` writes it (by default with thousands separators).
+export function SpeedNumber({ value, suffix = '', run, className = '', format = grouped }: SpeedNumberProps) {
   const main = useRef<HTMLSpanElement>(null);
   const trails = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
     const show = (n: number, speed: number) => {
-      const text = n.toLocaleString('en-US');
+      const text = format(n);
       const done = speed === 0 && n === value;
       const smear = Math.min(1, speed);
       if (main.current) {
@@ -46,7 +49,7 @@ export function SpeedNumber({ value, suffix = '', run, className = '' }: SpeedNu
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [run, value, suffix]);
+  }, [run, value, suffix, format]);
 
   return (
     <span className={`relative inline-block tabular-nums ${className}`} style={{ transform: 'skewX(-9deg)' }}>
