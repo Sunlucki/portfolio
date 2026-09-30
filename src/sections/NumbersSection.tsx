@@ -11,8 +11,8 @@ const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduc
 /**
  * The numbers: a drum that turns as the page scrolls (after React Bits Pro's 3D Text Reveal), a number on
  * every face. The stage sticks while the section scrolls past; the drum's angle follows the scroll, eased.
- * As a number comes round to the front it races up to its value (SpeedNumber); a number that goes back down
- * below resets, so it races again next time. Above
+ * A number races up to its value (SpeedNumber) as soon as it comes into view, so no zeros show; one that goes
+ * back down out of view resets, so it races again next time. Above
  * the drum, a heading whose letters scatter from the cursor.
  */
 export function NumbersSection() {
@@ -41,7 +41,6 @@ export function NumbersSection() {
       const pose = `${angle.toFixed(2)} ${radius.toFixed(0)}`;
       frame = requestAnimationFrame(tick);
       if (pose === drawn) return;
-      const first = !drawn; // landing mid-section: the numbers already passed show their values
       drawn = pose;
       let changed = false;
       faces.current.forEach((face, i) => {
@@ -52,7 +51,7 @@ export function NumbersSection() {
         face.style.transform = `translate(-50%, -50%) translateZ(${(-radius).toFixed(0)}px) rotateX(${tilt.toFixed(2)}deg) translateZ(${radius.toFixed(0)}px)`;
         face.style.opacity = seen.toFixed(3);
         face.style.visibility = seen > 0 ? 'visible' : 'hidden';
-        const run = tilt < -GAP * 0.9 ? false : tilt > -GAP * 0.4 && (first || tilt < GAP * 0.4) ? true : flags[i];
+        const run = tilt <= -GAP * 1.9 ? false : tilt < GAP * 1.9 ? true : flags[i]; // (in view: |tilt| < 1.9 faces)
         if (run !== flags[i]) {
           flags[i] = run;
           changed = true;
