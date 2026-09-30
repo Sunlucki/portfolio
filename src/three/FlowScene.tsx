@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
 import { MOBILE_APPS } from '../content';
 import { flow, phoneLayout } from './flow';
+import { FOV as MUSIC_FOV, RIM, inPlay, placeCamera } from './musicFloor';
 import { NOISE_GLSL } from './noise';
 
 /**
@@ -16,7 +17,10 @@ import { NOISE_GLSL } from './noise';
  * Graphics covers as a slow cloud, and land on the Video section's first films, which then show (their cards'
  * opacity, set here). On phones the Video section shows no grid: the particles build the iPhone again there, the
  * first film's picture on its screen, and PLAY floats over it (the section's); tapped, the phone flies at the camera
- * until its screen fills the view, its picture splitting into red, green and blue, and the section's feed opens.
+ * until its screen fills the view, its picture splitting into red, green and blue, and the section's feed opens;
+ * closed, the feed flies back into the phone. Scrolled on to the Music section, the particles leave the films (or
+ * the phone, which breaks up) and build its stage's floor, the rim and PLAY round Bogdan's feet, landing where the
+ * stage (three/MusicStage.tsx) draws them, and the stage's own floor shows (flow.music.built).
  * Everything is driven by the scroll (where the sections are on the screen, read every frame), eased.
  */
 
@@ -70,18 +74,23 @@ const screenFragment = /* glsl */ `
 `;
 
 // The particles: each has a place on the phone (aPhone, in its model's units; w: 1 on its display), one in the
-// cloud and, on desktops, one on a film's card (aTile: which, and where on it). Where it is: strewn round the phone,
-// gathered on it (uAssemble), in the cloud (uLeave), on its card or on phones on the phone again (uLand); each
-// particle in its own time, swirling on the way.
+// cloud, on desktops one on a film's card (aTile: which, and where on it) and one on the Music stage's floor
+// (aMusic). Where it is: strewn round the phone, gathered on it (uAssemble), in the cloud (uLeave), on its card or
+// on phones on the phone again (uLand), on the Music stage's floor (uOnward); each particle in its own time,
+// swirling on the way.
 const particleVertex = /* glsl */ `
   uniform mat4 uPhoneA; // the phone in the Apps section, as it stands now
   uniform mat4 uPhoneB; // phones: the phone in the Video section
   uniform float uAssemble, uLeave, uLand, uTime, uPixel, uSeenA, uSeenB, uCards, uMobile;
+  uniform float uOnward, uBuilt, uMorph; // on to the Music stage's floor; the floor shown; its button (0 PLAY, 1 all of it)
+  uniform mat4 uMusicView; // the Music stage's camera (and its floor's turn): from the floor to its canvas
+  uniform vec4 uStage; // the Music stage's canvas on the page's plane: left, bottom, width, height
   uniform vec4 uCloud; // its width and height, how far it has drifted
   uniform vec4 uTiles[${CARDS}]; // the films' cards on the page's plane: left, bottom, width, height
   attribute vec4 aPhone;
   attribute vec4 aRand;
   attribute vec3 aTile;
+  attribute vec4 aMusic; // its place in the Music stage's PLAY (w: 1 on the floor's rim instead)
   varying vec3 vColor;
   varying float vAlpha;
   ${NOISE_GLSL}
@@ -103,27 +112,37 @@ const particleVertex = /* glsl */ `
     vec4 card = uTiles[int(aTile.x + 0.5)];
     vec3 onCard = vec3(card.x + aTile.y * card.z, card.y + aTile.z * card.w, 0.0);
     vec3 end = mix(onCard, onB, uMobile);
+    // on the Music stage's floor (on its rim, in PLAY or, as the music plays, anywhere on it), where its camera
+    // sees it, laid on the page's plane where its canvas is
+    float along = aRand.z * 6.28318;
+    float spread = aRand.x * 6.28318;
+    vec3 floorAt = aMusic.w > 0.5 ? vec3(sin(along), 0.0, -cos(along)) * ${RIM.toFixed(2)} : mix(aMusic.xyz, vec3(cos(spread), 0.0, sin(spread)) * sqrt(aRand.y) * ${(RIM * 0.9).toFixed(3)}, uMorph);
+    vec4 seen = uMusicView * vec4(floorAt, 1.0);
+    vec3 onMusic = vec3(uStage.xy + (seen.xy / max(seen.w, 1e-3) * 0.5 + 0.5) * uStage.zw, 0.0);
 
     float a = own(uAssemble, aRand.x);
     float l = own(uLeave, aRand.y);
     float d = own(uLand, aRand.z);
+    float o = own(uOnward, fract(aRand.x + aRand.w));
     vec3 p = mix(strewn, onA, a);
     p = mix(p, cloud, l);
     p = mix(p, end, d);
-    float travel = sin(3.14159 * a) + sin(3.14159 * l) + sin(3.14159 * d);
+    p = mix(p, onMusic, o);
+    float travel = sin(3.14159 * a) + sin(3.14159 * l) + sin(3.14159 * d) + sin(3.14159 * o);
     vec3 q = p * 0.3 + vec3(0.0, 0.0, uTime * 0.15);
     p += vec3(snoise(q), snoise(q + 17.0), snoise(q + 31.0)) * 0.45 * travel;
 
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
-    gl_PointSize = (0.05 + 0.06 * aRand.w) * (1.0 + 0.4 * aPhone.w * (1.0 - l)) * uPixel / -mv.z;
+    gl_PointSize = (0.05 + 0.06 * aRand.w) * (1.0 + 0.4 * aPhone.w * (1.0 - l)) * (1.0 - 0.45 * o) * uPixel / -mv.z;
     // seen where the phone or the cards don't show yet, the cloud fading at its edges
     float edge = smoothstep(0.0, 0.12, up) * (1.0 - smoothstep(0.88, 1.0, up));
     float atA = a * (1.0 - l);
     float atCloud = l * (1.0 - d);
     float flicker = 0.8 + 0.2 * sin(uTime * (1.5 + 2.0 * aRand.w) + aRand.x * 40.0);
-    vAlpha = smoothstep(0.0, 0.3, uAssemble) * (1.0 - uSeenA * atA) * mix(1.0, edge, atCloud) * (1.0 - mix(uCards, uSeenB, uMobile) * d) * flicker * (0.7 + 0.5 * aRand.w);
-    vColor = mix(mix(vec3(0.42, 0.62, 1.0), vec3(0.72, 0.92, 1.0), aRand.w), vec3(0.95, 0.98, 1.0), 0.6 * aPhone.w * (1.0 - l));
+    // (leaving the films or the phone they show again; on the floor, they give way to it)
+    vAlpha = smoothstep(0.0, 0.3, uAssemble) * (1.0 - uSeenA * atA) * mix(1.0, edge, atCloud) * (1.0 - mix(uCards, uSeenB, uMobile) * d * (1.0 - o)) * (1.0 - uBuilt * o) * flicker * (0.7 + 0.5 * aRand.w);
+    vColor = mix(mix(mix(vec3(0.42, 0.62, 1.0), vec3(0.72, 0.92, 1.0), aRand.w), vec3(0.95, 0.98, 1.0), 0.6 * aPhone.w * (1.0 - l)), vec3(0.3, 0.7, 1.0), 0.5 * o);
   }
 `;
 const particleFragment = /* glsl */ `
@@ -139,7 +158,8 @@ const particleFragment = /* glsl */ `
 `;
 
 // Points over the phone's surfaces, as many on each part as its area takes (its display's marked), in the model's
-// units; and for the films' cards, which one and where on it (a third of them on its edges, so each reads crisp).
+// units; for the films' cards, which one and where on it (a third of them on its edges, so each reads crisp); and
+// their places on the Music stage's floor.
 function sample(root: THREE.Object3D, screen: THREE.Mesh | null, cards: number[]) {
   root.updateMatrixWorld(true);
   const meshes: { mesh: THREE.Mesh; area: number }[] = [];
@@ -195,11 +215,15 @@ function sample(root: THREE.Object3D, screen: THREE.Mesh | null, cards: number[]
     }
     tile.set([which, u, v], k * 3);
   }
+  // on the Music stage's floor: a fifth on its rim, the rest in PLAY
+  const music = new Float32Array(COUNT * 4);
+  for (let k = 0; k < COUNT; k++) music.set(Math.random() < 0.2 ? [0, 0, 0, 1] : [...inPlay(), 0], k * 4);
   const geometry = new THREE.BufferGeometry()
     .setAttribute('position', new THREE.BufferAttribute(new Float32Array(COUNT * 3), 3))
     .setAttribute('aPhone', new THREE.BufferAttribute(phone, 4))
     .setAttribute('aRand', new THREE.BufferAttribute(rand, 4))
-    .setAttribute('aTile', new THREE.BufferAttribute(tile, 3));
+    .setAttribute('aTile', new THREE.BufferAttribute(tile, 3))
+    .setAttribute('aMusic', new THREE.BufferAttribute(music, 4));
   geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
   return geometry;
 }
@@ -308,6 +332,11 @@ function Scene() {
           uSeenB: { value: 0 },
           uCards: { value: 0 },
           uMobile: { value: small ? 1 : 0 },
+          uOnward: { value: 0 },
+          uBuilt: { value: 0 },
+          uMorph: { value: 0 },
+          uMusicView: { value: new THREE.Matrix4() },
+          uStage: { value: new THREE.Vector4(0, 0, 1, 1) },
           uCloud: { value: new THREE.Vector4() },
           uTiles: { value: Array.from({ length: CARDS }, () => new THREE.Vector4()) },
         },
@@ -332,7 +361,7 @@ function Scene() {
 
   // the first film's picture, for the Video section's phone
   const poster = useRef<{ src: string; texture: THREE.Texture | null }>({ src: '', texture: null });
-  const run = useRef({ time: 0, shown: -1, app: -1, push: 1, turn: 1, assemble: 0, leave: 0, land: 0, flown: false, cards: -1, ready: '' });
+  const run = useRef({ time: 0, shown: -1, app: -1, push: 1, turn: 1, assemble: 0, leave: 0, land: 0, onward: 0, flown: false, landed: false, cards: -1, ready: '' });
   const tools = useMemo(
     () => ({
       matrix: new THREE.Matrix4(),
@@ -349,10 +378,19 @@ function Scene() {
       qb: new THREE.Quaternion(),
       sa: new THREE.Vector3(),
       sb: new THREE.Vector3(),
+      turn: new THREE.Matrix4(),
     }),
     [],
   );
-  const places = useRef<{ apps: HTMLElement | null; phone: HTMLElement | null; graphics: HTMLElement | null; films: HTMLElement | null }>({ apps: null, phone: null, graphics: null, films: null });
+  // the Music stage's camera, as it stands there
+  const musicCamera = useMemo(() => {
+    const camera = new THREE.PerspectiveCamera(MUSIC_FOV, 1, 0.1, 1000);
+    placeCamera(camera);
+    camera.updateMatrixWorld();
+    return camera;
+  }, []);
+  const dots = useRef<THREE.Points>(null);
+  const places = useRef<{ apps: HTMLElement | null; phone: HTMLElement | null; graphics: HTMLElement | null; films: HTMLElement | null; music: HTMLElement | null }>({ apps: null, phone: null, graphics: null, films: null, music: null });
 
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
@@ -364,6 +402,7 @@ function Scene() {
     found.apps ??= document.querySelector('[data-flow="apps"]');
     found.phone ??= document.querySelector('[data-flow="phone"]');
     found.films ??= document.querySelector('[data-flow="films"]');
+    found.music ??= document.querySelector('[data-flow="music"]');
     if (!found.apps) return;
 
     // the page's plane: world units per pixel, and a point of the screen on it
@@ -389,11 +428,34 @@ function Scene() {
     u.uLand.value = r.land;
     u.uCloud.value.set(TALL * (canvas.width / Math.max(1, canvas.height)) * 1.15, TALL * 1.2, (window.scrollY / vh) * 0.3, 0);
 
+    // on to the Music section: the particles leave the phone (phones: once it is on its way up the screen) or the
+    // films as its stage comes up, and build the stage's floor, done as it reaches the middle of the screen; then
+    // the stage's own floor shows
+    const m = found.music?.getBoundingClientRect();
+    let onward = 0;
+    if (m && m.height > 0) {
+      if (small && e) {
+        const from = e.top + e.height / 2;
+        onward = clamp01((vh * 0.35 - from) / Math.max(vh * 0.3, m.top + m.height / 2 - from - vh * 0.2));
+      } else onward = clamp01((vh - m.top) / (vh * 0.45 + m.height / 2));
+      const [left, bottom] = onPlane(m.left, m.bottom);
+      u.uStage.value.set(left, bottom, m.width * perPx, m.height * perPx);
+      musicCamera.aspect = m.width / m.height;
+      musicCamera.updateProjectionMatrix();
+      u.uMusicView.value.multiplyMatrices(musicCamera.projectionMatrix, musicCamera.matrixWorldInverse).multiply(tools.turn.makeRotationY(-flow.music.turn));
+      u.uMorph.value = flow.music.morph;
+    }
+    r.onward += (onward - r.onward) * ease;
+    u.uOnward.value = r.onward;
+    const built = still ? 1 : smooth(0.82, 1, r.onward);
+    u.uBuilt.value = built;
+    flow.music.built = built;
+
     // the phone: in the Apps section, or on phones in the Video section once the particles land there
     const atB = small && r.land > 0.5 && !!e;
     // (with reduced motion no particles: the phone just stands where it is)
     const seenA = still ? 1 : smooth(0.8, 1, r.assemble) * (1 - smooth(0, 0.15, r.leave));
-    const seenB = small ? (still ? 1 : smooth(0.8, 1, r.land)) : 0;
+    const seenB = small ? (still ? 1 : smooth(0.8, 1, r.land) * (1 - smooth(0, 0.15, r.onward))) : 0;
     u.uSeenA.value = seenA;
     u.uSeenB.value = seenB;
     const place = (box: DOMRect) => {
@@ -411,9 +473,11 @@ function Scene() {
     if (e && small) pose(place(e), 0, u.uPhoneB.value);
 
     // PLAY tapped (phones): the phone flies at the camera, face on, until its display fills the view, its picture
-    // splitting apart; then the feed opens
-    const flying = small && flow.fly > 0 && !!e;
-    const fly = flying ? clamp01((performance.now() - flow.fly) / FLY_MS) : 0;
+    // splitting apart; then the feed opens. The feed closed, it flies back from there.
+    const now = performance.now();
+    const back = flow.back > 0 ? clamp01((now - flow.back) / FLY_MS) : 0;
+    const flying = small && !!e && (flow.fly > 0 || flow.back > 0);
+    const fly = !flying ? 0 : flow.back > 0 ? 1 - back : clamp01((now - flow.fly) / FLY_MS);
     const g = group.current;
     if (g) {
       const shown = atB ? seenB : seenA;
@@ -430,13 +494,17 @@ function Scene() {
           tools.full.decompose(to, qb, sb);
           tools.matrix.compose(from.lerp(to, k), qa.slerp(qb, k), sa.lerp(sb, k));
           screen.uniforms.uSplit.value = 0.06 * fly * fly;
-          if (fly >= 1 && !r.flown) {
+          if (!flow.back && fly >= 1 && !r.flown) {
             r.flown = true;
             flow.flown?.();
           }
+          if (flow.back && back >= 1 && !r.landed) {
+            r.landed = true;
+            flow.landed?.();
+          }
         } else {
           screen.uniforms.uSplit.value = 0;
-          r.flown = false;
+          r.flown = r.landed = false;
         }
         tools.matrix.decompose(g.position, g.quaternion, g.scale);
       } else {
@@ -511,6 +579,8 @@ function Scene() {
       const ready = seenB > 0.9 ? '1' : '0';
       if (ready !== r.ready) end.dataset.ready = r.ready = ready;
     }
+    // none of the particles shows while they all rest in what they built (the films or the phone, the floor)
+    if (dots.current) dots.current.visible = !(r.onward > 0.999 && built > 0.999) && !(r.onward < 0.001 && r.land > 0.999 && (small ? seenB : u.uCards.value) > 0.999);
   });
 
   // off the page: the films' cards show again
@@ -527,7 +597,7 @@ function Scene() {
         <primitive object={model.root} />
         <primitive object={model.backing} />
       </group>
-      {!still && <points geometry={geometry} material={material} frustumCulled={false} />}
+      {!still && <points ref={dots} geometry={geometry} material={material} frustumCulled={false} />}
     </>
   );
 }

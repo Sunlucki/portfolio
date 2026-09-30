@@ -118,12 +118,13 @@ export function MusicSection() {
   const track = TRACKS[current];
 
   return (
-    <section id="music" className="bg-[#0C0C0C] px-4 pb-24 pt-16 sm:px-6 md:px-10 md:pt-24">
+    <section id="music" className="px-4 pb-24 pt-16 sm:px-6 md:px-10 md:pt-24">
       <SectionTitle text={t.music.title} className="mb-4 md:mb-6" />
 
       <div className="mx-auto mt-6 grid max-w-6xl items-center gap-8 md:mt-10 md:grid-cols-[1.3fr_1fr] md:gap-10">
         <div className="min-w-0">
-          <div ref={stage} className="relative aspect-[4/5] sm:aspect-[5/4] md:aspect-auto md:h-[520px]">
+          {/* (its floor built by the particles from the Video section: three/FlowScene.tsx) */}
+          <div ref={stage} data-flow="music" className="relative aspect-[4/5] sm:aspect-[5/4] md:aspect-auto md:h-[520px]">
             {warm && (
               <Quiet>
                 <Suspense fallback={null}>

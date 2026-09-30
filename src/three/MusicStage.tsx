@@ -2,6 +2,8 @@ import { Canvas, useFrame, useThree, type ThreeEvent } from '@react-three/fiber'
 import { Billboard, useTexture } from '@react-three/drei';
 import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { flow } from './flow';
+import { FOV, RIM, SQUASH, inPlay, placeCamera } from './musicFloor';
 
 /**
  * The music player's stage, which is the player: Bogdan in his headphones stands still on a round floor, its rim a
@@ -10,21 +12,17 @@ import * as THREE from 'three';
  * which is the spectrum, read from the middle out: the bass under his feet, the mids round him, the highs at the rim,
  * each ring of particles rising with its band, only upward, and coloured by it. With the pointer over the floor the
  * button lights up: the triangle, or PAUSE's two bars (him between them) drawn in the floor. It turns a little with
- * the pointer; he holds still, the photo shown as it is.
+ * the pointer; he holds still, the photo shown as it is. The rim and the floor show as the particles coming from the
+ * Video section build them (three/FlowScene.tsx, which lands its particles where this draws: flow.music).
  */
 
 const BANDS = 48; // the spectrum laid out from the floor's middle to its rim, 35 Hz to 16 kHz in octave fractions
 const BANDS_FPS = 30; // the track's spectrum, worked out beforehand: this many rows of BANDS a second (scripts/prepare-bands.mjs)
-const RIM = 1.9; // the floor's radius, where the progress runs
 const FIGURE_HEIGHT = 2.1;
 const FIGURE_ASPECT = 501 / 1400; // public/about/listening.webp
 // The ground point between his feet in the cut-out (40.1 % across, 7.4 % up from the bottom), where the photo
 // turns to the camera and the floor's middle lies, so the bass is right under him.
 const FEET = [0.401, 0.074] as const;
-const FOV = 32;
-const ELEVATION = 0.5; // the camera, above him as the photo was taken
-const DISTANCE = 8;
-const SQUASH = 0.57; // how much the floor shortens, seen from there: the button is drawn taller to read upright
 const FLAT = 0.3; // the particles' cloud, flattened into the floor
 const SHELLS = 30; // half the particles sit on shells, rings of the spectrum
 
@@ -38,6 +36,7 @@ const floorVertex = /* glsl */ `
   uniform float uTime;
   uniform float uEnergy;
   uniform float uPixel;
+  uniform float uBuilt; // how far the particles from the Video section have built it
   varying vec3 vColor;
   varying float vAlpha;
 
@@ -92,7 +91,7 @@ const floorVertex = /* glsl */ `
     float r = mix(ri, r0, m); // the colour says the frequency: deep blue bass, cyan mids, violet highs
     gl_PointSize = (0.02 + 0.022 * min(glow, 1.5) + 0.008 * button) * uPixel / -mv.z;
     vColor = mix(palette(clamp(0.08 + 0.88 * r, 0.0, 1.0)) * (0.55 + 0.6 * min(glow, 1.3)), vec3(0.55, 0.85, 1.0), 0.45 * button);
-    vAlpha = mix(0.34 + 0.4 * min(glow, 1.0), (0.2 + 0.45 * min(glow, 1.0)) * (1.0 - 0.25 * r0 * r0), m) + 0.28 * button;
+    vAlpha = (mix(0.34 + 0.4 * min(glow, 1.0), (0.2 + 0.45 * min(glow, 1.0)) * (1.0 - 0.25 * r0 * r0), m) + 0.28 * button) * uBuilt;
   }
 `;
 
@@ -104,6 +103,7 @@ const rimVertex = /* glsl */ `
   uniform float uEnergy;
   uniform float uTime;
   uniform float uPixel;
+  uniform float uBuilt;
   varying vec3 vColor;
   varying float vAlpha;
   void main() {
@@ -117,7 +117,7 @@ const rimVertex = /* glsl */ `
     gl_Position = projectionMatrix * mv;
     gl_PointSize = (0.032 + 0.026 * lit + 0.03 * head) * uPixel / -mv.z;
     vColor = mix(vec3(0.2, 0.36, 0.9), vec3(0.4, 0.78, 1.0), lit) * (1.0 + 0.5 * uEnergy * lit) + vec3(0.35, 0.65, 1.0) * head;
-    vAlpha = mix(0.34 + 0.25 * uHover, 1.0, lit) + 0.6 * head;
+    vAlpha = (mix(0.34 + 0.25 * uHover, 1.0, lit) + 0.6 * head) * uBuilt;
   }
 `;
 
@@ -131,31 +131,6 @@ const dotFragment = /* glsl */ `
     gl_FragColor = vec4(vColor, vAlpha * exp(-r * 3.5));
   }
 `;
-
-// PLAY: a triangle pointing right, drawn as seen (u across, v up the screen), its centroid at his feet
-const PLAY_AT = [
-  [-0.52, 0.72],
-  [-0.52, -0.72],
-  [1.05, 0],
-];
-// a point in it, laid on the floor: a quarter of them on its edges, so it reads crisp
-function inPlay(): [number, number, number] {
-  let u: number;
-  let v: number;
-  const [p, q, r] = PLAY_AT;
-  if (Math.random() < 0.25) {
-    const side = Math.floor(Math.random() * 3);
-    const [a, b] = [PLAY_AT[side], PLAY_AT[(side + 1) % 3]];
-    const t = Math.random();
-    [u, v] = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
-  } else {
-    let a = Math.random();
-    let b = Math.random();
-    if (a + b > 1) [a, b] = [1 - a, 1 - b];
-    [u, v] = [p[0] + a * (q[0] - p[0]) + b * (r[0] - p[0]), p[1] + a * (q[1] - p[1]) + b * (r[1] - p[1])];
-  }
-  return [u + (Math.random() - 0.5) * 0.02, Math.abs(Math.random() - 0.5) * 0.05, -v / SQUASH + (Math.random() - 0.5) * 0.03];
-}
 
 // Directions evenly over the sphere; half the radii on shells, the rest leaning outward; and each a place in PLAY.
 function cloud(count: number) {
@@ -205,7 +180,7 @@ function Stage({ bands, clock, playing, progress, onToggle, onSeek }: StageProps
     const spectrumTexture = new THREE.DataTexture(bytes, BANDS, 1, THREE.RedFormat, THREE.UnsignedByteType);
     spectrumTexture.magFilter = spectrumTexture.minFilter = THREE.LinearFilter;
     spectrumTexture.needsUpdate = true;
-    const shared = { uTime: { value: 0 }, uEnergy: { value: 0 }, uPixel: { value: 1 } };
+    const shared = { uTime: { value: 0 }, uEnergy: { value: 0 }, uPixel: { value: 1 }, uBuilt: { value: 1 } };
     const floor = new THREE.ShaderMaterial({
       vertexShader: floorVertex,
       fragmentShader: dotFragment,
@@ -231,10 +206,8 @@ function Stage({ bands, clock, playing, progress, onToggle, onSeek }: StageProps
   useEffect(() => {
     parts.shared.uPixel.value = (size.height * viewport.dpr) / (2 * Math.tan(THREE.MathUtils.degToRad(FOV) / 2));
   }, [parts, size.height, viewport.dpr]);
-  // the camera looks down at him from where the photo was taken, and stays there: he holds still
   useEffect(() => {
-    camera.position.set(0, 0.95 + Math.sin(ELEVATION) * DISTANCE, Math.cos(ELEVATION) * DISTANCE);
-    camera.lookAt(0, 0.9, 0);
+    placeCamera(camera);
   }, [camera]);
 
   const run = useRef({ time: 0, energy: 0, over: 'none' as 'none' | 'floor' | 'rim' });
@@ -277,6 +250,10 @@ function Stage({ bands, clock, playing, progress, onToggle, onSeek }: StageProps
     ease(u.uTurn, pointer.x * 0.35, 2.5);
     ease(parts.line.uniforms.uProgress, progress, 6);
     ease(parts.line.uniforms.uHover, s.over === 'rim' ? 1 : 0, 8);
+    // built by the particles from the Video section, which land where this draws (its turn and its button)
+    parts.shared.uBuilt.value = flow.music.built;
+    flow.music.turn = u.uTurn.value;
+    flow.music.morph = u.uMorph.value;
   });
 
   // the floor is the button, its rim the progress: where the pointer is on it says which

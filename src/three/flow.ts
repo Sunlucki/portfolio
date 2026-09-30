@@ -6,7 +6,8 @@
  *
  * The scene finds its places by these attributes: [data-flow="apps"] (the Apps section's stage for the phone),
  * [data-flow="graphics"] (the Graphics section), [data-flow="films"] (the Video section's grid; its first films,
- * [data-film], are the ones the particles build) and, on phones, [data-flow="phone"] (the Video section's stage).
+ * [data-film], are the ones the particles build), on phones [data-flow="phone"] (the Video section's stage) and
+ * [data-flow="music"] (the Music section's stage, whose floor the particles build last).
  */
 export const flow = {
   // the Apps section's phone: its screens, the one on it, and which app's it is
@@ -16,6 +17,12 @@ export const flow = {
   // phones: PLAY tapped (the time it was, performance.now()); the scene flies into the screen, then calls `flown`
   fly: 0,
   flown: null as (() => void) | null,
+  // phones: the feed closed (the time it was); the scene flies back out of the screen, then calls `landed`
+  back: 0,
+  landed: null as (() => void) | null,
+  // the Music stage's floor: how far the particles have built it (whole without the scene), and its turn and its
+  // button (0 PLAY, 1 the whole floor as the music plays), the stage's, for the particles to land where it draws
+  music: { built: 1, turn: 0, morph: 0 },
   // phones: where the scene is (FlowSections' own): behind the page, over it (the phone flying into the screen) or
   // under the feed (nothing of it shows: it stops drawing)
   layer: null as ((layer: FlowLayer) => void) | null,

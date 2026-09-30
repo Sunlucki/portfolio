@@ -42,6 +42,29 @@ const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduc
 // touch screens (no hover): no frames flipping
 const touch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+// The page glides down to `to` (slower than the browser's own smooth scroll, so the particles can be seen on their
+// way), unless a finger or the wheel takes over; then `done`.
+function glide(to: number, done: () => void, ms = 1800) {
+  const from = window.scrollY;
+  const t0 = performance.now();
+  let stopped = still;
+  const stop = () => (stopped = true);
+  window.addEventListener('touchstart', stop, { once: true, passive: true });
+  window.addEventListener('wheel', stop, { once: true, passive: true });
+  const step = (now: number) => {
+    const k = Math.min(1, (now - t0) / ms);
+    if (!stopped) window.scrollTo({ top: from + (to - from) * (k < 0.5 ? 4 * k ** 3 : 1 - (2 - 2 * k) ** 3 / 2), behavior: 'instant' });
+    if (k < 1 && !stopped) requestAnimationFrame(step);
+    else {
+      window.removeEventListener('touchstart', stop);
+      window.removeEventListener('wheel', stop);
+      done();
+    }
+  };
+  if (!still) return requestAnimationFrame(step);
+  window.scrollTo({ top: to, behavior: 'instant' });
+  done();
+}
 
 /**
  * Video: Bogdan's films in a masonry grid (three columns, two on tablets, one on phones), each at its own shape,
@@ -59,6 +82,7 @@ export function VideoSection() {
   const [phone, setPhone] = useState(phoneLayout);
   const [feed, setFeed] = useState(false);
   const [flying, setFlying] = useState(false);
+  const [gliding, setGliding] = useState(false); // the feed over, on to the Music section
   const theater = useRef<HTMLDivElement>(null);
   const feeder = useRef<FeedHandle>(null);
   const fallback = useRef(0);
@@ -92,6 +116,7 @@ export function VideoSection() {
     flow.poster = poster(FILMS[0]);
   }, []);
   const play = () => {
+    if (flying || gliding) return;
     feeder.current?.start();
     if (still) return setFeed(true); // no flying
     setFlying(true);
@@ -99,12 +124,30 @@ export function VideoSection() {
     flow.fly = performance.now();
     fallback.current = window.setTimeout(() => setFeed(true), 1400); // no scene to fly (no WebGL): open all the same
   };
-  const closeFeed = () => {
+  // closed, the feed flies back into the phone, the film just watched on its screen; the feed over, the page goes
+  // on to the Music section (the phone breaking up to build its floor)
+  const closeFeed = (at: number, end: boolean) => {
     window.clearTimeout(fallback.current);
     setFeed(false);
-    setFlying(false);
-    flow.fly = 0;
     flow.flown = null;
+    flow.poster = poster(FILMS[at]);
+    const done = () => {
+      window.clearTimeout(fallback.current);
+      setFlying(false);
+      flow.fly = flow.back = 0;
+      flow.landed = null;
+      const music = document.getElementById('music');
+      if (!end || !music) return;
+      setGliding(true);
+      glide(music.getBoundingClientRect().top + window.scrollY, () => {
+        setGliding(false);
+        flow.poster = poster(FILMS[0]); // (the phone gone by now: the feed starts over next time)
+      });
+    };
+    if (!flow.fly) return done(); // (it didn't fly in)
+    flow.back = performance.now();
+    flow.landed = done;
+    fallback.current = window.setTimeout(done, 1400); // no scene to fly (no WebGL): back all the same
   };
   // the scene: over the page while the phone flies, resting under the feed
   useEffect(() => {
@@ -149,7 +192,7 @@ export function VideoSection() {
               onClick={play}
               aria-label={fill(t.video.play, { title: FILMS[0].title })}
               className="absolute left-1/2 top-[42%] grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 scale-50 place-items-center rounded-full text-white opacity-0 shadow-[0_0_40px_rgba(255,45,85,0.6)] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-data-[ready=1]:-translate-y-[70%] group-data-[ready=1]:scale-100 group-data-[ready=1]:opacity-100"
-              style={{ background: '#FF2D55', ...(flying && { opacity: 0, transform: 'translate(-50%, -70%) scale(1.8)', transitionDuration: '300ms' }) }}
+              style={{ background: '#FF2D55', ...((flying || gliding) && { opacity: 0, transform: 'translate(-50%, -70%) scale(1.8)', transitionDuration: '300ms', pointerEvents: 'none' }) }}
             >
               <span className="absolute inset-0 rounded-full group-data-[ready=1]:animate-[play-ring_1.6s_ease-out_infinite]" />
               <Play className="h-8 w-8 translate-x-0.5 group-data-[ready=1]:animate-[play-pulse_1.6s_ease-in-out_infinite]" fill="currentColor" />

@@ -270,15 +270,26 @@ export function HeroSection() {
     }
 
     // Dither Veil loop: burns the pointer's trail into the print (or, when the pointer has been idle for
-    // a while or there is none, a slow wandering spot over the figure) and redraws while anything moves.
+    // a while, a slow wandering spot over the figure) and redraws while anything moves. Touch screens have no
+    // pointer to follow: the print stays whole until a touch or a swipe, which shows the photo whole for a few
+    // seconds (the print dissolving into it), and then knits back.
     const wander = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const touch = window.matchMedia('(hover: none)').matches;
     const pointer = { x: 0, y: 0, at: -Infinity };
+    const whole = { from: -Infinity, until: -Infinity }; // touch screens: the photo shown whole
     let veilRaf = 0;
     let veilLast = 0;
     const onVeilPointer = (e: PointerEvent) => {
       pointer.x = e.clientX;
       pointer.y = e.clientY;
       pointer.at = performance.now();
+      wakeVeil();
+    };
+    const onVeilTouch = () => {
+      const now = performance.now();
+      if (progress >= 0.3) return; // (the figure is gone by then)
+      if (now > whole.until) whole.from = now;
+      whole.until = now + 3000;
       wakeVeil();
     };
     const veilTick = (now: number) => {
@@ -289,13 +300,19 @@ export function HeroSection() {
       const w = fgCanvas.clientWidth;
       const h = fgCanvas.clientHeight;
       let spot: { x: number; y: number } | null = null;
-      if (now - pointer.at < 2500) {
+      if (touch) {
+        // (no spot: the whole print dissolves)
+      } else if (now - pointer.at < 2500) {
         spot = { x: ((pointer.x - rect.left) * w) / rect.width, y: ((pointer.y - rect.top) * h) / rect.height };
       } else if (wander) {
         const t = now / 1000;
         spot = { x: w * (0.5 + 0.22 * Math.sin(t * 0.47)), y: h * (0.5 + 0.2 * Math.sin(t * 0.31 + 1.3)) };
       }
-      const lit = veil.step(dt, spot);
+      let lit = veil.step(dt, spot);
+      if (touch && now < whole.until) {
+        veil.flood(wander ? (now - whole.from) / 350 : 1);
+        lit = true;
+      }
       velocity *= 0.9;
       veil.render(sourceChanged, 3 + Math.min(12, Math.abs(velocity) * 40));
       sourceChanged = false;
@@ -307,8 +324,13 @@ export function HeroSection() {
       veilLast = performance.now();
       veilRaf = requestAnimationFrame(veilTick);
     }
-    window.addEventListener('pointermove', onVeilPointer, { passive: true });
-    window.addEventListener('pointerdown', onVeilPointer, { passive: true });
+    if (touch) {
+      window.addEventListener('pointerdown', onVeilTouch, { passive: true });
+      window.addEventListener('scroll', onVeilTouch, { passive: true });
+    } else {
+      window.addEventListener('pointermove', onVeilPointer, { passive: true });
+      window.addEventListener('pointerdown', onVeilPointer, { passive: true });
+    }
     if (!depth) visibility.observe(section);
 
     return () => {
@@ -317,6 +339,8 @@ export function HeroSection() {
       document.documentElement.removeEventListener('pointerleave', onPointerLeave);
       window.removeEventListener('pointermove', onVeilPointer);
       window.removeEventListener('pointerdown', onVeilPointer);
+      window.removeEventListener('pointerdown', onVeilTouch);
+      window.removeEventListener('scroll', onVeilTouch);
       visibility.disconnect();
       if (depthRaf) cancelAnimationFrame(depthRaf);
       if (veilRaf) cancelAnimationFrame(veilRaf);
@@ -369,7 +393,9 @@ export function HeroSection() {
         {/* Legibility gradients above every layer, so subject and backdrop are shaded alike */}
         <div ref={shadeRef} aria-hidden className="pointer-events-none absolute inset-0 z-30">
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#0C0C0C]/60 to-transparent" />
-          <div className="absolute inset-x-0 bottom-0 h-[42%] bg-gradient-to-t from-[#0C0C0C]/90 via-[#0C0C0C]/40 to-transparent" />
+          <div className="absolute inset-x-0 bottom-0 hidden h-[42%] bg-gradient-to-t from-[#0C0C0C]/90 via-[#0C0C0C]/40 to-transparent sm:block" />
+          {/* phones: darker, under the tagline and the button */}
+          <div className="absolute inset-x-0 bottom-0 h-[48%] bg-[linear-gradient(to_top,#0C0C0C_0%,rgb(12_12_12/0.88)_42%,rgb(12_12_12/0)_100%)] sm:hidden" />
         </div>
 
         <div ref={copyRef} className="pointer-events-none relative z-40 flex h-full flex-col">
@@ -382,12 +408,13 @@ export function HeroSection() {
             <LangSwitch className={NAV_TEXT} />
           </FadeIn>
 
-          <div className="mt-auto flex items-end justify-between gap-6 px-6 pb-7 sm:pb-8 md:px-10 md:pb-10">
+          {/* phones: the tagline centred, the button under it; wider: side by side */}
+          <div className="mt-auto flex flex-col items-center gap-6 px-6 pb-8 text-center sm:flex-row sm:items-end sm:justify-between sm:pb-8 sm:text-left md:px-10 md:pb-10">
             <FadeIn
               as="p"
               delay={0.35}
               y={20}
-              className="max-w-[160px] font-light uppercase leading-snug tracking-wide text-[#D7E2EA] sm:max-w-[220px] md:max-w-[260px]"
+              className="max-w-[320px] text-balance font-light uppercase leading-snug tracking-wide text-[#D7E2EA] sm:max-w-[220px] sm:text-wrap md:max-w-[260px]"
               style={{ fontSize: 'clamp(0.75rem, 1.4vw, 1.5rem)' }}
             >
               {HERO_TAGLINE}

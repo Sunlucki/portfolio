@@ -8,7 +8,8 @@ import { NOISE_GLSL } from '../three/noise';
 // The Video section's feed on phones, like TikTok's: one film at a time on the whole screen, with its sound; swipe
 // up for the next, down for the one before. Swiped, the film breaks into particles that follow the finger away while
 // the next one's gather from the other side (WebGL, over the film only while it moves). Tap to pause or play; the
-// play buttons and the timeline, a line of particles like the music player's, are red.
+// play buttons and the timeline, a line of particles like the music player's, are red. The feed is over when the
+// last film has played or is swiped past: it closes as if closed, saying so (`onClose`'s `end`).
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -239,7 +240,7 @@ function Timeline({ progress, playing, onSeek }: { progress: () => number; playi
 // The feed. It is in the page (hidden) as soon as the Video section comes near, so `start` can play the first film
 // in the very tap on PLAY (phones let a page play sound only in a tap); `open` shows it. It sits right in the body,
 // over everything (the sections round it keep their own layers).
-export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boolean; onClose: () => void }>(function VideoFeed({ films, open, onClose }, ref) {
+export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boolean; onClose: (at: number, end: boolean) => void }>(function VideoFeed({ films, open, onClose }, ref) {
   const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const holder = useRef<HTMLDivElement>(null);
@@ -257,6 +258,8 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
   const [length, setLength] = useState(films[0].seconds);
   const [swiped, setSwiped] = useState(false);
   const film = films[index];
+  const last = index === films.length - 1;
+  const over = useRef(() => {}); // the last film has played: the feed is over
 
   const source = (f: FeedFilm) => `/video/${f.slug}.mp4`;
   useImperativeHandle(
@@ -328,6 +331,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
           onStateChange: (e: { data: number }) => {
             if (e.data === 1) setStarted(true);
             setPlaying(e.data === 1);
+            if (e.data === 0) over.current(); // (ended)
           },
         },
       });
@@ -443,6 +447,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
     const s = swipe.current;
     if (!s.dragging) {
       if (!s.moved && !(e.target as HTMLElement).closest('[data-control]') && started) toggle();
+      else if (s.moved && last && s.y - e.clientY > 60) close(true); // up past the last film: the feed is over
       return;
     }
     s.dragging = false;
@@ -470,11 +475,19 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
     else if (video.current) video.current.currentTime = to;
     setTime(to);
   };
-  const close = () => {
+  const close = (end = false) => {
     video.current?.pause();
     tube.current?.pauseVideo();
-    onClose();
+    onClose(index, end);
+    if (!end) return;
+    // over: from the first film again, next time
+    setIndex(0);
+    setTime(0);
+    setLength(films[0].seconds);
   };
+  useEffect(() => {
+    over.current = () => last && close(true);
+  });
   useEffect(() => {
     if (!open) return;
     const key = (e: KeyboardEvent) => {
@@ -501,10 +514,11 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
       <video
         ref={video}
         playsInline
-        loop
         preload="metadata"
         poster={films[index].youtube ? undefined : films[index].poster}
         className={`absolute inset-0 h-full w-full ${covers(film) ? 'object-cover' : 'object-contain'} ${film.youtube ? 'hidden' : ''}`}
+        loop={!last}
+        onEnded={() => over.current()}
         onPlay={() => setPlaying(true)}
         onPause={() => setPlaying(false)}
         onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
@@ -537,7 +551,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
         <button
           type="button"
           data-control
-          onClick={close}
+          onClick={() => close()}
           aria-label={t.buttons.close}
           className="pointer-events-auto grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white backdrop-blur-md"
         >

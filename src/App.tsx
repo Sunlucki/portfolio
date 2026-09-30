@@ -50,8 +50,8 @@ export default function App() {
         <AppsSection />
         <MarqueeSection />
         <VideoSection />
+        <MusicSection />
       </FlowSections>
-      <MusicSection />
       <ContactSection />
     </main>
   );

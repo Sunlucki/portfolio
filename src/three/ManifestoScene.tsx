@@ -1686,11 +1686,18 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
 
 // ——— the phrases, written in particles ———
 
-// Samples every phrase as particles, laid out like centred type above the bottom of the screen: plain
-// words in SemiBold, marked ones in ExtraBold (Kanit, or Montserrat for Cyrillic: FONT). Returns the geometry
-// (home positions in clip space, phrase, style, reading order) and the particle size in pixels.
+// On phones held upright each phrase sits right under its shape, its first line this far down a tall screen
+// (19.5:9); lower only under the Earth drawn near (its lights) and the hands reaching for the bulb, which take that
+// room. On shorter screens the shapes take more of the height (the layout's `fit`), and the phrases go lower with them.
+const PHONE_TOP = [0.62, 0.62, 0.82, 0.62, 0.62, 0.84, 0.62, 0.62, 0.62, 0.62];
+
+// Samples every phrase as particles, laid out like centred type above the bottom of the screen (on phones, under
+// its shape): plain words in SemiBold, marked ones in ExtraBold (Kanit, or Montserrat for Cyrillic: FONT). Returns
+// the geometry (home positions in clip space, phrase, style, reading order) and the particle size in pixels.
 function writeWords(width: number, height: number) {
   const narrow = width < 768;
+  const upright = narrow && height > width;
+  const lower = 0.45 * Math.max(0, Math.min(1, (width / height) * 1.1) - 0.51); // (the layout's fit, over a tall phone's)
   // (Montserrat, for Cyrillic, runs wider than Kanit: a size smaller, so the lines hold as many words)
   const fontSize = Math.min(70.4, Math.max(30.4, width * 0.052)) * (FONT === 'Montserrat' ? 0.9 : 1);
   const lead = fontSize * 1.08;
@@ -1761,7 +1768,7 @@ function writeWords(width: number, height: number) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // up from the bottom line, two lines at most: a longer phrase runs on down, keeping clear of its shape (but
     // never off the screen)
-    const top = Math.min(bottom - Math.min(2, lines.length) * lead, height * 0.97 - lines.length * lead);
+    const top = Math.min(upright ? height * ((PHONE_TOP[k] ?? 0.62) + lower) : bottom - Math.min(2, lines.length) * lead, height * 0.97 - lines.length * lead);
     lines.forEach((line, i) => {
       let x = (width - line.width) / 2;
       const baseline = top + i * lead + fontSize * 0.8;

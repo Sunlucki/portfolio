@@ -177,6 +177,13 @@ export function createHeroVeil(canvas: HTMLCanvasElement, source: HTMLCanvasElem
       return lit;
     },
 
+    /** Burns the whole print through to the photo, to `level` (0-1) at least, each cell at its own threshold. */
+    flood(level: number) {
+      const v = Math.round(255 * Math.min(1, Math.max(0, level)));
+      for (let i = 0; i < trail.length; i += 4) if (trail[i] < v) trail[i] = v;
+      trailTexture.needsUpdate = true;
+    },
+
     /** Draws the current source frame; `aberration` is the edge split in CSS px. */
     render(sourceChanged: boolean, aberration: number) {
       if (sourceChanged) sourceTexture.needsUpdate = true;

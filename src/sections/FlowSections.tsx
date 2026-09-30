@@ -15,10 +15,11 @@ class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
 }
 
 /**
- * The Mobile Apps, Graphics and Video sections over one particle scene (three/FlowScene.tsx): a canvas the size of the
- * screen, stuck to it behind them for as long as they are on it (sticky, taking no room: the sections start at its
- * top), so the iPhone built in the Apps section can break up, drift behind the Graphics covers and build the Video
- * section's films. Loaded as they come near; drawn only while they are on screen (and not under the Video feed).
+ * The Mobile Apps, Graphics, Video and Music sections over one particle scene (three/FlowScene.tsx): a canvas the size
+ * of the screen, stuck to it behind them for as long as they are on it (sticky, taking no room: the sections start at
+ * its top), so the iPhone built in the Apps section can break up, drift behind the Graphics covers, build the Video
+ * section's films and then the Music stage's floor. Loaded as they come near; drawn only while they are on screen (and
+ * not under the Video feed).
  * On phones, PLAY tapped, it comes over the page for the phone to fly into the screen.
  */
 export function FlowSections({ children }: { children: ReactNode }) {
