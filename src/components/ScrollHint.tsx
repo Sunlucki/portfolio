@@ -16,8 +16,8 @@ const easeInOut = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (2 - 2 * x) ** 3 / 
 const INK = ['#E23BD6', '#9A4DFF'];
 
 /**
- * A hint to scroll, for touch screens, low in the middle of the hero: a finger comes in, presses, swipes up (speeding
- * up and slowing, on a slight arc, turning a little as a hand does), lets go, three times; and each time the word
+ * A hint to scroll, for touch screens, low in the middle of the hero: a finger comes in turned to the left, presses,
+ * swipes up (speeding up and slowing, on a slight arc, turning up with the swipe as a hand does), lets go, three times; and each time the word
  * (`word`, in the same hand as About's "Why?") is written behind its tip in particles, upwards, then breaks up and
  * blows away up the screen. Then it goes (`onDone`). All in the contact button's purples, over a soft shade.
  */
@@ -68,7 +68,9 @@ export function ScrollHint({ word, onDone }: { word: string; onDone: () => void 
         const tipY = TIP_FROM + 16 * (1 - press) + (TIP_TO - TIP_FROM) * swipe - 14 * off;
         const tipX = BOX_W / 2 + 7 * Math.sin(Math.PI * swipe) - 3 * (1 - inAt);
         const scale = 1.08 - 0.14 * press + 0.12 * off;
-        hand.style.transform = `translate(${(tipX - FINGER * TIP[0]).toFixed(1)}px, ${(tipY - FINGER * TIP[1]).toFixed(1)}px) rotate(${(7 - 12 * swipe).toFixed(1)}deg) scale(${scale.toFixed(3)})`;
+        // (turned 45° to the left while it comes in; pressing and swiping, it turns up with the swipe, a little past)
+        const turn = -45 + 8 * press + 44 * swipe + 6 * off;
+        hand.style.transform = `translate(${(tipX - FINGER * TIP[0]).toFixed(1)}px, ${(tipY - FINGER * TIP[1]).toFixed(1)}px) rotate(${turn.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
         hand.style.opacity = (inAt * (1 - off)).toFixed(3);
         // where it touches: a ring going out
         const touch = clamp01((k - 0.2) / 0.2);
@@ -98,7 +100,8 @@ export function ScrollHint({ word, onDone }: { word: string; onDone: () => void 
     };
   }, [word, onDone]);
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[26%] z-40 flex justify-center [animation:fade-in_0.4s_ease-out]">
+    // (its foot, with the finger's, clear of the tagline and the button under it, however tall the screen)
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[235px] z-40 flex justify-center [animation:fade-in_0.4s_ease-out]">
       <div className="relative" style={{ width: BOX_W, height: BOX_H, background: 'radial-gradient(closest-side, rgb(4 11 28 / 0.6), rgb(4 11 28 / 0))' }}>
         <canvas ref={canvas} className="absolute left-1/2 -translate-x-1/2" style={{ top: WORD_TOP, width: W, height: H }} />
         <span ref={ripple} className="absolute left-0 top-0 h-7 w-7 rounded-full border-2 opacity-0" style={{ borderColor: INK[0] }} />

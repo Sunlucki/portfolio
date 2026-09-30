@@ -2026,7 +2026,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const scrolled = st.scroll;
     st.scroll = snap ? window.scrollY : st.scroll + (window.scrollY - st.scroll) * k;
     st.v = snap ? 0 : st.v + ((st.scroll - scrolled) / dt - st.v) * (1 - Math.exp(-dt * 4));
-    const speed = heroDone ? Math.min(1, Math.abs(st.v) / (2.1 * vh)) : 0;
+    let speed = heroDone ? Math.min(1, Math.abs(st.v) / (2.1 * vh)) : 0; // (eased in past the hero, below)
 
     // galaxy → Earth → its lights → heart → brain → idea → laptop → its chip → AI → eye: every segment holds its
     // shape first, then the camera flies on (FLIGHTS) or dives (into the laptop's chip); past the chip the shapes
@@ -2041,15 +2041,21 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     // the camera flies on through them to the galaxy, which gathers ahead, holds its phrase and takes the
     // camera into its core, where the Earth is.
     const twist = smooth(IRIS_FULL + 1, 80, frame);
-    let space = smooth(SPACE_FROM, 82, frame);
+    const heroSpace = smooth(SPACE_FROM, 82, frame);
+    let space = heroSpace;
     let first = 1; // the galaxy's phrase, gathering as the galaxy settles
+    // Past the hero, from where the iris was over the pupil (its middle, size, wind, how far strewn) to the
+    // galaxy's, as the galaxy starts to gather: no jump where the hero ends (its playhead is eased and can still be a
+    // frame or two short of its last as the page leaves it)
+    let arrive = 1;
     if (st.x < TRACK) {
       pair = 0;
       let f = st.x;
       while (pair < STAGES - 1 && f >= STAGE[pair]) f -= STAGE[pair++];
       f = Math.min(1, f / STAGE[pair]);
       if (pair === 0) {
-        space = heroDone ? 1 - smooth(0.02, 0.34, f) : space;
+        arrive = heroDone ? smooth(0, 0.3, f) : 0;
+        space = heroDone ? heroSpace + (1 - smooth(0.02, 0.34, f) - heroSpace) * arrive : space;
         first = heroDone ? smooth(0.24, 0.44, f) : 0;
         t = flow(0.56, 1, f);
         hold = heroDone ? f / 0.56 : 0;
@@ -2074,6 +2080,7 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
       t = smooth(0, 0.8, st.h);
       hold = (st.x - TRACK) / (b.track - TRACK); // the eye's phrase, held a little longer
     }
+    speed *= arrive;
     morph.current.pair = pair;
     uniforms.uMorph.value = t;
     uniforms.uTwist.value = twist;
@@ -2086,7 +2093,8 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     uniforms.uSpace.value = space;
     // and the whole of it winds on, one way and never pausing, from the iris gathering on the pupil to the camera
     // flying into the galaxy's core
-    uniforms.uWind.value = WIND * (heroDone ? 1 + 2 * (pair === 0 ? st.x / STAGE[0] : 1) : clamp01((frame - IRIS_FROM) / (82 - IRIS_FROM)));
+    const heroWind = clamp01((frame - IRIS_FROM) / (82 - IRIS_FROM));
+    uniforms.uWind.value = WIND * (heroDone ? heroWind + (1 + 2 * (pair === 0 ? st.x / STAGE[0] : 1) - heroWind) * arrive : heroWind);
     uniforms.uWarp.value = Math.max(0, frame - SPACE_FROM) * 1.5 + st.x * 70 + uniforms.uTime.value * 1.2;
     const flight = Math.sin(Math.PI * t);
     const reveal = pair === STAGES ? smooth(0.76, 0.98, st.h) : 0; // the portrait fades in over the landed particles…
@@ -2118,8 +2126,8 @@ function Rig({ uniforms, show, bridge, lens, morph }: { uniforms: Uniforms; show
     const fit = (Math.min(0.37, 0.42 * (view.width / Math.max(1, view.height))) * worldTall()) / uniforms.uIrisOuter.value;
     const earthAt = uniforms.uEarth.value;
     if (heroDone) {
-      uniforms.uIrisCenter.value.set(earthAt.x, earthAt.y);
-      uniforms.uIrisScale.value = fit * GALAXY_FAR ** -space;
+      uniforms.uIrisCenter.value.set(st.irisX + (earthAt.x - st.irisX) * arrive, st.irisY + (earthAt.y - st.irisY) * arrive);
+      uniforms.uIrisScale.value = st.irisScale + (fit * GALAXY_FAR ** -space - st.irisScale) * arrive;
     } else {
       uniforms.uIrisCenter.value.set(st.irisX, st.irisY);
       uniforms.uIrisScale.value = st.irisScale;
