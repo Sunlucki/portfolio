@@ -16,7 +16,7 @@ import { NOISE_GLSL } from './noise';
  * in from the right, a new app turning it round. Scrolled on, it breaks up again: its particles drift up behind the
  * Graphics covers as a slow cloud, and land on the Video section's first films, which then show (their cards'
  * opacity, set here). On phones the Video section shows no grid: the particles build the iPhone again there, the
- * first film's picture on its screen, and PLAY floats over it (the section's); tapped, the phone flies at the camera
+ * films on its screen as a grid, PLAY in particles standing out in front of it; tapped, the phone flies at the camera
  * until its screen fills the view, its picture splitting into red, green and blue, and the section's feed opens;
  * closed, the feed flies back into the phone. Scrolled on to the Music section, the particles leave the films (or
  * the phone, which breaks up) and build its stage's floor, the rim and PLAY round Bogdan's feet, landing where the
@@ -228,6 +228,171 @@ function sample(root: THREE.Object3D, screen: THREE.Mesh | null, cards: number[]
   return geometry;
 }
 
+// The phone in silver, as the iPhone 17 Pro comes in it: a light aluminium unibody and white glass on its back (the
+// model is the contact scene's, in Deep Blue). Its palette's blue swatches (4 texels wide, gltf-transform's) turn
+// silver where they are rough and white where glossy (the back's glass), less metallic so they read light against
+// the dark round them; the photo on its camera plateau turns grey. The textures are copies: the contact scene keeps
+// its own.
+const SILVER = [214, 216, 219];
+const WHITE = [240, 240, 238];
+function texels(texture: THREE.Texture) {
+  const { width, height } = texture.image as { width: number; height: number };
+  const canvas = document.createElement('canvas');
+  [canvas.width, canvas.height] = [width, height];
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(texture.image as CanvasImageSource, 0, 0);
+  return { canvas, ctx, image: ctx.getImageData(0, 0, width, height) };
+}
+function copied(from: THREE.Texture, { canvas, ctx, image }: ReturnType<typeof texels>) {
+  ctx.putImageData(image, 0, 0);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.flipY = from.flipY;
+  texture.colorSpace = from.colorSpace;
+  texture.magFilter = from.magFilter;
+  texture.minFilter = from.minFilter;
+  texture.wrapS = from.wrapS;
+  texture.wrapT = from.wrapT;
+  texture.generateMipmaps = from.generateMipmaps;
+  texture.channel = from.channel;
+  return texture;
+}
+function silvered(materials: THREE.MeshStandardMaterial[]) {
+  const done = new Map<THREE.Texture, { map: THREE.Texture; mr: THREE.Texture | null }>();
+  for (const material of materials) {
+    const { map, metalnessMap } = material;
+    if (!map?.image) continue;
+    let paint = done.get(map);
+    if (!paint) {
+      const base = texels(map);
+      const { data, width, height } = base.image;
+      if (metalnessMap?.image && material.name.startsWith('Palette')) {
+        const mr = texels(metalnessMap);
+        for (let x0 = 0; x0 + 1 < width; x0 += 4) {
+          const at = (Math.min(1, height - 1) * width + x0 + 1) * 4;
+          if (!(data[at + 2] > data[at] + 15 && data[at] < 100)) continue; // the blue swatches only
+          const glossy = mr.image.data[at + 1] < 90; // (green: roughness)
+          for (let y = 0; y < height; y++) {
+            for (let x = x0; x < Math.min(width, x0 + 4); x++) {
+              const k = (y * width + x) * 4;
+              data.set(glossy ? WHITE : SILVER, k);
+              mr.image.data[k + 1] = glossy ? 60 : 110;
+              mr.image.data[k + 2] = glossy ? 10 : 60;
+            }
+          }
+        }
+        paint = { map: copied(map, base), mr: copied(metalnessMap, mr) };
+      } else {
+        for (let k = 0; k < data.length; k += 4) data.fill(Math.min(255, (data[k] * 0.3 + data[k + 1] * 0.59 + data[k + 2] * 0.11) * 1.12 + 10), k, k + 3);
+        paint = { map: copied(map, base), mr: null };
+      }
+      done.set(map, paint);
+    }
+    material.map = paint.map;
+    if (paint.mr) material.metalnessMap = material.roughnessMap = paint.mr;
+    material.envMapIntensity = 2.4; // (white reads grey in the scene's dim light)
+  }
+}
+
+// ——— phones: the Video section's phone ———
+// On its screen the films as a grid, like a profile's: three across, each 9:16, under its status bar, as many rows
+// as it takes, the last cut off (there are more). Drawn as their pictures come in.
+function filmGrid(sources: string[], aspect: number) {
+  const width = 600;
+  const height = Math.round(width / aspect);
+  const canvas = document.createElement('canvas');
+  [canvas.width, canvas.height] = [width, height];
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, width, height);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.flipY = false; // (as the screens are)
+  texture.colorSpace = THREE.NoColorSpace;
+  const gap = 4;
+  const top = Math.round(height * 0.075);
+  const cell = [(width - gap * 2) / 3, ((width - gap * 2) / 3) * (16 / 9)];
+  sources.forEach((src, i) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => {
+      const [w, h] = [image.naturalWidth, image.naturalHeight];
+      const scale = Math.max(cell[0] / w, cell[1] / h); // (cover: its middle)
+      const [sw, sh] = [cell[0] / scale, cell[1] / scale];
+      ctx.drawImage(image, (w - sw) / 2, (h - sh) / 2, sw, sh, (i % 3) * (cell[0] + gap), top + Math.floor(i / 3) * (cell[1] + gap), cell[0], cell[1]);
+      texture.needsUpdate = true;
+    };
+    image.src = src;
+  });
+  return texture;
+}
+
+// PLAY in particles, standing out in front of its screen: a red disc and PLAY's white triangle in it (in the disc's
+// radii), and a ring round it that runs out as it beats. It gathers with the phone, beats, and, tapped, bursts at the
+// camera as the camera flies in.
+const PLAY_RADIUS = 0.2; // in the phone's units (its height 2): across, about half its screen
+const PLAY_FRONT = 0.3; // how far in front of the screen it stands
+const playVertex = /* glsl */ `
+  attribute vec3 aShape; // where in the button, in its radii; z: 0 the disc, 1 the triangle, 2 the ring
+  attribute vec4 aRand;
+  uniform float uGather, uBurst, uShow, uTime, uPixel, uScale;
+  varying vec3 vColor;
+  varying float vAlpha;
+  void main() {
+    float k = clamp((uGather - aRand.x * 0.45) / 0.55, 0.0, 1.0);
+    k = k * k * (3.0 - 2.0 * k);
+    float ring = step(1.5, aShape.z);
+    float beat = 1.0 + 0.06 * sin(uTime * 3.927); // every 1.6 s
+    float run = fract(uTime / 1.6 + aRand.y * 0.1); // the ring, running out
+    vec2 at = aShape.xy * ${PLAY_RADIUS.toFixed(2)} * beat * (1.0 + 0.6 * run * ring);
+    vec3 home = vec3(at, 0.01 * step(0.5, aShape.z) * (1.0 - ring));
+    vec3 strewn = vec3(at * 3.0 + (aRand.zw - 0.5) * 2.4, (aRand.y - 0.5) * 1.6);
+    vec3 p = mix(strewn, home, k);
+    p.xy *= 1.0 + 2.0 * uBurst;
+    p.z += uBurst * (0.6 + 1.8 * aRand.z);
+    vec4 mv = modelViewMatrix * vec4(p, 1.0);
+    gl_Position = projectionMatrix * mv;
+    gl_PointSize = (0.016 + 0.008 * aRand.w) * uScale * uPixel / -mv.z;
+    vColor = aShape.z > 0.5 && aShape.z < 1.5 ? vec3(1.0) : vec3(1.0, 0.176, 0.333) * (0.9 + 0.25 * aRand.w);
+    vAlpha = uShow * smoothstep(0.0, 0.6, k) * (1.0 - uBurst) * mix(1.0, 0.75 * (1.0 - run), ring);
+  }
+`;
+const playFragment = /* glsl */ `
+  varying vec3 vColor;
+  varying float vAlpha;
+  void main() {
+    float a = (1.0 - smoothstep(0.3, 0.5, length(gl_PointCoord - 0.5))) * vAlpha;
+    if (a < 0.01) discard;
+    gl_FragColor = vec4(vColor, a);
+  }
+`;
+function playShape() {
+  const [disc, ring, triangle] = [1900, 220, 460];
+  const count = disc + ring + triangle;
+  const shape = new Float32Array(count * 3);
+  let i = 0;
+  for (let k = 0; k < disc; k++, i++) {
+    const a = Math.random() * Math.PI * 2;
+    const r = k < disc * 0.15 ? 1 : Math.sqrt(Math.random()); // (some on its edge, so it reads crisp)
+    shape.set([Math.cos(a) * r, Math.sin(a) * r, 0], i * 3);
+  }
+  for (let k = 0; k < ring; k++, i++) {
+    const a = Math.random() * Math.PI * 2;
+    shape.set([Math.cos(a), Math.sin(a), 2], i * 3);
+  }
+  // the triangle last, so it is drawn over the disc: pointing right, its middle a little right of the disc's
+  const [p, q, t] = [[-0.3, 0.44], [-0.3, -0.44], [0.54, 0]];
+  for (let k = 0; k < triangle; k++, i++) {
+    let [a, b] = [Math.random(), Math.random()];
+    if (a + b > 1) [a, b] = [1 - a, 1 - b];
+    shape.set([p[0] + a * (q[0] - p[0]) + b * (t[0] - p[0]), p[1] + a * (q[1] - p[1]) + b * (t[1] - p[1]), 1], i * 3);
+  }
+  const geometry = new THREE.BufferGeometry()
+    .setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3))
+    .setAttribute('aShape', new THREE.BufferAttribute(shape, 3))
+    .setAttribute('aRand', new THREE.BufferAttribute(new Float32Array(count * 4).map(() => Math.random()), 4));
+  geometry.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e4);
+  return geometry;
+}
+
 // The first films of the grid (the ones in view as it comes up), for the particles to build.
 function firstFilms() {
   const grid = document.querySelector<HTMLElement>('[data-flow="films"]');
@@ -291,6 +456,7 @@ function Scene() {
         faded.push(material);
       }
     });
+    silvered(faded.filter((m): m is THREE.MeshStandardMaterial => (m as THREE.MeshStandardMaterial).isMeshStandardMaterial === true));
     screen.uniforms.uBox.value.set(face.min.y, face.min.z, face.max.y - face.min.y, face.max.z - face.min.z);
     root.rotation.y = Math.PI / 2; // authored with the screen facing −X
     const box = new THREE.Box3().setFromObject(root);
@@ -344,9 +510,35 @@ function Scene() {
     [],
   );
   useEffect(() => () => material.dispose(), [material]);
+  // phones: PLAY, in particles
+  const play = useMemo(
+    () =>
+      small && !still
+        ? {
+            geometry: playShape(),
+            material: new THREE.ShaderMaterial({
+              vertexShader: playVertex,
+              fragmentShader: playFragment,
+              transparent: true,
+              depthWrite: false,
+              uniforms: { uGather: { value: 0 }, uBurst: { value: 0 }, uShow: { value: 0 }, uTime: { value: 0 }, uPixel: { value: 1 }, uScale: { value: 1 } },
+            }),
+          }
+        : null,
+    [],
+  );
+  useEffect(
+    () => () => {
+      play?.geometry.dispose();
+      play?.material.dispose();
+    },
+    [play],
+  );
   useEffect(() => {
-    material.uniforms.uPixel.value = (size.height * viewport.dpr) / (2 * Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
-  }, [material, size.height, viewport.dpr]);
+    const pixel = (size.height * viewport.dpr) / (2 * Math.tan(THREE.MathUtils.degToRad(FOV / 2)));
+    material.uniforms.uPixel.value = pixel;
+    if (play) play.material.uniforms.uPixel.value = pixel;
+  }, [material, play, size.height, viewport.dpr]);
 
   // the pointer, for the phone's lean (the canvas lets it through to the page)
   const pointer = useRef({ x: 0, y: 0 });
@@ -359,9 +551,10 @@ function Scene() {
     return () => window.removeEventListener('pointermove', move);
   }, []);
 
-  // the first film's picture, for the Video section's phone
-  const poster = useRef<{ src: string; texture: THREE.Texture | null }>({ src: '', texture: null });
-  const run = useRef({ time: 0, shown: -1, app: -1, push: 1, turn: 1, assemble: 0, leave: 0, land: 0, onward: 0, flown: false, landed: false, cards: -1, ready: '' });
+  // phones: the films, as a grid, for the Video section's phone's screen
+  const grid = useRef<THREE.CanvasTexture | null>(null);
+  useEffect(() => () => grid.current?.dispose(), []);
+  const run = useRef({ time: 0, shown: -1, app: -1, push: 1, turn: 1, assemble: 0, leave: 0, land: 0, onward: 0, play: 0, flown: false, landed: false, cards: -1, ready: '' });
   const tools = useMemo(
     () => ({
       matrix: new THREE.Matrix4(),
@@ -415,7 +608,7 @@ function Scene() {
     // and the particles land as the films (or the Video section's phone) come up
     const a = found.apps.getBoundingClientRect();
     const assemble = clamp01((vh - a.top) / ((vh + a.height) / 2));
-    const leave = clamp01((vh * 0.4 - (a.top + a.height / 2)) / (vh * 0.8));
+    const leave = clamp01((vh * 0.25 - (a.top + a.height / 2)) / (vh * 0.8));
     const end = small ? found.phone : found.films;
     const e = end?.getBoundingClientRect();
     const land = !e ? 0 : small ? clamp01((vh - e.top) / ((vh + e.height) / 2)) : clamp01((vh - e.top) / (vh * 0.75));
@@ -517,20 +710,26 @@ function Scene() {
         m.opacity = opacity;
         m.depthWrite = opacity > 0.98;
       }
+      // PLAY gathers with the phone in the Video section; tapped, it bursts at the camera; while the feed flies
+      // back it is gone, and it gathers again once the phone is back
+      if (play) {
+        const pu = play.material.uniforms;
+        const gather = atB && !flow.back ? smooth(0.55, 1, r.land) * (1 - smooth(0, 0.15, r.onward)) : 0;
+        if (flow.back) r.play = 0;
+        else if (!flow.fly) r.play += (gather - r.play) * Math.min(1, dt * 4);
+        pu.uGather.value = r.play;
+        pu.uBurst.value = flow.fly && !flow.back ? clamp01((now - flow.fly) / 420) : 0;
+        pu.uShow.value = atB ? 1 : 0;
+        pu.uTime.value = r.time;
+        pu.uScale.value = g.scale.x;
+      }
     }
 
-    // what's on the display: the apps' screens in the Apps section, the first film's picture in the Video section
+    // what's on the display: the apps' screens in the Apps section, the films as a grid in the Video section
     const s = screen.uniforms;
     if (atB) {
-      if (flow.poster && poster.current.src !== flow.poster) {
-        poster.current.src = flow.poster;
-        new THREE.TextureLoader().load(flow.poster, (texture) => {
-          texture.flipY = false;
-          texture.colorSpace = THREE.NoColorSpace;
-          poster.current.texture = texture;
-        });
-      }
-      if (poster.current.texture) s.tFrom.value = s.tTo.value = poster.current.texture;
+      if (!grid.current && flow.posters.length) grid.current = filmGrid(flow.posters, model.glass.size.x / model.glass.size.y);
+      if (grid.current) s.tFrom.value = s.tTo.value = grid.current;
       s.uPush.value = 1;
       r.shown = -1;
       r.app = -1;
@@ -574,10 +773,11 @@ function Scene() {
         for (const el of films) el.style.opacity = cards.toFixed(3);
       }
     }
-    // phones: PLAY floats over the phone once it has gathered there
+    // phones: PLAY can be tapped once it has gathered there (the section's button, drawn here: data-drawn)
     if (small && e && end) {
-      const ready = seenB > 0.9 ? '1' : '0';
+      const ready = (play ? r.play > 0.8 : seenB > 0.9) ? '1' : '0';
       if (ready !== r.ready) end.dataset.ready = r.ready = ready;
+      if (play && end.dataset.drawn !== '1') end.dataset.drawn = '1';
     }
     // none of the particles shows while they all rest in what they built (the films or the phone, the floor)
     if (dots.current) dots.current.visible = !(r.onward > 0.999 && built > 0.999) && !(r.onward < 0.001 && r.land > 0.999 && (small ? seenB : u.uCards.value) > 0.999);
@@ -596,6 +796,15 @@ function Scene() {
       <group ref={group} visible={false}>
         <primitive object={model.root} />
         <primitive object={model.backing} />
+        {play && (
+          <points
+            geometry={play.geometry}
+            material={play.material}
+            position={[model.glass.centre.x, model.glass.centre.y, model.glass.centre.z + model.glass.size.z / 2 + PLAY_FRONT]}
+            frustumCulled={false}
+            renderOrder={2}
+          />
+        )}
       </group>
       {!still && <points ref={dots} geometry={geometry} material={material} frustumCulled={false} />}
     </>

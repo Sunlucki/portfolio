@@ -12,8 +12,8 @@
 export const flow = {
   // the Apps section's phone: its screens, the one on it, and which app's it is
   phone: { images: [] as string[], shown: 0, app: 0 },
-  // phones: the screen the Video section's iPhone shows (the first film's picture)
-  poster: '',
+  // phones: the films' pictures, for the Video section's iPhone to show as a grid on its screen
+  posters: [] as string[],
   // phones: PLAY tapped (the time it was, performance.now()); the scene flies into the screen, then calls `flown`
   fly: 0,
   flown: null as (() => void) | null,

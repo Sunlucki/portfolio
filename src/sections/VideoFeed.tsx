@@ -240,7 +240,7 @@ function Timeline({ progress, playing, onSeek }: { progress: () => number; playi
 // The feed. It is in the page (hidden) as soon as the Video section comes near, so `start` can play the first film
 // in the very tap on PLAY (phones let a page play sound only in a tap); `open` shows it. It sits right in the body,
 // over everything (the sections round it keep their own layers).
-export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boolean; onClose: (at: number, end: boolean) => void }>(function VideoFeed({ films, open, onClose }, ref) {
+export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boolean; onClose: (end: boolean) => void }>(function VideoFeed({ films, open, onClose }, ref) {
   const root = useRef<HTMLDivElement>(null);
   const video = useRef<HTMLVideoElement>(null);
   const holder = useRef<HTMLDivElement>(null);
@@ -478,7 +478,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
   const close = (end = false) => {
     video.current?.pause();
     tube.current?.pauseVideo();
-    onClose(index, end);
+    onClose(end);
     if (!end) return;
     // over: from the first film again, next time
     setIndex(0);

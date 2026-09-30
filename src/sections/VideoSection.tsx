@@ -2,7 +2,7 @@ import { Play, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SectionTitle } from '../components/SectionTitle';
-import { SpeedNumber } from '../components/SpeedNumber';
+import { DrumNumber } from '../components/DrumNumber';
 import { VIDEO_ORDER, VIDEO_UNDER, VIDEO_VIEWS, YOUTUBE_FILMS } from '../content';
 import { LOCALE, fill, t } from '../i18n';
 import { flow, phoneLayout } from '../three/flow';
@@ -110,10 +110,10 @@ export function VideoSection() {
     return stacked;
   }, [columns]);
 
-  // phones: the first film's picture on the iPhone's screen; PLAY flies the camera into it and opens the feed,
-  // whose first film starts in the tap itself (so it plays with its sound)
+  // phones: the films on the iPhone's screen, as a grid (there are many); PLAY flies the camera into it and opens
+  // the feed, whose first film starts in the tap itself (so it plays with its sound)
   useEffect(() => {
-    flow.poster = poster(FILMS[0]);
+    flow.posters = FILMS.slice(0, 15).map(poster);
   }, []);
   const play = () => {
     if (flying || gliding) return;
@@ -124,13 +124,12 @@ export function VideoSection() {
     flow.fly = performance.now();
     fallback.current = window.setTimeout(() => setFeed(true), 1400); // no scene to fly (no WebGL): open all the same
   };
-  // closed, the feed flies back into the phone, the film just watched on its screen; the feed over, the page goes
-  // on to the Music section (the phone breaking up to build its floor)
-  const closeFeed = (at: number, end: boolean) => {
+  // closed, the feed flies back into the phone; the feed over, the page goes on to the Music section (the phone
+  // breaking up to build its floor)
+  const closeFeed = (end: boolean) => {
     window.clearTimeout(fallback.current);
     setFeed(false);
     flow.flown = null;
-    flow.poster = poster(FILMS[at]);
     const done = () => {
       window.clearTimeout(fallback.current);
       setFlying(false);
@@ -139,10 +138,7 @@ export function VideoSection() {
       const music = document.getElementById('music');
       if (!end || !music) return;
       setGliding(true);
-      glide(music.getBoundingClientRect().top + window.scrollY, () => {
-        setGliding(false);
-        flow.poster = poster(FILMS[0]); // (the phone gone by now: the feed starts over next time)
-      });
+      glide(music.getBoundingClientRect().top + window.scrollY, () => setGliding(false));
     };
     if (!flow.fly) return done(); // (it didn't fly in)
     flow.back = performance.now();
@@ -184,18 +180,19 @@ export function VideoSection() {
       <Views />
       {phone ? (
         <>
-          {/* the iPhone's place (the scene behind builds it), and PLAY over its screen once it has (tapped, it bursts
-              towards the camera as the camera flies in) */}
+          {/* the iPhone's place (the scene behind builds it) and PLAY in the middle of its screen: the scene draws it in
+              particles, standing out in front of the phone (data-drawn), and this is where it is tapped; without the
+              scene, the button itself, red. Tapped, it bursts towards the camera as the camera flies in. */}
           <div data-flow="phone" data-ready="1" className="group relative mx-auto aspect-[4/5] w-full max-w-[440px]">
             <button
               type="button"
               onClick={play}
               aria-label={fill(t.video.play, { title: FILMS[0].title })}
-              className="absolute left-1/2 top-[42%] grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 scale-50 place-items-center rounded-full text-white opacity-0 shadow-[0_0_40px_rgba(255,45,85,0.6)] transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-data-[ready=1]:-translate-y-[70%] group-data-[ready=1]:scale-100 group-data-[ready=1]:opacity-100"
-              style={{ background: '#FF2D55', ...((flying || gliding) && { opacity: 0, transform: 'translate(-50%, -70%) scale(1.8)', transitionDuration: '300ms', pointerEvents: 'none' }) }}
+              className="pointer-events-none absolute left-1/2 top-1/2 grid h-20 w-20 -translate-x-1/2 -translate-y-1/2 scale-50 place-items-center rounded-full bg-[#FF2D55] text-white opacity-0 shadow-[0_0_40px_rgba(255,45,85,0.6)] outline-offset-4 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-white group-data-[ready=1]:pointer-events-auto group-data-[ready=1]:scale-100 group-data-[ready=1]:opacity-100 group-data-[drawn=1]:bg-transparent group-data-[drawn=1]:shadow-none"
+              style={flying || gliding ? { opacity: 0, transform: 'translate(-50%, -50%) scale(1.8)', transitionDuration: '300ms', pointerEvents: 'none' } : undefined}
             >
-              <span className="absolute inset-0 rounded-full group-data-[ready=1]:animate-[play-ring_1.6s_ease-out_infinite]" />
-              <Play className="h-8 w-8 translate-x-0.5 group-data-[ready=1]:animate-[play-pulse_1.6s_ease-in-out_infinite]" fill="currentColor" />
+              <span className="absolute inset-0 rounded-full group-data-[drawn=1]:hidden group-data-[ready=1]:animate-[play-ring_1.6s_ease-out_infinite]" />
+              <Play className="h-8 w-8 translate-x-0.5 group-data-[drawn=1]:hidden group-data-[ready=1]:animate-[play-pulse_1.6s_ease-in-out_infinite]" fill="currentColor" />
             </button>
           </div>
           <p className="mt-2 text-balance text-center text-xs uppercase tracking-[0.18em] text-[#D7E2EA]/60">{t.video.tap}</p>
@@ -338,8 +335,8 @@ function Tile({ film, index, onOpen }: { film: Film; index: number; onOpen: () =
   );
 }
 
-// The views of his videos on each platform, in a row under the title: each with its icon, fading in and racing
-// up to its count as the row comes into view (like the numbers), again each time it does.
+// The views of his videos on each platform, in a row under the title: each with its icon, fading in as the row
+// comes into view, its count's digits on drums that spin to it (DrumNumber), again each time it does.
 function Views() {
   const row = useRef<HTMLUListElement>(null);
   const [run, setRun] = useState(false);
@@ -365,7 +362,7 @@ function Views() {
           <span aria-hidden className="flex flex-col items-center gap-1.5 sm:flex-row sm:gap-3">
             <Platform name={platform} />
             <span className="whitespace-nowrap text-xl font-black leading-none sm:text-2xl md:text-3xl">
-              <SpeedNumber value={count} suffix="+" run={run} format={millions} />
+              <DrumNumber text={`${millions(count)}+`} run={run} />
             </span>
           </span>
           <span aria-hidden className="text-[10px] uppercase tracking-[0.2em] text-[#D7E2EA]/60 sm:text-xs">
