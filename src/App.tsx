@@ -3,8 +3,12 @@ import { HeroSection } from './sections/HeroSection';
 import { ManifestoSection } from './sections/ManifestoSection';
 import { MarqueeSection } from './sections/MarqueeSection';
 import { AboutSection } from './sections/AboutSection';
+import { NumbersSection } from './sections/NumbersSection';
 import { ServicesSection } from './sections/ServicesSection';
 import { ProjectsSection } from './sections/ProjectsSection';
+import { AppsSection } from './sections/AppsSection';
+import { VideoSection } from './sections/VideoSection';
+import { MusicSection } from './sections/MusicSection';
 import { ContactSection } from './sections/ContactSection';
 
 // Far below the fold and brings matter-js along, so it stays out of the first bundle.
@@ -35,12 +39,16 @@ export default function App() {
       <HeroSection />
       <ManifestoSection />
       <AboutSection />
+      <NumbersSection />
       <Suspense fallback={null}>
         <StackSection />
       </Suspense>
       <ServicesSection />
       <ProjectsSection />
+      <AppsSection />
       <MarqueeSection />
+      <VideoSection />
+      <MusicSection />
       <ContactSection />
     </main>
   );

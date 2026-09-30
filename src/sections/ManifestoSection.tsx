@@ -1,5 +1,5 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
-import { PHRASES, phraseRuns, phraseText } from '../content';
+import { PHRASES, SHAPE_SCROLL, phraseRuns, phraseText } from '../content';
 import { handoffLength } from '../three/aboutStage';
 import type { ManifestoBridge } from '../three/ManifestoScene';
 
@@ -7,7 +7,7 @@ const loadScene = () => import('../three/ManifestoScene');
 const ManifestoScene = lazy(loadScene);
 const PHRASE_VH = 70; // scroll length per shape
 const HOLD_VH = 45; // the last phrase, over the eye, stays a little longer
-const TRACK_VH = PHRASES.length * PHRASE_VH + HOLD_VH;
+const TRACK_VH = SHAPE_SCROLL.reduce((sum, n) => sum + n) * PHRASE_VH + HOLD_VH;
 // The section starts on top of the hero's last 29% (from frame 58, as the camera nears the pupil) so the
 // particle iris can form over the real one: 29% of the hero's 120vh / 190vh of scroll.
 const OVERLAP = '-mt-[135.2vh] [--overlap:35.2vh] md:-mt-[155.7vh] md:[--overlap:55.7vh]';

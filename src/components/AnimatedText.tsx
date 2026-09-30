@@ -1,34 +1,53 @@
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
-import { useRef, type CSSProperties } from 'react';
+import { useRef, type CSSProperties, type ReactNode } from 'react';
 
-type AnimatedTextProps = { text: string; className?: string; style?: CSSProperties };
+// A stretch of the text shown in its own colours, a letter each, and wrapped by `render` (say, in a button).
+type Highlight = { text: string; colors: string[]; render: (letters: ReactNode) => ReactNode };
+type AnimatedTextProps = { text: string; className?: string; style?: CSSProperties; highlight?: Highlight };
 
-// Reveals the paragraph character by character (opacity 0.2 → 1) as it scrolls through the viewport.
-export function AnimatedText({ text, className, style }: AnimatedTextProps) {
+// Reveals the paragraph character by character (opacity 0.2 → 1) as it scrolls through the viewport. The
+// characters shown are marked data-char, for whatever wants to move them.
+export function AnimatedText({ text, className, style, highlight }: AnimatedTextProps) {
   const ref = useRef<HTMLParagraphElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start 0.8', 'end 0.2'] });
   const chars = Array.from(text);
+  const letters = (from: number, to: number, colors?: string[]) =>
+    chars.slice(from, to).map((char, k) => (
+      <Char key={from + k} progress={scrollYProgress} range={[(from + k) / chars.length, (from + k + 1) / chars.length]} color={colors?.[k]}>
+        {char}
+      </Char>
+    ));
+  const found = highlight ? text.indexOf(highlight.text) : -1;
+  const at = found < 0 ? -1 : Array.from(text.slice(0, found)).length; // in characters, as `chars` counts
+  const end = at + (highlight ? Array.from(highlight.text).length : 0);
 
   return (
     <p ref={ref} className={className} style={style}>
-      <span className="sr-only">{text}</span>
-      <span aria-hidden>
-        {chars.map((char, i) => (
-          <Char key={i} progress={scrollYProgress} range={[i / chars.length, (i + 1) / chars.length]}>
-            {char}
-          </Char>
-        ))}
-      </span>
+      {highlight && at >= 0 ? (
+        // read as text, the highlight as whatever it is rendered into
+        <>
+          <span className="sr-only">{chars.slice(0, at).join('')}</span>
+          <span aria-hidden>{letters(0, at)}</span>
+          {highlight.render(<span aria-hidden>{letters(at, end, highlight.colors)}</span>)}
+          <span className="sr-only">{chars.slice(end).join('')}</span>
+          <span aria-hidden>{letters(end, chars.length)}</span>
+        </>
+      ) : (
+        <>
+          <span className="sr-only">{text}</span>
+          <span aria-hidden>{letters(0, chars.length)}</span>
+        </>
+      )}
     </p>
   );
 }
 
-function Char({ children, progress, range }: { children: string; progress: MotionValue<number>; range: [number, number] }) {
+function Char({ children, progress, range, color }: { children: string; progress: MotionValue<number>; range: [number, number]; color?: string }) {
   const opacity = useTransform(progress, range, [0.2, 1]);
   return (
     <span className="relative">
       <span className="invisible">{children}</span>
-      <motion.span className="absolute left-0 top-0" style={{ opacity }}>
+      <motion.span data-char className="absolute left-0 top-0" style={{ opacity, color }}>
         {children}
       </motion.span>
     </span>

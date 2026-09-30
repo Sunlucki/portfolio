@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { SectionTitle } from '../components/SectionTitle';
 import { TILES } from '../content';
 
 // Four rows, dealt like cards so neighbouring covers differ.
@@ -7,8 +8,8 @@ const SPEED = 0.15; // pixels of slide per pixel of scroll
 // Fades the rows out at the top and bottom, so they sit in the page like a backdrop.
 const FADE = 'linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent)';
 
-// The smaller projects as a backdrop above "Let's talk": rows of covers that slide slowly in
-// alternating directions as the page scrolls.
+// Graphics: branding, print and social media covers in rows that slide slowly in alternating directions as the
+// page scrolls.
 export function MarqueeSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -40,13 +41,9 @@ export function MarqueeSection() {
   }, []);
 
   return (
-    <section
-      ref={sectionRef}
-      aria-label="Selected work"
-      className="overflow-hidden bg-[#0C0C0C] py-10 md:py-16"
-      style={{ maskImage: FADE, WebkitMaskImage: FADE }}
-    >
-      <div className="flex flex-col gap-3 opacity-60">
+    <section id="graphics" ref={sectionRef} className="bg-[#0C0C0C] pt-16 md:pt-24">
+      <SectionTitle text="Graphics" className="mb-2 px-4 sm:px-6 md:mb-4 md:px-10" />
+      <div className="flex flex-col gap-3 overflow-hidden py-10 md:py-16" style={{ maskImage: FADE, WebkitMaskImage: FADE }}>
         {ROWS.map((tiles, i) => (
           <div
             key={i}

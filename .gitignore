@@ -2,3 +2,12 @@ node_modules
 dist
 *.local
 .DS_Store
+
+# The music player's tracks (scripts/prepare-media.py): deployed from this Mac, kept out of the public repo
+public/music/
+
+# The Video section's films (scripts/prepare-media.py): deployed from this Mac too
+public/video/
+
+# Python bytecode from the media scripts
+__pycache__/

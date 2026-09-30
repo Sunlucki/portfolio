@@ -9,7 +9,7 @@ Personal site of a full-stack design engineer from Poznań, Poland. It shows sel
 - React 19 + TypeScript, built with Vite
 - Tailwind CSS 3.4
 - Framer Motion — in-view fades, the character-by-character text reveal, sticky stacking project cards
-- anime.js 4 — the scroll-synced hero timeline (`onScroll`), the scroll hint loop and the stat counters
+- anime.js 4 — the scroll-synced hero timeline (`onScroll`) and the scroll hint loop
 - React Three Fiber + drei + postprocessing — the manifesto and the 3D phone scene in the contact section (loaded lazily)
 - React Bits — Micro Slats (hero backdrop), Tech Text (headings) and Folder Float (the stack, with matter-js), in `src/vendor/react-bits/`
 - Lucide icons, Kanit from Google Fonts
@@ -40,12 +40,14 @@ The canvases are sized from their own box (a ResizeObserver: Safari can run the 
 
 ## The manifesto
 
-Straight after the hero, five phrases, each written in particles under a shape made of one cloud of particles (`src/sections/ManifestoSection.tsx`, `src/three/ManifestoScene.tsx`): the Earth, a gear, a circuit brain, a question mark and an eye that looks back.
+Straight after the hero, nine phrases (Bogdan's own lines), each written in particles under a shape made of one cloud of particles (`src/sections/ManifestoSection.tsx`, `src/three/ManifestoScene.tsx`): the galaxy the hero's iris winds into, the Earth, the Earth at night lit where people live, a heart, a bulb that two hands reach for and don't quite touch (after the Creation of Adam), a brain, a laptop the camera dives into, down to its chip, whose brain then turns into the letters AI (that phrase holds over both), and an eye that looks back. A red thread runs through them: the lights, the heart, the bolt glowing in the bulb, the brain's signals, the caret on the laptop's screen and the sparks running into the chip.
 
 - The section starts on top of the hero's last part and is screen-blended, so its black is see-through. As the camera nears the eye, particles gather out of a loose swirl into an iris laid exactly over the real one (`scripts/estimate-motion.py` also measures the pupil in every frame, `src/heroPupil.json`) and grow with the zoom until the camera is inside the pupil.
-- As the camera flies into the pupil the iris becomes a galaxy: the pupil closes into a bright core and the fibres wind into three arms. Past the hero the galaxy draws to the middle of the screen and collapses into the Earth: continents in dense points with brighter coasts, sparse blue oceans and a rim of air, from hand-simplified coastlines (`src/three/earth.ts`). Its far side fades, so it reads as a solid planet.
-- From there the particles flow from shape to shape. Every shape's points are ordered along a Hilbert curve, so each particle travels to a nearby place in the next one and the cloud flows instead of criss-crossing; mid-flight they swirl through 3D noise towards the lens. Most points sit on outlines and flicker, and a light pulse runs across (after React Bits' Electric Logo). The Earth and the gear turn; the eye's iris follows the cursor (or looks around on its own), hides behind the lids and blinks.
-- The phrases are particles too, sampled from Kanit set on a canvas and drawn straight in clip space so the type stays put while the camera moves. A phrase gathers while its shape forms and breaks up as the shape leaves, driven by the same scroll; words land in reading order, highlighted words (`*word*` in `content.ts`) last, in heavier type and a cyan-to-pink accent, and `~word~` is struck out. Dust streams past; bloom, film grain and a chromatic aberration that follows the scroll speed and the morph do the lens work. Everything moves in vertex shaders; the CPU only uploads the next pair of shapes when the scroll crosses into it.
+- As the camera flies into the pupil the iris becomes a galaxy: the pupil closes into a bright core and the fibres wind into three arms. Past the hero the galaxy draws to the middle of the screen, holds the first phrase a while and collapses into the Earth: continents in dense points with brighter coasts, sparse blue oceans and a rim of air, from hand-simplified coastlines (`src/three/earth.ts`). Its far side fades, so it reads as a solid planet.
+- From there the particles flow from shape to shape. Every shape's points are ordered along a Hilbert curve, so each particle travels to a nearby place in the next one and the cloud flows instead of criss-crossing; mid-flight they swirl through 3D noise towards the lens. Most points sit on outlines and flicker, and a light pulse runs across (after React Bits' Electric Logo). The Earth turns; the heart, the brain, the bulb, the laptop and its chip sway, so they are never seen edge on. The eye's iris follows the cursor (or looks around on its own), hides behind the lids and blinks.
+- The lit Earth keeps every point of the Earth in place (only particles that have somewhere to go swirl), dims its land to night and gathers its loose dust into red points that pulse where people live, scattered by NASA's Black Marble (`scripts/prepare-lights.py`, `public/manifesto/lights.webp`). The heart, the brain and the bulb with the hands are baked from models into 20,000 points each, 78 KB (`scripts/prepare-models.py`): the heart's and the brain's folds, fat and vessels live in their textures, so points are kept by the texture's brightness; the bulb's points carry their part (hand, nail, glass, base, bolt), and its glass lights up at the rim. The heart beats twice a second; the brain has faint red signals flitting inside. Far sides of the Earth, the heart and the brain are dimmed, so they read as solids.
+- The laptop and its chip are drawn in code. The laptop: its shell, keys and trackpad in steel, and code on its screen as bars in syntax colours, with a red caret blinking. Into it the particles don't fly, the camera dives: the scene is magnified about the chip's place under the keys while the view pitches down to the chip's tilt (`dive()` in the vertex shader), and each point stays the laptop's until it leaves the view or dissolves on the way in, then turns into the chip's, which grows from inside the laptop to full size. The dive gets half a shape more scroll than a morph (`SHAPE_SCROLL` in `src/content.ts`, which also gives the galaxy its time). The chip follows the renders Bogdan picked: a die with a brain drawn as a circuit in cyan neon, pins all round, a substrate webbed with magenta traces, white pads at its corners and a board whose cyan traces fade into the dark, with red sparks running in along them. The chip with AI is the same point set with only the brain's points moved to the letters (Kanit ExtraBold), so the brain turns into AI in place.
+- The phrases are particles too, sampled from Kanit set on a canvas and drawn straight in clip space so the type stays put while the camera moves. Their lines are balanced (the narrowest measure that takes as few lines, like CSS `text-wrap: balance`), so no word is left alone on the last one. A phrase gathers while its shape forms and breaks up as the shape leaves, driven by the same scroll; words land in reading order, highlighted words (`*word*` in `content.ts`) last, in heavier type and a cyan-to-pink accent, and `~word~` is struck out. Dust streams past; bloom, film grain and a chromatic aberration that follows the scroll speed and the morph do the lens work. Everything moves in vertex shaders; the CPU only uploads the next pair of shapes when the scroll crosses into it.
 - At the end the About section slides over this one (`--handoff`, which this section grows by, so nothing below moves) and the eye breaks up into Bogdan's portrait: points scattered over the photo by its brightness, drawing it like a halftone, are carried through the stage's framing onto its place on screen (`src/three/aboutStage.ts`), and the portrait fades in over them. The particles fade towards the stage's sides and bottom as the stage does, so the bottom of the photo stays dark. The portrait holds still until it has taken over. Once it has taken over, the manifesto stops rendering.
 - The layer is transparent, not CSS-blended: a last pass (ScreenAlpha) gives each pixel the alpha of its brightest channel, which composites exactly like a screen blend without making the browser (Safari above all) blend a full-screen layer on every frame.
 - Smoothness: the rig runs before the cloud in every frame, so the pair of shapes on the GPU always matches the morph; the lens kick follows the eased scroll, not the wheel's steps; both 3D scenes (this one and the phone) mount and compile their shaders in the background (`compileAsync`) while the hero plays, so nothing is set up mid-scroll.
@@ -57,11 +59,17 @@ On devices with a mouse (and without reduced motion) the pointer is an extruded 
 
 ## The About portrait
 
-A low-angle portrait, full width, right under the title: the letters sit on the photo's dark top, the hoodie fades out at the bottom, and the text and the numbers follow the scene (`src/components/DepthImage.tsx`, one OGL shader; phones get a taller crop around the face). The photo is shown as it is, with depth and light:
+A low-angle portrait, full width, right under the title: the letters sit on the photo's dark top, the hoodie fades out at the bottom, and the text follows the scene (`src/components/DepthImage.tsx`, one OGL shader; phones get a taller crop around the face). The photo is shown as it is, with depth and light:
 
 - depth: the camera moves with the pointer (or circles on its own), so near parts slide against far ones. The depth map's head is flattened to one depth, so the face holds still as one piece instead of its features sliding against each other;
 - light: the pointer is a lamp above the photo. What faces it brightens (normals from the depth map, smoothed), and the skin glints; away from it the photo stays, a little dimmer, never black;
 - the maps are prepared offline (`scripts/prepare-portrait.py`): one texture packs the parallax depth with the normals, another says where the skin glints. The canvas never renders finer than the photo itself.
+
+The text opens with a hello: "Hi, my name is Bogdan Nenadović, but online I’m known as SUNLUCKI". Hovering the handle writes a violet "Why?" above it in Caveat (only those four glyphs are loaded; on touch screens it is always there). Clicking the handle scatters every letter of the text out from it (Web Animations), and the handle's story comes up in their place; "Got it" (or Escape) gathers the letters back, landing with a little bounce (`Story` in `src/sections/AboutSection.tsx`).
+
+## The numbers
+
+Right after About, "Here are the numbers" (`src/sections/NumbersSection.tsx`, figures in `NUMBERS` in `src/content.ts`). The heading's letters scatter from the cursor and bounce back a second later (`src/components/ScatterText.tsx`, after React Bits Pro's Text Scatter; Web Animations, no library). Below it a drum turns as the page scrolls (after 3D Text Reveal): the stage sticks while the section scrolls past, a number on every face, on the rim of a cylinder in CSS 3D whose angle follows the scroll, eased. As a number comes round to the front it races up to its value, blurred and stretched with trailing copies while it is fast, then settles sharp (`src/components/SpeedNumber.tsx`, after Speeding Text); a number under 10 spins its digit through two laps first. A number that goes back down below the front resets, so it races again. The hours count from 1 January 2016 up to the day the page is opened, at Bogdan's 8 to 10 hours a day, 4 to 6 days a week, taken at the middle (45 a week) and rounded down to the thousand. With reduced motion the numbers are a plain list.
 
 ## The contact scene
 
@@ -72,11 +80,39 @@ A low-angle portrait, full width, right under the title: the letters sit on the 
 - Bogdan, lifted out of the render with Apple Vision, floats above it as a billboard. He is printed as a 1-bit Atkinson dither in texture space (after React Bits' Dither Veil); the cursor burns a trail through to the photo, and each cell knits back at its own threshold;
 - the camera orbits a few degrees with the pointer and sways on its own, so the depth reads on touch screens too.
 
-Two R3F canvases live on the page, the manifesto and this one. `@react-three/postprocessing` sizes a new composer from a size vector shared by all composers, so one canvas could come up at the other's size; `src/three/KeepSize.tsx` puts the renderer back.
+Four R3F canvases live on the page: the manifesto, this one, the Mobile Apps iPhone and the music stage; only the first two post-process. `@react-three/postprocessing` sizes a new composer from a size vector shared by all composers, so one canvas could come up at the other's size; `src/three/KeepSize.tsx` puts the renderer back.
 
 ## The stack section
 
 Eight React Bits Folder Float folders (Frontend, Backend, iOS, AI, Fintech, DevOps, Design, Media). A folder opens on hover — on touch screens on tap — and its tools spring out as notes that can be dragged around (matter-js). Wide screens get a 4 × 2 shelf with room above each row for the notes; narrow screens a swipeable row whose middle folder opens by itself. The list lives in `STACK` in `src/content.ts` and only names tools the repositories actually show.
+
+## The projects
+
+Sticky cards that stack as the page scrolls, each named by the system it is (the product or the client in the line above). Four of them play the product's promo live in one wide window, in place of the screenshots: SIMBIA's 2D films (Remotion compositions, 1920 × 1080 at 30 fps, every frame a pure function of its number), in `@remotion/player`, muted, looping, covering the window. Only the card on top plays; the others show a screenshot, and a promo goes on from where it left off when its card comes back on top. Over the film, a chapter for each scenario jumps there (the one playing is lit); below it, play/pause and the progress, which seeks. Remotion, the films and Inter load as the section comes near (`src/promo/Promo.tsx`, about 340 KB gzipped); three.js they share with the manifesto. The films play in English (`inputProps={{ lang: 'en' }}`).
+
+The WordPress sites' card turns through the sites instead (`public/work/wp-*.webp`, made by `scripts/prepare-media.py`), the ones with a demo film first: each its film, Bogdan's own mockups easing in a little closer, then its pages scrolling on a MacBook drawn in CSS, with a pill per site and a link to each site that is still live.
+
+`src/promo/saas` and `src/promo/oner` are copied from the SIMBIA repo (branch `promo/wideo-2d` at `2ba662f`: `Claude outputs/promo-remotion/src/saas` without `compositions.tsx` and `kit/Demo.tsx`, and the 16 files of `packages/oner/src` it needs), changed only where this app needs it: the paths to oner, and one unused render-prop parameter renamed (`b2b/Mobile.tsx`). They are linted at the source, not here (`.oxlintrc.json`). To update, copy them again from the branch.
+
+## Mobile apps
+
+A section of its own after the web projects (`src/sections/AppsSection.tsx`, apps in `MOBILE_APPS` in `src/content.ts`): the contact scene's iPhone stands up beside the app's name (`src/three/AppsPhone.tsx`), and each app's screens show on its display, a new one pushing in from the right as in iOS; a new app turns the phone round, its back to the camera while the screen changes. A pill per app and each screen's name jump to it; the stage glows in the app's colour. The screens are real iOS Simulator captures with demo data (iApply and TAXI BOSS on local demo servers, CashFlow offline), kept in the knowledge base (`sources/screens/apps`) and cut to 640 wide by `scripts/prepare-media.py`. SIMBIA CRM's app is left out: it is Russian only and shows live data only.
+
+## Graphics
+
+Branding, print and social media, no websites: rows of covers that slide slowly in alternating directions as the page scrolls (`src/sections/MarqueeSection.tsx`, covers in `TILES` in `src/content.ts`, cut to 840 × 540 by `scripts/prepare-media.py`, some from a closer crop).
+
+## Video
+
+Bogdan's films in a masonry grid (`src/sections/VideoSection.tsx`), each at its own shape, dealt to the shortest column so the order still reads across (three columns, two on tablets, one on phones). A film shows its poster; hovered, it loads a strip of ten of its frames, one small image, and flips through them. Clicked, it plays on the full screen with its sound (the Fullscreen API; on iPhones the theatre fills the window), and the music player stops. `scripts/prepare-media.py` makes, from `~/Desktop/Видео`, an H.264 film for each (1080p and 30 fps at most, AAC), its poster and its strip (`public/video/`, kept out of git like the music) and the list in `src/videos.json`.
+
+## Music
+
+A player for Bogdan's music (`src/sections/MusicSection.tsx`): 131 tracks, fifteen in his order, then the rest of his LUCKI BEATS album mixed, the short beats spread out between the full tracks; titles in English and without "Beat". Play, skip, seek, the next track when one ends, and the phone's lock screen and media keys (Media Session). The tracks are his AAC masters from his Music library, copied as they are, only moved to stream from the first byte (WAV and MP3 become AAC at 256 kbps); `scripts/prepare-media.py` writes them to `public/music/NNN.m4a` (about 750 MB) and the list to `src/music.json`. They are kept out of git (`.gitignore`) and reach the server with the deploy, from this Mac.
+
+On the left, his stage (`src/three/MusicStage.tsx`, loaded as the section comes near, drawn only while on screen): Bogdan in his headphones (his cut-out, `public/about/listening.webp`, shown as it is) stands still, the camera fixed where the photo was taken, on a flattened cloud of blue particles centred on the point between his feet. The sound runs through Web Audio, wired on the first play, so the cloud can hear it: the loudness of the last two and a half seconds runs out from under his feet to the edge (a 150-sample texture read by radius), so every hit leaves him as a bright wave that lifts the particles it passes; every band of the spectrum sets the cloud rippling along its own axis, the bass in broad slow swells and the highs in fine quick ones; the louder it plays, the faster it swirls. With no music it breathes. Only the cloud answers the pointer: it turns about its own axis, under his feet, as the pointer moves across the stage.
+
+On the right, the tracks as cards like the projects' only smaller (`Playlist`, Framer Motion): folded to a strip, the one at the list's middle (or under the pointer, or focused) open, the one that plays lit blue; an open card grows as much up as down, its neighbours making way on both sides, so the middle holds still as the list scrolls, and every change springs with a bounce. When the scroll stops, the nearest card settles into the middle; the track that plays comes there by itself. The list fades out at its top and bottom.
 
 ## Project layout
 
@@ -84,19 +120,22 @@ Eight React Bits Folder Float folders (Frontend, Backend, iOS, AI, Fintech, DevO
 src/
   content.ts            all copy and project data
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
-  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, CountUp, SectionTitle, buttons
+  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, ScatterText, SpeedNumber, SectionTitle, buttons
   heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
-  sections/             Hero (+ heroVeil.ts), Manifesto, About, Stack, Services, Projects, Marquee, Contact
-  three/                PhoneScene, ManifestoScene (+ earth.ts, aboutStage.ts, KeepSize), cursor3d
+  promo/                the products' promos in the project cards (Promo.tsx; saas/ and oner/ copied from SIMBIA)
+  sections/             Hero (+ heroVeil.ts), Manifesto, About, Numbers, Stack, Services, Projects, Apps, Marquee (Graphics), Video, Music, Contact
+  three/                PhoneScene, ManifestoScene (+ earth.ts, aboutStage.ts, KeepSize), AppsPhone, MusicStage, cursor3d
   vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
-  prepare-media.py      builds hero frames (+ Vision cut-outs), card images, marquee tiles (project covers) and icons from local sources
+  prepare-media.py      builds hero frames (+ Vision cut-outs), card images, the WordPress slides and films, marquee tiles, icons and the music from local sources
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
   estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
   prepare-about.py      phone scene assets (cut-out, poster, recoloured iPhone model)
   prepare-portrait.py   About portrait assets (photo, packed depth + normals, glint map)
+  prepare-lights.py     the Earth's night lights for the manifesto (NASA Black Marble → 720×360)
+  prepare-models.py     the manifesto's heart, brain and bulb with hands, baked from models into point sets
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
-public/                 generated media (hero/, work/, tiles/, about/, models/)
+public/                 generated media (hero/, work/, tiles/, about/, models/; music/ and video/ not in git)
 ```
 
 ## Develop
@@ -119,6 +158,8 @@ Code © Bogdan Nenadović. Screenshots show products I built and are published w
 ## Credits
 
 - 3D model: ["iPhone 17 Pro Max"](https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d) by [MajdyModels](https://sketchfab.com/MG990), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Recoloured and compressed for the web.
-- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the dithered figures are modelled on Dither Veil and the manifesto's flicker on Electric Logo.
-- [Lucide](https://lucide.dev) icons (ISC), including the brain-circuit outline the manifesto draws in particles.
+- 3D models baked into the manifesto's particles: ["Realistic Human Heart"](https://sketchfab.com/3d-models/realistic-human-heart-3f8072336ce94d18b3d0d055a1ece089) by [neshallads](https://sketchfab.com/neshallads) and ["Low-Poly Human Brain Model"](https://sketchfab.com/3d-models/low-poly-human-brain-model-781330cf8c6e40508f0de62e2fef8dec) by [moaazzizo123](https://sketchfab.com/moaazzizo123), both [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Only point sets reach the site (`scripts/prepare-models.py`).
+- [React Bits](https://reactbits.dev) by David Haz — Micro Slats, Tech Text and Folder Float (MIT + Commons Clause); the dithered figures are modelled on Dither Veil and the manifesto's flicker on Electric Logo. The numbers are modelled on [React Bits Pro](https://pro.reactbits.dev)'s Text Scatter, 3D Text Reveal and Speeding Text, written from scratch here.
+- [Lucide](https://lucide.dev) icons (ISC).
+- The Earth at night: NASA Earth Observatory, [Black Marble 2016](https://earthobservatory.nasa.gov/features/NightLights) (Suomi NPP VIIRS; public domain).
 - 3D simplex noise from [ashima/webgl-noise](https://github.com/ashima/webgl-noise) (Ashima Arts, Ian McEwan; MIT).

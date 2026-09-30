@@ -124,9 +124,14 @@ export function ContactSection() {
           <span>B2B contracts via SIMBIA sp. z o.o.</span>
         </div>
         <p className="mt-4 text-center text-xs normal-case leading-relaxed tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:py-2 [&_a]:underline-offset-2 hover:[&_a]:underline">
-          3D model “<a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>” by{' '}
-          <a href="https://sketchfab.com/MG990">MajdyModels</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>, recoloured.
-          Micro Slats, Tech Text and Folder Float from <a href="https://reactbits.dev">React Bits</a>.
+          3D models under <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>: “
+          <a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>” by{' '}
+          <a href="https://sketchfab.com/MG990">MajdyModels</a>, recoloured; “
+          <a href="https://sketchfab.com/3d-models/realistic-human-heart-3f8072336ce94d18b3d0d055a1ece089">Realistic Human Heart</a>” by{' '}
+          <a href="https://sketchfab.com/neshallads">neshallads</a> and “
+          <a href="https://sketchfab.com/3d-models/low-poly-human-brain-model-781330cf8c6e40508f0de62e2fef8dec">Low-Poly Human Brain Model</a>” by{' '}
+          <a href="https://sketchfab.com/moaazzizo123">moaazzizo123</a>, turned into particles. Earth at night: NASA Black Marble. Micro Slats, Tech
+          Text and Folder Float from <a href="https://reactbits.dev">React Bits</a>.
         </p>
       </footer>
     </section>
