@@ -20,6 +20,7 @@ const ru: Copy = {
     heading: 'Привет, я {name}, {role}',
     tagline: 'full-stack дизайн-инженер, который проектирует, разрабатывает и запускает продукты под ключ',
     scroll: 'Листайте',
+    swipe: 'скролл',
   },
   buttons: { contact: 'Связаться со мной', email: 'Написать мне', live: 'Открыть проект', close: 'Закрыть', play: 'Воспроизвести', pause: 'Пауза' },
   manifesto: {

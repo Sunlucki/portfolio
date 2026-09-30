@@ -20,6 +20,7 @@ const pl: Copy = {
     heading: 'Cześć, jestem {name}, {role}',
     tagline: 'full-stack design engineer, który projektuje, buduje i wdraża kompletne produkty',
     scroll: 'Przewiń',
+    swipe: 'przewiń',
   },
   buttons: { contact: 'Skontaktuj się', email: 'Napisz do mnie', live: 'Zobacz na żywo', close: 'Zamknij', play: 'Odtwórz', pause: 'Pauza' },
   manifesto: {

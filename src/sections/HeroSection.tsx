@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { animate, createTimeline, onScroll } from 'animejs';
 import { FadeIn } from '../components/FadeIn';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
+import { ScrollHint } from '../components/ScrollHint';
 import { LangSwitch } from '../components/LangSwitch';
 import MicroSlats from '../vendor/react-bits/MicroSlats';
 import TechText from '../vendor/react-bits/TechText';
@@ -37,6 +38,7 @@ const NAV_TEXT = `${
 const HEADROOM = 0.12; // phones: share of the screen above the subject at the very top of the page
 const LOOSE_UNTIL = 0.12; // phones: scroll progress at which the framing is back to full cover
 const HOODIE_BLUE = '#1261d6'; // sampled from the hoodie
+const IDLE_MS = 3000; // touch screens: nothing touched or scrolled this long on the hero, and it hints (above)
 const HEADLINE = { fontFamily: FONT, fontWeight: 900, fontSize: 400, color: '#BBCCD7', accentColor: '#7FB0FF' } as const;
 
 /**
@@ -61,6 +63,14 @@ export function HeroSection() {
   const hintRef = useRef<HTMLDivElement>(null);
   const hintDotRef = useRef<HTMLSpanElement>(null);
   const [slatsPaused, setSlatsPaused] = useState(false);
+  // touch screens, idle on the hero for IDLE_MS: the print comes back and a finger shows to swipe (ScrollHint), again
+  // every IDLE_MS while nothing moves
+  const [hinting, setHinting] = useState(false);
+  const nudge = useRef({ next: 0, on: false });
+  const hintDone = useCallback(() => {
+    nudge.current = { next: performance.now() + IDLE_MS, on: false };
+    setHinting(false);
+  }, []);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -272,8 +282,8 @@ export function HeroSection() {
 
     // Dither Veil loop: burns the pointer's trail into the print (or, when the pointer has been idle for
     // a while, a slow wandering spot over the figure) and redraws while anything moves. Touch screens have no
-    // pointer to follow: the print stays whole until a touch or a swipe, which shows the photo whole for a few
-    // seconds (the print dissolving into it), and then knits back.
+    // pointer to follow: the photo shows whole, and after IDLE_MS with nothing touched or scrolled the print knits
+    // back and the finger hint plays; a touch or a swipe shows the photo whole again (the print dissolving into it).
     const wander = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const touch = window.matchMedia('(hover: none)').matches;
     const pointer = { x: 0, y: 0, at: -Infinity };
@@ -288,9 +298,14 @@ export function HeroSection() {
     };
     const onVeilTouch = () => {
       const now = performance.now();
+      nudge.current.next = now + IDLE_MS;
+      if (nudge.current.on) {
+        nudge.current.on = false;
+        setHinting(false);
+      }
       if (progress >= 0.3) return; // (the figure is gone by then)
       if (now > whole.until) whole.from = now;
-      whole.until = now + 3000;
+      whole.until = now + IDLE_MS;
       wakeVeil();
     };
     const veilTick = (now: number) => {
@@ -325,9 +340,24 @@ export function HeroSection() {
       veilLast = performance.now();
       veilRaf = requestAnimationFrame(veilTick);
     }
+    let idle = 0;
     if (touch) {
       window.addEventListener('pointerdown', onVeilTouch, { passive: true });
       window.addEventListener('scroll', onVeilTouch, { passive: true });
+      // the photo whole from the start; idle on the hero's first frames, the hint
+      const now = performance.now();
+      whole.from = now - 1000;
+      whole.until = now + IDLE_MS;
+      nudge.current = { next: now + IDLE_MS, on: false };
+      wakeVeil();
+      if (wander) {
+        idle = window.setInterval(() => {
+          const h = nudge.current;
+          if (h.on || performance.now() < h.next || progress > 0.08 || !inView) return;
+          h.on = true;
+          setHinting(true);
+        }, 200);
+      }
     } else {
       window.addEventListener('pointermove', onVeilPointer, { passive: true });
       window.addEventListener('pointerdown', onVeilPointer, { passive: true });
@@ -342,6 +372,7 @@ export function HeroSection() {
       window.removeEventListener('pointerdown', onVeilPointer);
       window.removeEventListener('pointerdown', onVeilTouch);
       window.removeEventListener('scroll', onVeilTouch);
+      window.clearInterval(idle);
       visibility.disconnect();
       if (depthRaf) cancelAnimationFrame(depthRaf);
       if (veilRaf) cancelAnimationFrame(veilRaf);
@@ -438,6 +469,8 @@ export function HeroSection() {
             <span ref={hintDotRef} className="absolute left-0 top-0 block h-2 w-px bg-[#D7E2EA]" />
           </span>
         </div>
+
+        {hinting && <ScrollHint word={t.hero.swipe} onDone={hintDone} />}
 
         <div ref={blackoutRef} aria-hidden className="pointer-events-none absolute inset-0 z-50 bg-[#0C0C0C] opacity-0" />
       </div>

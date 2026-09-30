@@ -20,6 +20,7 @@ const uk: Copy = {
     heading: 'Привіт, я {name}, {role}',
     tagline: 'full-stack дизайн-інженер, який проєктує, розробляє й запускає продукти від і до',
     scroll: 'Гортайте',
+    swipe: 'скрол',
   },
   buttons: { contact: 'Зв’язатися', email: 'Написати мені', live: 'Відкрити проєкт', close: 'Закрити', play: 'Відтворити', pause: 'Пауза' },
   manifesto: {

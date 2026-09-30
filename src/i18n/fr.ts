@@ -20,6 +20,7 @@ const fr: Copy = {
     heading: 'Salut, je suis {name}, {role}',
     tagline: 'un full-stack design engineer qui conçoit, développe et livre des produits complets',
     scroll: 'Défiler',
+    swipe: 'défiler',
   },
   buttons: { contact: 'Me contacter', email: 'Écrivez-moi', live: 'Voir en ligne', close: 'Fermer', play: 'Lire', pause: 'Pause' },
   manifesto: {

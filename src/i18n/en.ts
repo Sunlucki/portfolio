@@ -21,6 +21,7 @@ const en = {
     heading: 'Hi, I’m {name}, {role}',
     tagline: 'a full-stack design engineer who designs, builds and ships complete products',
     scroll: 'Scroll',
+    swipe: 'scroll', // touch screens: the word the finger sweeps up, idle on the hero
   },
   buttons: { contact: 'Contact Me', email: 'Email me', live: 'Live Project', close: 'Close', play: 'Play', pause: 'Pause' },
   manifesto: {
