@@ -4,6 +4,7 @@ import { SectionTitle } from '../components/SectionTitle';
 import { SpeedNumber } from '../components/SpeedNumber';
 import { VIDEO_ORDER, VIDEO_UNDER, VIDEO_VIEWS, YOUTUBE_FILMS } from '../content';
 import { LOCALE, fill, t } from '../i18n';
+import { ParticlePlay, PhonePlayer } from './VideoPlayer';
 import films from '../videos.json';
 
 // Bogdan's films (scripts/prepare-media.py writes their list, the films, their posters and their strips of frames)
@@ -36,6 +37,8 @@ const millions = (tenths: number) => compact.format(tenths * 100_000); // VIDEO_
 // a film's credit in the visitor's language, where it is words rather than names
 const credited = (credit: string) => t.video.credits[credit] ?? credit;
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// touch screens (no hover): their own player (VideoPlayer.tsx), and PLAY on the film in the middle of the screen
+const touch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 /**
@@ -43,12 +46,16 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60))
  * wide and tall ones taking turns, dealt to the shortest column so the order still reads across (or kept right under
  * another, where he asked). A film shows its poster; hovered, it loads a strip of ten of its frames (one small image; YouTube's
  * three stills for the music videos there) and flips through them. Clicked, it plays on the full screen with its
- * sound (YouTube's player for those), and the music player stops.
+ * sound (YouTube's player for those), and the music player stops. On touch screens the film in the middle of the
+ * screen shows PLAY in particles, and a tap opens the card into the section's own player (VideoPlayer.tsx).
  */
 export function VideoSection() {
   const [columns, setColumns] = useState(3);
   const [open, setOpen] = useState<number | null>(null);
+  const [phone, setPhone] = useState<{ i: number; from: DOMRect } | null>(null);
+  const [middle, setMiddle] = useState(-1); // touch screens: the film nearest the middle of the screen
   const theater = useRef<HTMLDivElement>(null);
+  const grid = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fit = () => setColumns(window.innerWidth < 640 ? 1 : window.innerWidth < 1024 ? 2 : 3);
@@ -70,8 +77,44 @@ export function VideoSection() {
     return stacked;
   }, [columns]);
 
-  const show = (i: number) => {
+  // touch screens: which film is nearest the middle of the screen, as the page scrolls
+  useEffect(() => {
+    const el = grid.current;
+    if (!touch || !el) return;
+    let frame = 0;
+    const find = () => {
+      frame = 0;
+      const mid = window.innerHeight / 2;
+      let best = -1;
+      let near = Infinity;
+      el.querySelectorAll<HTMLElement>('[data-film]').forEach((tile) => {
+        const box = tile.getBoundingClientRect();
+        const off = box.bottom < 0 || box.top > window.innerHeight ? Infinity : Math.abs((box.top + box.bottom) / 2 - mid);
+        if (off < near) [near, best] = [off, Number(tile.dataset.film)];
+      });
+      setMiddle(best);
+    };
+    const onScroll = () => (frame ||= requestAnimationFrame(find));
+    const around = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+      } else {
+        window.removeEventListener('scroll', onScroll);
+        setMiddle(-1);
+      }
+    });
+    around.observe(el);
+    return () => {
+      around.disconnect();
+      window.removeEventListener('scroll', onScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
+
+  const show = (i: number, from: DOMRect) => {
     document.querySelectorAll('audio').forEach((audio) => audio.pause());
+    if (touch) return setPhone({ i, from });
     setOpen(i);
     theater.current?.requestFullscreen?.().catch(() => {}); // where it can't (iPhone), the theatre fills the window
   };
@@ -98,15 +141,22 @@ export function VideoSection() {
     <section id="video" className="bg-[#0C0C0C] px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
       <SectionTitle text={t.video.title} className="mb-4 md:mb-6" />
       <Views />
-      <div className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">
+      <div ref={grid} className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">
         {stacks.map((stack, c) => (
           <div key={c} className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
             {stack.map((i) => (
-              <Tile key={FILMS[i].slug} film={FILMS[i]} onOpen={() => show(i)} />
+              <Tile key={FILMS[i].slug} film={FILMS[i]} index={i} active={i === middle && !phone} onOpen={(from) => show(i, from)} />
             ))}
           </div>
         ))}
       </div>
+      {phone && (
+        <PhonePlayer
+          film={{ ...FILMS[phone.i], credit: FILMS[phone.i].credit && credited(FILMS[phone.i].credit!), poster: poster(FILMS[phone.i]) }}
+          from={phone.from}
+          onClose={() => setPhone(null)}
+        />
+      )}
 
       <div
         ref={theater}
@@ -142,9 +192,8 @@ export function VideoSection() {
 }
 
 // A film in the grid: its poster, its frames flipping while the pointer is on it (loaded the first time), its name.
-// Touch screens can't hover: there a film flips through its frames while it crosses the middle of the screen.
-function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
-  const self = useRef<HTMLButtonElement>(null);
+// Touch screens can't hover: there the film in the middle of the screen (`active`) shows PLAY, in particles.
+function Tile({ film, index, active, onOpen }: { film: Film; index: number; active: boolean; onOpen: (from: DOMRect) => void }) {
   const [strip, setStrip] = useState(false); // the strip asked for
   const [frame, setFrame] = useState(-1); // -1: the poster
   const count = film.youtube ? 3 : FRAMES;
@@ -178,24 +227,14 @@ function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
     setFrame(-1);
   };
   useEffect(() => () => window.clearInterval(flip.current), []);
-  useEffect(() => {
-    const el = self.current;
-    if (!el || still || window.matchMedia('(hover: hover)').matches) return;
-    const observer = new IntersectionObserver(([entry]) => (entry.isIntersecting ? enter() : leave()), { rootMargin: '-35% 0px -35% 0px' });
-    observer.observe(el);
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const hover = touch ? {} : { onMouseEnter: enter, onMouseLeave: leave, onFocus: enter, onBlur: leave };
 
   return (
     <button
-      ref={self}
       type="button"
-      onClick={onOpen}
-      onMouseEnter={enter}
-      onMouseLeave={leave}
-      onFocus={enter}
-      onBlur={leave}
+      data-film={index}
+      onClick={(e) => onOpen(e.currentTarget.getBoundingClientRect())}
+      {...hover}
       aria-label={`${fill(t.video.play, { title: film.title })}${film.credit ? `, ${credited(film.credit)}` : ''}`}
       className="group relative block w-full overflow-hidden rounded-[24px] bg-white/[0.04] text-left"
       style={{ aspectRatio: `${film.width} / ${film.height}` }}
@@ -226,10 +265,13 @@ function Tile({ film, onOpen }: { film: Film; onOpen: () => void }) {
             {clock(film.seconds)}
           </p>
         </div>
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#0C0C0C] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
-          <Play className="h-4 w-4 translate-x-px" fill="currentColor" />
-        </span>
+        {!touch && (
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-[#0C0C0C] opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+            <Play className="h-4 w-4 translate-x-px" fill="currentColor" />
+          </span>
+        )}
       </div>
+      {touch && <ParticlePlay on={active} className="absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2" />}
     </button>
   );
 }
