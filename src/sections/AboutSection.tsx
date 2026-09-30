@@ -155,9 +155,9 @@ function Story() {
   );
 }
 
-// Over the handle, written by hand: an arrow drawn down to it, then "Why?" beside it, a stroke at a time (the arrow's
-// line, its head, then the word wiped in from the left, room left round its letters so none is cut); `drawn` false
-// wipes it all out at once.
+// Over the handle, written by hand: "Why?" above the line over it, then an arrow drawn from the word down through
+// that line to the handle, a stroke at a time (the word wiped in from the left with room round its letters so none is
+// cut, the arrow's line, its head); `drawn` false wipes it all out at once.
 const INK = '#B38BFF';
 function Why({ drawn: show }: { drawn: boolean }) {
   const stroke = (delay: number, ms: number) => ({
@@ -166,23 +166,24 @@ function Why({ drawn: show }: { drawn: boolean }) {
     transition: show && !still ? `stroke-dashoffset ${ms}ms cubic-bezier(0.5, 0, 0.3, 1) ${delay}ms` : 'none',
   });
   return (
-    <span aria-hidden className="pointer-events-none absolute bottom-[58%] left-1/2 flex -translate-x-[42%] -rotate-6 items-end whitespace-nowrap">
-      <svg viewBox="0 0 48 40" className="mb-[-0.4em] mr-[0.1em] h-[1.7em] w-[2em] overflow-visible" fill="none" stroke={INK} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 3px #0C0C0C)' }}>
-        <path pathLength={1} d="M45 12 C 34 5, 18 6, 12 17 C 9 22, 9 27, 11 33" style={stroke(0, 520)} />
-        <path pathLength={1} d="M4 26 L 11 34 L 18 27" style={stroke(480, 220)} />
-      </svg>
+    <span aria-hidden className="pointer-events-none absolute left-1/2 -translate-x-1/2 -rotate-3" style={{ bottom: 'calc(100% + 1.3em)' }}>
       <span
-        className="text-[1.25em] font-bold leading-none"
+        className="block whitespace-nowrap text-[1.6em] font-bold leading-none"
         style={{
           color: INK,
           fontFamily: 'Caveat, cursive',
           textShadow: '0 0 6px #0C0C0C, 0 0 12px #0C0C0C',
           clipPath: show ? 'inset(-0.5em -0.5em -0.5em -0.5em)' : 'inset(-0.5em 100% -0.5em -0.5em)',
-          transition: show && !still ? 'clip-path 600ms cubic-bezier(0.45, 0, 0.3, 1) 650ms' : 'none',
+          transition: show && !still ? 'clip-path 600ms cubic-bezier(0.45, 0, 0.3, 1)' : 'none',
         }}
       >
         {ABOUT_HELLO.hint}
       </span>
+      {/* from under the word's start, down through the line above the handle, to it */}
+      <svg viewBox="0 0 30 50" className="absolute left-[4%] top-full h-[1.95em] w-[1em] overflow-visible" fill="none" stroke={INK} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" style={{ filter: 'drop-shadow(0 0 3px #0C0C0C)' }}>
+        <path pathLength={1} d="M20 3 C 8 12, 6 24, 13 34 C 15 38, 15 42, 14 47" style={stroke(620, 420)} />
+        <path pathLength={1} d="M8 40 L 14 48 L 21 41" style={stroke(1000, 200)} />
+      </svg>
     </span>
   );
 }
