@@ -1,7 +1,7 @@
 // All copy and data for the page. Facts mirror ../data/profile.json in the knowledge base. The words come from
 // ./i18n, in the visitor's language (English: i18n/en.ts).
 
-import { t } from './i18n';
+import { lang, t, type Lang } from './i18n';
 import musicTracks from './music.json';
 
 export const PERSON = {
@@ -99,18 +99,34 @@ export const phraseRuns = (phrase: string): Run[] =>
 
 export const phraseText = (phrase: string) => phrase.replace(/[*~^+]/g, '');
 
-// Tools in daily use, one folder each. Only what the repositories and files actually show
-// (../data/profile.json → skills); nothing listed on the old CV without evidence.
-export const STACK = [
-  { name: 'Frontend', items: ['TypeScript', 'React', 'Next.js', 'Vite', 'Tailwind CSS', 'shadcn/ui', 'TanStack Query', 'Zustand', 'Zod'] },
-  { name: 'Backend', items: ['Node.js', 'Fastify', 'Express', 'PostgreSQL', 'Prisma', 'Drizzle', 'Redis', 'BullMQ', 'Socket.IO', 'OpenAPI'] },
-  { name: 'iOS', items: ['Swift 6', 'SwiftUI', 'WidgetKit', 'Live Activities', 'StoreKit 2', 'APNs', 'CoreNFC', 'XCTest'] },
-  { name: 'AI', items: ['Claude Code', 'Codex', 'Claude API', 'OpenAI API', 'Groq', 'Structured outputs', 'Tesseract OCR', 'whisper.cpp'] },
-  { name: 'Fintech', items: ['KSeF 2.0', 'SAF-T / JPK', 'PSD2 banking', 'Stripe', 'PayU', 'Przelewy24', 'Allegro', 'BaseLinker', 'Shopify'] },
-  { name: 'DevOps', items: ['Linux', 'nginx', 'PM2', 'Docker', 'GitHub Actions', 'Let’s Encrypt', 'Sentry', 'Vitest', 'Playwright'] },
-  { name: 'Design', items: ['Figma', 'Framer Motion', 'Three.js', 'React Three Fiber', 'GLSL', 'Spline', 'Photoshop', 'Illustrator'] },
-  { name: 'Media', items: ['Final Cut Pro', 'Premiere Pro', 'Logic Pro', 'Higgsfield', 'Kling', 'Midjourney', 'ElevenLabs', 'Remotion'] },
-];
+// Tools in daily use, one folder each. Only what the repositories and files actually show (../data/profile.json
+// → skills, and this site itself for its WebGL, motion and languages); nothing listed on the old CV without evidence.
+const FOLDERS = {
+  Frontend: ['TypeScript', 'React 19', 'Next.js', 'Vite', 'Tailwind CSS', 'shadcn/ui', 'TanStack Query', 'Zustand', 'Zod', 'i18n', 'Telegram Mini Apps'],
+  'WebGL & Motion': ['WebGL', 'Three.js', 'React Three Fiber', 'GLSL', 'Postprocessing', 'GPGPU particles', 'Framer Motion', 'anime.js', 'OGL', 'Spline'],
+  Backend: ['Node.js', 'Fastify', 'Express', 'PostgreSQL', 'Prisma', 'Drizzle', 'Redis', 'BullMQ', 'Socket.IO', 'SSE', 'OpenAPI'],
+  AI: ['Claude Code', 'Codex', 'AI agents', 'Claude API', 'OpenAI API', 'Groq', 'Structured outputs', 'Document AI', 'Tesseract OCR', 'whisper.cpp'],
+  iOS: ['Swift 6', 'SwiftUI', 'WidgetKit', 'Live Activities', 'StoreKit 2', 'Sign in with Apple', 'APNs', 'CoreNFC', 'XCTest'],
+  'Fintech & Commerce': ['Stripe', 'PSD2 banking', 'EU VAT / VIES', 'Shopify', 'WooCommerce', 'KSeF 2.0', 'SAF-T / JPK', 'PayU', 'Przelewy24', 'Allegro', 'BaseLinker'],
+  'DevOps & Security': ['Linux', 'nginx', 'Docker', 'GitHub Actions', 'PM2', 'Let’s Encrypt', 'Sentry', 'Vitest', 'Playwright', 'Passkeys', 'RBAC'],
+  'Design & Media': ['Figma', 'Photoshop', 'Illustrator', 'Final Cut Pro', 'Premiere Pro', 'Logic Pro', 'Remotion', 'Midjourney', 'Higgsfield', 'Kling', 'ElevenLabs'],
+};
+type Folder = keyof typeof FOLDERS;
+// The folders in the order each language's market asks for them: first what is sought most there. Polish: its
+// e-invoicing and payments (KSeF is mandatory from 2026); German: quality and security early; Italian and French:
+// commerce and the visual side; Russian and Ukrainian: AI and 3D after the core. The rest as for English.
+const ORDER: Record<Lang, Folder[]> = {
+  en: ['Frontend', 'WebGL & Motion', 'Backend', 'AI', 'iOS', 'DevOps & Security', 'Fintech & Commerce', 'Design & Media'],
+  de: ['Frontend', 'Backend', 'DevOps & Security', 'AI', 'WebGL & Motion', 'Fintech & Commerce', 'iOS', 'Design & Media'],
+  pl: ['Fintech & Commerce', 'Backend', 'Frontend', 'AI', 'DevOps & Security', 'WebGL & Motion', 'iOS', 'Design & Media'],
+  it: ['Frontend', 'Backend', 'Fintech & Commerce', 'WebGL & Motion', 'AI', 'iOS', 'DevOps & Security', 'Design & Media'],
+  fr: ['Frontend', 'WebGL & Motion', 'Backend', 'Fintech & Commerce', 'AI', 'iOS', 'DevOps & Security', 'Design & Media'],
+  ru: ['Frontend', 'Backend', 'AI', 'WebGL & Motion', 'iOS', 'DevOps & Security', 'Fintech & Commerce', 'Design & Media'],
+  uk: ['Frontend', 'Backend', 'AI', 'WebGL & Motion', 'iOS', 'DevOps & Security', 'Fintech & Commerce', 'Design & Media'],
+};
+// (in Polish the fintech folder leads with the Polish ones)
+const POLISH_FINTECH = ['KSeF 2.0', 'SAF-T / JPK', 'PayU', 'Przelewy24', 'Allegro', 'BaseLinker', 'PSD2 banking', 'EU VAT / VIES', 'Stripe', 'Shopify', 'WooCommerce'];
+export const STACK = ORDER[lang].map((name) => ({ name, items: lang === 'pl' && name === 'Fintech & Commerce' ? POLISH_FINTECH : FOLDERS[name] }));
 
 export const SERVICES = t.services.list;
 

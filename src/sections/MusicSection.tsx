@@ -338,8 +338,9 @@ function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur,
 
 // Phones: the playlist as a short column right under the stage, scrolling within: the card that is on pinned over
 // its top and the others running in under it, three in view (the fourth peeking in), shaded where they go under
-// and at the bottom; its first eight tracks, or all of them when asked (or once one past the eighth is on). A track
-// picked morphs up into the pinned place with a bounce, and the one that was there back into its own.
+// and at the bottom; its first eight tracks, or all of them when asked (or once one past the eighth is on). Scrolled
+// to its end, the page scrolls on (no trap). A track picked morphs up into the pinned place with a bounce, and the
+// one that was there back into its own.
 const FIRST = 8;
 const PEEK = 22;
 const UNDER = OPEN + GAP; // the pinned card and the gap under it
@@ -356,7 +357,7 @@ function PhoneList({ current, playing, time, onPick }: PlaylistProps) {
             layoutScroll
             role="list"
             aria-label={t.music.playlist}
-            className="flex h-full flex-col gap-2.5 overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex h-full flex-col gap-2.5 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             style={{ paddingTop: UNDER }}
           >
             {others.map((k) => (

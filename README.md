@@ -84,7 +84,7 @@ Four R3F canvases live on the page: the manifesto, this one, the particle scene 
 
 ## The stack section
 
-Eight React Bits Folder Float folders (Frontend, Backend, iOS, AI, Fintech, DevOps, Design, Media). A folder opens on hover — on touch screens on tap — and its tools spring out as notes that can be dragged around (matter-js). Wide screens get a 4 × 2 shelf with room above each row for the notes; narrow screens a swipeable row whose middle folder opens by itself. The list lives in `STACK` in `src/content.ts` and only names tools the repositories actually show.
+Eight React Bits Folder Float folders (Frontend, WebGL & Motion, Backend, AI, iOS, DevOps & Security, Fintech & Commerce, Design & Media). A folder opens on hover — on touch screens on tap — and its tools spring out as notes that can be dragged around (matter-js). Wide screens get a 4 × 2 shelf with room above each row for the notes; narrow screens a swipeable row whose middle folder opens by itself. The lists live in `FOLDERS` in `src/content.ts` and only name tools the repositories (`../data/profile.json`) or this site itself actually show. The folders come in the order each language's market asks for them (`ORDER`): Polish leads with e-invoicing and payments (KSeF, JPK, PayU, Przelewy24, Allegro), German brings quality and security forward, Italian and French commerce and the visual side, Russian and Ukrainian AI and 3D after the core; the rest as in English.
 
 ## The projects
 
