@@ -16,7 +16,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;900&display=swap">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfilePage","url":"https://sunlucki.pl/cv/","dateModified":"2026-10-01","mainEntity":{"@type":"Person","@id":"https://sunlucki.pl/#person","name":"Bogdan Nenadović","alternateName":["Bohdan Nenadovych"],"jobTitle":"Product Engineer & Solutions Architect","description":"I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.","email":"mailto:hello@sunlucki.pl","url":"https://sunlucki.pl/","image":"https://sunlucki.pl/cv/portrait.jpg","address":{"@type":"PostalAddress","addressLocality":"Poznań","addressCountry":"PL"},"worksFor":{"@type":"Organization","name":"SIMBIA sp. z o.o.","url":"https://simbia.eu"},"alumniOf":{"@type":"CollegeOrUniversity","name":"WSB University in Poznań"},"knowsLanguage":[{"@type":"Language","name":"English"},{"@type":"Language","name":"Polish"},{"@type":"Language","name":"Ukrainian"},{"@type":"Language","name":"Russian"}],"knowsAbout":["AI-assisted SDLC","Agentic coding","Multi-agent orchestration","Claude Code","OpenAI Codex","MCP","LLM integration","Structured outputs","Prompt caching","Document AI / OCR","LLM pipelines","Prompt engineering","Solution architecture","System design","Domain modules","State machines","Event-driven design (LISTEN/NOTIFY, SSE, queues)","Integration architecture (OAuth2, signed webhooks, idempotency)","Security architecture","ADRs","TypeScript","Node.js (Fastify, Express)","React","Next.js","PostgreSQL","Prisma","Drizzle","Redis / BullMQ","REST / OpenAPI","Swift / SwiftUI","CI/CD (GitHub Actions)","Automated testing (Vitest, XCTest)","Docker","Linux (nginx, PM2, systemd)","Backups and disaster recovery","Sentry","CRM","B2B commerce","Payments (Stripe, PayU, Przelewy24)","E-invoicing (KSeF 2.0)","Accounting","HR tech","Fleet management (Uber API)"],"sameAs":["https://www.linkedin.com/in/sunlucki","https://github.com/Sunlucki"]}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfilePage","url":"https://sunlucki.pl/cv/","dateModified":"2026-10-01","mainEntity":{"@type":"Person","@id":"https://sunlucki.pl/#person","name":"Bogdan Nenadović","alternateName":["Bohdan Nenadovych"],"jobTitle":"Product Engineer & Solutions Architect","description":"I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.","email":"mailto:hello@sunlucki.pl","url":"https://sunlucki.pl/","image":"https://sunlucki.pl/cv/portrait.jpg","address":{"@type":"PostalAddress","addressLocality":"Poznań","addressCountry":"PL"},"worksFor":{"@type":"Organization","name":"SIMBIA sp. z o.o.","url":"https://simbia.eu"},"alumniOf":{"@type":"CollegeOrUniversity","name":"WSB University in Poznań"},"knowsLanguage":[{"@type":"Language","name":"English"},{"@type":"Language","name":"Polish"},{"@type":"Language","name":"Ukrainian"},{"@type":"Language","name":"Russian"}],"knowsAbout":["AI-assisted SDLC","Agentic coding","Multi-agent orchestration","Claude Code","OpenAI Codex","MCP","LLM integration","Structured outputs","Prompt caching","Document AI / OCR","LLM pipelines","Prompt engineering","Solution architecture","System design","Domain modules","State machines","Event-driven design (LISTEN/NOTIFY, SSE, queues)","Integration architecture (OAuth2, signed webhooks, idempotency)","Security architecture","ADRs","TypeScript","Node.js (Fastify, Express)","React","Next.js","PostgreSQL","Prisma","Drizzle","Redis / BullMQ","REST / OpenAPI","Swift / SwiftUI","CI/CD (GitHub Actions)","Automated testing (Vitest, XCTest)","Docker","Linux (nginx, PM2, systemd)","AWS (S3, SES, SNS integrations)","Backups and disaster recovery","Sentry","CRM","B2B commerce","Payments (Stripe, PayU, Przelewy24)","E-invoicing (KSeF 2.0)","Accounting","HR tech","Fleet management (Uber API)"],"sameAs":["https://www.linkedin.com/in/sunlucki","https://github.com/Sunlucki"]}}</script>
 <style>
 :root {
   --bg: #0c0c0c; --panel: #111216; --edge: rgb(85 87 94 / 0.55); --line: rgb(215 226 234 / 0.14);
@@ -110,9 +110,9 @@ html.js .step:not(.on) .panel { display: none; }
 
 /* experience */
 .timeline { list-style: none; border-left: 1.5px solid var(--line); margin-left: 6px; }
-.job { position: relative; padding: 0 0 26px 26px; display: grid; grid-template-columns: 170px 1fr; gap: 6px 22px; }
+.job { position: relative; padding: 0 0 24px 26px; }
 .job::before { content: ''; position: absolute; left: -6px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgb(127 176 255 / 0.15); }
-.job .dates { color: var(--muted); font-size: 0.9rem; padding-top: 2px; }
+.job .dates { color: var(--muted); }
 .job h3 { font-size: 1.12rem; }
 .job .org { color: var(--accent); font-size: 0.95rem; margin-bottom: 4px; }
 .job .org a { text-decoration: none; }
@@ -124,7 +124,9 @@ html.js .step:not(.on) .panel { display: none; }
 .project { transition: opacity 0.3s, border-color 0.3s; }
 .project.dim { opacity: 0.28; }
 .project.hit { border-color: rgb(127 176 255 / 0.7); }
-.project header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.project header { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; }
+.project .host { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+.project .status { margin-left: auto; }
 .project h3 { font-size: 1.3rem; font-weight: 600; }
 .project .status { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
 .project > p { margin-top: 8px; }
@@ -137,6 +139,7 @@ html.js .step:not(.on) .panel { display: none; }
 .project .link a { color: var(--accent); text-decoration: none; }
 .also { margin-top: 16px; color: var(--muted); }
 .print-only { display: none; }
+.nw { white-space: nowrap; }
 
 /* skills, education, languages */
 .skills { display: grid; gap: 18px; }
@@ -159,7 +162,6 @@ html.js .rv.in { opacity: 1; transform: none; }
   .avatar { order: -1; width: 132px; }
   .numbers { grid-template-columns: repeat(2, 1fr); }
   .numbers .value { font-size: 1.75rem; }
-  .job { grid-template-columns: 1fr; }
   .projects, .pair { grid-template-columns: 1fr; }
   section { padding-top: 48px; }
 }
@@ -179,7 +181,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero { padding: 0 0 9pt; }
   .slats { opacity: 0.35; }
   .hero-in { grid-template-columns: 1fr auto; gap: 18pt; }
-  .eyebrow { font-size: 7pt; margin-bottom: 3pt; }
+  .eyebrow { display: none; }
   h1.name, .numbers .value { background: none; -webkit-text-fill-color: currentColor; color: var(--head); }
   h1.name { font-size: 30pt; }
   h1.name span { display: inline; }
@@ -222,9 +224,8 @@ html.js .rv.in { opacity: 1; transform: none; }
   .fit summary .pill { display: none; }
   .fit details p { display: inline; padding: 0; }
   .timeline { margin-left: 3pt; }
-  .job { padding: 0 0 5pt 13pt; grid-template-columns: 76pt 1fr; gap: 0 10pt; break-inside: avoid; }
+  .job { padding: 0 0 5pt 13pt; break-inside: avoid; }
   .job::before { left: -4pt; top: 3pt; width: 6pt; height: 6pt; box-shadow: none; }
-  .job .dates { font-size: 8pt; padding-top: 1pt; }
   .job h3 { font-size: 9.2pt; }
   .job .org { font-size: 8.4pt; margin-bottom: 1pt; }
   .projects { display: block; }
@@ -238,7 +239,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .project details { margin-top: 3pt; }
   .project summary { display: none; }
   .project details ul { margin-top: 0; }
-  .project .link { margin-top: 2pt; font-size: 7.8pt; }
+  .project .host { font-size: 7.8pt; }
   .also { margin-top: 5pt; }
   .skills { gap: 2pt; }
   .skills > div h3 { display: inline; font-size: 8.5pt; color: var(--accent); }
@@ -246,8 +247,6 @@ html.js .rv.in { opacity: 1; transform: none; }
   .chips { display: inline; }
   .chips li { display: inline; border: 0; padding: 0; font-size: 8.6pt; color: var(--text); }
   .chips li:not(:last-child)::after { content: ', '; }
-  #education h2.title { display: none; }
-  #education { padding-top: 6pt; }
   .pair { display: block; }
   .pair .card { background: none; border: 0; padding: 0; border-radius: 0; }
   .pair .card h3 { display: inline; font-size: 8.5pt; color: var(--accent); }
@@ -296,12 +295,12 @@ html.js .rv.in { opacity: 1; transform: none; }
 <main id="main" class="wrap">
 <section id="summary" class="rv">
   <h2 class="title"><span class="tt">S</span>ummary</h2>
-  <p class="lead">I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.</p>
+  <p class="lead">I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with <span class="nw">double-entry</span> accounting and KSeF <span class="nw">e-invoicing</span> that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a <span class="nw">23-language</span> EU store with an LLM <span class="nw">lead-qualification</span> pipeline, and workforce and fleet platforms with native iOS apps. My delivery is <span class="nw">spec-driven</span> and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial <span class="nw">multi-agent</span> reviews and, on the main platforms, CI/CD with <span class="nw">health-gated</span> rollback. Before engineering full time I <span class="nw">co-owned</span> businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.</p>
   <ul class="numbers">
     <li class="card"><span class="value">10+</span><span class="label">production systems shipped in 2026, as the sole architect</span></li>
-    <li class="card"><span class="value">94%</span><span class="label">of my 2026 commits co-authored with Claude</span></li>
-    <li class="card"><span class="value">127 → 84</span><span class="label">audit findings reproduced by skeptic agents, then fixed</span></li>
-    <li class="card"><span class="value">9 + 1</span><span class="label">parallel coding agents and a QA agent: an 11K-line design system in ~14.5 h</span></li>
+    <li class="card"><span class="value">94%</span><span class="label">of my 2026 commits <span class="nw">co-authored</span> with Claude</span></li>
+    <li class="card"><span class="value">84 of 127</span><span class="label">audit findings confirmed by skeptic agents, then fixed</span></li>
+    <li class="card"><span class="value">9 + 1</span><span class="label">parallel coding agents and a QA agent: an <span class="nw">11K-line</span> design system in ~14.5 h</span></li>
     <li class="card"><span class="value">700+</span><span class="label">automated tests on the largest platform (339 REST endpoints)</span></li>
     <li class="card"><span class="value">23</span><span class="label">interface languages on one EU platform</span></li>
   </ul>
@@ -317,7 +316,7 @@ html.js .rv.in { opacity: 1; transform: none; }
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-2"><span class="n">02</span>Orchestrate</button></h3>
-      <p class="panel" id="step-2">Coding agents work in parallel in git worktrees against frozen contracts and a file-ownership map, with handoff prompts between models. The spin.clinic design system was built this way by 9 agents and a QA agent: 11K lines in about 14.5 hours, with no merge conflicts.</p>
+      <p class="panel" id="step-2">Coding agents work in parallel in git worktrees against frozen contracts and a <span class="nw">file-ownership</span> map, with handoff prompts between models. The spin.clinic design system was built this way by 9 agents and a QA agent: 11K lines in about 14.5 hours, with no merge conflicts.</p>
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-3"><span class="n">03</span>Test</button></h3>
@@ -325,25 +324,25 @@ html.js .rv.in { opacity: 1; transform: none; }
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-4"><span class="n">04</span>Review and validate</button></h3>
-      <p class="panel" id="step-4">Adversarial multi-agent audits: a skeptic agent has to reproduce every finding before it is fixed and pinned by a regression test. 127 findings, 84 confirmed and fixed on SIMBIA CRM; 52 findings, 20 confirmed on AiBizBox; an accounting review that ran 28 agents and 750 tool calls.</p>
+      <p class="panel" id="step-4">Adversarial <span class="nw">multi-agent</span> audits: a skeptic agent has to reproduce every finding before it is fixed and pinned by a regression test. 127 findings, 84 confirmed and fixed on SIMBIA CRM; 52 findings, 20 confirmed on AiBizBox; an accounting review that ran 28 agents and 750 tool calls.</p>
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-5"><span class="n">05</span>Ship</button></h3>
-      <p class="panel" id="step-5">On the main platforms (SIMBIA CRM, PROTECTDENT, XyliMelts): GitHub Actions with PostgreSQL and Redis service containers, a database backup before every deploy, migrations, health-gated automatic rollback and smoke tests.</p>
+      <p class="panel" id="step-5">On the main platforms (SIMBIA CRM, PROTECTDENT, XyliMelts): GitHub Actions with PostgreSQL and Redis service containers, a database backup before every deploy, migrations, <span class="nw">health-gated</span> automatic rollback and smoke tests.</p>
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-6"><span class="n">06</span>Operate</button></h3>
-      <p class="panel" id="step-6">Daily off-site backups with weekly automated restore tests (SIMBIA CRM), Sentry, health endpoints and alerts. Incidents get a postmortem: after a sync failure wiped a working copy, the code was rebuilt from the agents’ session logs and checked against production.</p>
+      <p class="panel" id="step-6">Daily <span class="nw">off-site</span> backups with weekly automated restore tests (SIMBIA CRM), Sentry, health endpoints and alerts. Incidents get a postmortem: after a sync failure wiped a working copy, the code was rebuilt from the agents’ session logs and checked against production.</p>
     </li>
   </ol>
-  <p class="tools"><b>Tools:</b> Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (browser automation, iOS Simulator, design tools) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM</p>
+  <p class="tools"><b>Tools:</b> Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (Chrome browser automation, iOS Simulator, Figma, Spline) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM</p>
   <div class="ai">
     <h3>AI systems in production</h3>
     <ul class="bullets">
-      <li>LLM lead-qualification pipeline (PROTECTDENT): map-based discovery, site crawling, evidence-based scoring from 0 to 100 and reply-intent classification into 8 intents; 7,800+ qualified B2B accounts.</li>
-      <li>Multi-provider LLM routing: a 4-model fallback chain with hard timeouts, quotas, caching and a call log; a vision assistant that maps a photo of dental equipment to compatible products.</li>
+      <li>LLM <span class="nw">lead-qualification</span> pipeline (PROTECTDENT): <span class="nw">map-based</span> discovery, site crawling, <span class="nw">evidence-based</span> scoring from 0 to 100 and <span class="nw">reply-intent</span> classification into 8 intents; 7,800+ qualified B2B accounts.</li>
+      <li><span class="nw">Multi-provider</span> LLM routing: a <span class="nw">4-model</span> fallback chain with hard timeouts, quotas, caching and a call log; a vision assistant that maps a photo of dental equipment to compatible products.</li>
       <li>Document AI: OCR, then a vision LLM, field extraction and human review, with personal data masked before any LLM call (AiBizBox, SIMBIA).</li>
-      <li>Claude features with structured outputs validated by Zod, prompt caching and atomic per-user quotas (CashFlow); an LLM ingest pipeline that rejects quotes that are not verbatim (Novus Ignis).</li>
+      <li>Claude features with structured outputs validated by Zod, prompt caching and atomic <span class="nw">per-user</span> quotas (CashFlow); an LLM ingest pipeline that rejects quotes that are not verbatim (Novus Ignis).</li>
     </ul>
   </div>
 </section>
@@ -359,7 +358,7 @@ html.js .rv.in { opacity: 1; transform: none; }
     </details>
     <details open>
       <summary><h3>AI-assisted SDLC: development, testing, CI/CD</h3><span class="pill">Evidence</span></summary>
-      <p>My 2026 projects were built this way, from written specs to tested releases; the main platforms ship through CI/CD with health checks and automatic rollback. About 94% of my 2026 commits are co-authored with Claude.</p>
+      <p>My 2026 projects were built this way, from written specs to tested releases; the main platforms ship through CI/CD with health checks and automatic rollback. About 94% of my 2026 commits are <span class="nw">co-authored</span> with Claude.</p>
     </details>
     <details>
       <summary><h3>Agentic coding and autonomous software engineering</h3><span class="pill">Evidence</span></summary>
@@ -367,15 +366,19 @@ html.js .rv.in { opacity: 1; transform: none; }
     </details>
     <details>
       <summary><h3>AI systems: AI workflows, single- and multi-agent</h3><span class="pill">Evidence</span></summary>
-      <p>LLM pipelines in production (lead qualification, intent classification, document AI with human review, multi-provider routing) and multi-agent orchestration for the engineering work itself.</p>
+      <p>LLM pipelines in production (lead qualification, intent classification, document AI with human review, <span class="nw">multi-provider</span> routing) and <span class="nw">multi-agent</span> orchestration for the engineering work itself.</p>
     </details>
     <details>
       <summary><h3>Infrastructure choices: security, cost, performance, scalability</h3><span class="pill">Evidence</span></summary>
-      <p>Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker); backups with restore tests; security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.</p>
+      <p><span class="nw">Self-managed</span> Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, <span class="nw">signature-verified</span> (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search instead of pgvector for a <span class="nw">500-item</span> catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, <span class="nw">HMAC-signed</span> webhooks, signed URLs, PII masking, GDPR.</p>
     </details>
     <details>
       <summary><h3>Business value and stakeholders</h3><span class="pill">Evidence</span></summary>
-      <p>Co-founder and board member of a software company; earlier co-owned a business and led a creative team; sales materials that state plainly what a system does and does not do; a 90-day EU go-to-market plan with pricing research across 9 countries.</p>
+      <p><span class="nw">Co-founder</span> and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier <span class="nw">co-owned</span> a business and led a creative team; a <span class="nw">90-day</span> EU <span class="nw">go-to-market</span> plan with pricing research across 9 countries.</p>
+    </details>
+    <details>
+      <summary><h3>Communication with technical and non-technical audiences</h3><span class="pill">Evidence</span></summary>
+      <p>For engineers: specs, ADRs, runbooks and audit reports with <span class="nw">file-and-line</span> evidence. For buyers and owners: proposals, seller cheat sheets, <span class="nw">minute-by-minute</span> demo scripts and plain tables of what a system does, what is coming and what not to promise.</p>
     </details>
     <details>
       <summary><h3>Leadership</h3><span class="pill">Evidence</span></summary>
@@ -388,60 +391,44 @@ html.js .rv.in { opacity: 1; transform: none; }
   <h2 class="title"><span class="tt">E</span>xperience</h2>
   <ol class="timeline">
     <li class="job">
-      <p class="dates"><time datetime="2026-08">Aug 2026</time> – present</p>
-      <div>
-        <h3>Co-founder, Board Member &amp; Solutions Architect</h3>
-        <p class="org"><a href="https://simbia.eu">SIMBIA sp. z o.o.</a> · Poznań · remote</p>
-        <p>A software company that builds and licenses vertical platforms: CRM, workforce management, fleet management and B2B commerce. I own the architecture and the AI-assisted delivery process. The company runs its sales and statutory accounting on our own CRM.</p>
-      </div>
+      <h3>Co-founder, Board Member &amp; Solutions Architect</h3>
+      <p class="org"><a href="https://simbia.eu">SIMBIA sp. z o.o.</a> · Poznań · remote · <span class="dates"><time datetime="2026-08">Aug 2026</time> – present</span></p>
+      <p>A software company that builds and licenses vertical platforms: CRM, workforce management, fleet management and B2B commerce. I own the architecture and the <span class="nw">AI-assisted</span> delivery process. The company runs its sales and statutory accounting on our own CRM.</p>
     </li>
     <li class="job">
-      <p class="dates"><time datetime="2025-01">Jan 2025</time> – present</p>
-      <div>
-        <h3>Founder; independent product engineer and architect since 2026</h3>
-        <p class="org">STYLEICON (own studio) · Poznań</p>
-        <p>Web, branding and video studio in 2025. Since January 2026: designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026).</p>
-      </div>
+      <h3>Independent Product Engineer &amp; Architect</h3>
+      <p class="org">STYLEICON (own studio) · Poznań · <span class="dates"><time datetime="2026-01">Jan 2026</time> – present</span></p>
+      <p>Designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026); since August 2026 through SIMBIA sp. z o.o.</p>
     </li>
     <li class="job">
-      <p class="dates"><time datetime="2026-09">Sep 2026</time></p>
-      <div>
-        <h3>Design System Engineer (contract)</h3>
-        <p class="org"><a href="https://spin.clinic">spin.clinic</a></p>
-        <p>Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.</p>
-      </div>
+      <h3>Owner: web, branding and video studio</h3>
+      <p class="org">STYLEICON (own studio) · Poznań · <span class="dates"><time datetime="2025-01">Jan 2025</time> – <time datetime="2025-12">Dec 2025</time></span></p>
+      <p>Websites, brand identities and video production for local businesses.</p>
     </li>
     <li class="job">
-      <p class="dates"><time datetime="2026-09">Sep 2026</time></p>
-      <div>
-        <h3>Tech Lead (pro bono)</h3>
-        <p class="org">Fundacja Novus Ignis</p>
-        <p>Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.</p>
-      </div>
+      <h3>Design System Engineer (contract)</h3>
+      <p class="org"><a href="https://spin.clinic">spin.clinic</a> · <span class="dates"><time datetime="2026-09">Sep 2026</time></span></p>
+      <p>Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.</p>
     </li>
     <li class="job">
-      <p class="dates"><time datetime="2022-09">Sep 2022</time> – <time datetime="2025-01">Jan 2025</time></p>
-      <div>
-        <h3>Marketing &amp; Team Leader; shareholder and President of the Management Board</h3>
-        <p class="org">Black Point Group sp. z o.o. · Poznań</p>
-        <p>Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.</p>
-      </div>
+      <h3>Tech Lead (pro bono)</h3>
+      <p class="org">Fundacja Novus Ignis · <span class="dates"><time datetime="2026-09">Sep 2026</time></span></p>
+      <p><span class="nw">Re-architected</span> and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.</p>
     </li>
     <li class="job">
-      <p class="dates"><time datetime="2020-10">Oct 2020</time> – <time datetime="2025-05">May 2025</time></p>
-      <div>
-        <h3>Co-owner</h3>
-        <p class="org">Black Point Barbershop · Poznań</p>
-        <p>Co-founded and ran a barbershop and creative hub: identity, a website with online booking, social media and video.</p>
-      </div>
+      <h3>Marketing &amp; Team Leader; shareholder and President of the Management Board</h3>
+      <p class="org">Black Point Group sp. z o.o. · Poznań · <span class="dates"><time datetime="2022-09">Sep 2022</time> – <time datetime="2025-01">Jan 2025</time></span></p>
+      <p>Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.</p>
     </li>
     <li class="job">
-      <p class="dates"><time datetime="2017-05">May 2017</time> – <time datetime="2020-08">Aug 2020</time></p>
-      <div>
-        <h3>Web Developer</h3>
-        <p class="org">GreenView</p>
-        <p>Websites from UX/UI to WordPress deployment: responsive builds, usability testing, work directly with clients and marketing teams.</p>
-      </div>
+      <h3>Co-owner</h3>
+      <p class="org">Black Point Barbershop · Poznań · <span class="dates"><time datetime="2020-10">Oct 2020</time> – <time datetime="2025-05">May 2025</time></span></p>
+      <p><span class="nw">Co-founded</span> and ran a barbershop and creative hub: identity, a website with online booking, social media and video.</p>
+    </li>
+    <li class="job">
+      <h3>Web Developer</h3>
+      <p class="org">GreenView · <span class="dates"><time datetime="2017-05">May 2017</time> – <time datetime="2020-08">Aug 2020</time></span></p>
+      <p>Websites from UX/UI to WordPress deployment: responsive builds, usability testing, work directly with clients and marketing teams.</p>
     </li>
   </ol>
 </section>
@@ -464,44 +451,40 @@ html.js .rv.in { opacity: 1; transform: none; }
   <p class="filter-note" aria-live="polite"></p>
   <div class="projects">
     <article class="project card" data-skills="ai-sdlc architecture ts node pg react swift cicd security payments">
-      <header><h3>SIMBIA CRM</h3><span class="status">Production · runs my company</span></header>
-      <p>Sales CRM with full double-entry accounting for a Polish limited company: KSeF 2.0 e-invoicing, PSD2 open banking, registry-based lead generation and a SwiftUI companion app.</p>
+      <header><h3>SIMBIA CRM</h3><a class="host" href="https://crm.simbia.eu">crm.simbia.eu ↗</a><span class="status">Production · runs my company</span></header>
+      <p>Sales CRM with full <span class="nw">double-entry</span> accounting for a Polish limited company: KSeF 2.0 <span class="nw">e-invoicing</span>, PSD2 open banking, <span class="nw">registry-based</span> lead generation and a SwiftUI companion app.</p>
       <ul class="metrics"><li>~110K lines of TypeScript</li><li>~240 REST endpoints</li><li>57 PostgreSQL tables</li><li>269 tests</li></ul>
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets"><li>Accounting invariants enforced inside PostgreSQL: deferred constraint triggers, immutable journals, gapless numbering; 8 government XML filings validated against the official XSD schemas.</li><li>Realtime updates from PostgreSQL LISTEN/NOTIFY to Server-Sent Events with per-role filtering; IMAP IDLE sync that puts client replies on the lead timeline in about 4 seconds.</li><li>Zero-touch deploys with health-gated automatic rollback; daily off-site backups with weekly automated restore checks.</li><li>Built through orchestrated coding agents with written specs and adversarial multi-agent audits: 127 findings, 84 confirmed and fixed.</li></ul>
+        <ul class="bullets"><li>Accounting invariants enforced inside PostgreSQL: deferred constraint triggers, immutable journals, gapless numbering; 8 government XML filings validated against the official XSD schemas.</li><li>Realtime updates from PostgreSQL LISTEN/NOTIFY to <span class="nw">Server-Sent</span> Events with <span class="nw">per-role</span> filtering; IMAP IDLE sync that puts client replies on the lead timeline in about 4 seconds.</li><li><span class="nw">Zero-touch</span> deploys with <span class="nw">health-gated</span> automatic rollback; daily <span class="nw">off-site</span> backups with weekly automated restore checks.</li><li>Built through orchestrated coding agents with written specs and adversarial <span class="nw">multi-agent</span> audits: 127 findings, 84 confirmed and fixed.</li></ul>
       </details>
-      <p class="link"><a href="https://crm.simbia.eu">crm.simbia.eu ↗</a></p>
     </article>
     <article class="project card" data-skills="architecture ts node pg react cicd security payments">
-      <header><h3>B2B Commerce Platform</h3><span class="status">Production · licensed to Mind Logistic</span></header>
+      <header><h3>B2B Commerce Platform</h3><a class="host" href="https://bosspartners.pl">bosspartners.pl ↗</a><span class="status">Production · licensed to Mind Logistic</span></header>
       <p>Wholesale platform that replaced a client’s WooCommerce store in production: company accounts with spend limits and approval flows, contract price books, RFQ and quotes, trade credit with aging and dunning.</p>
       <ul class="metrics"><li>~140K lines of TypeScript</li><li>339 REST endpoints</li><li>66 data models</li><li>700+ tests</li></ul>
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets"><li>Payment adapter registry for 7 gateways (Stripe, PayU, Przelewy24, Tpay, Autopay, Paynow, Revolut) with gateway-specific auth and signed-webhook verification.</li><li>Marketplace channel engine (Allegro, Shopify, WooCommerce, Shoper, Empik, Erli): job queue, exponential backoff, nightly reconciliation, AES-256-GCM encrypted credentials.</li><li>Migrated live customers, orders and products from WooCommerce, upgrading legacy password hashes to bcrypt transparently.</li></ul>
+        <ul class="bullets"><li>Payment adapter registry for 7 gateways (Stripe, PayU, Przelewy24, Tpay, Autopay, Paynow, Revolut) with <span class="nw">gateway-specific</span> auth and <span class="nw">signed-webhook</span> verification.</li><li>Marketplace channel engine (Allegro, Shopify, WooCommerce, Shoper, Empik, Erli): job queue, exponential backoff, nightly reconciliation, <span class="nw">AES-256-GCM</span> encrypted credentials.</li><li>Migrated live customers, orders and products from WooCommerce, upgrading legacy password hashes to bcrypt transparently.</li></ul>
       </details>
-      <p class="link"><a href="https://bosspartners.pl">bosspartners.pl ↗</a></p>
     </article>
     <article class="project card" data-skills="llm ts node pg react cicd payments">
-      <header><h3>PROTECTDENT</h3><span class="status">Production</span></header>
-      <p>23-language EU e-commerce for medical-device consumables, with an LLM lead-qualification pipeline for B2B sales.</p>
+      <header><h3>PROTECTDENT</h3><a class="host" href="https://protectdent.eu">protectdent.eu ↗</a><span class="status">Production · client platform, licensed</span></header>
+      <p><span class="nw">23-language</span> EU <span class="nw">e-commerce</span> for <span class="nw">medical-device</span> consumables, with an LLM <span class="nw">lead-qualification</span> pipeline for B2B sales.</p>
       <ul class="metrics"><li>23 languages</li><li>600+ tests</li><li>7,800+ qualified B2B accounts</li></ul>
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets"><li>The LLM lead-qualification pipeline and the 4-model fallback chain with a vision assistant (see AI systems in production).</li><li>Stripe checkout, VIES-based VAT and KSeF e-invoicing; CI/CD with health-checked deploys; a 90-day EU go-to-market plan (373 price points across 9 countries).</li></ul>
+        <ul class="bullets"><li>The LLM <span class="nw">lead-qualification</span> pipeline and the <span class="nw">4-model</span> fallback chain with a vision assistant (see AI systems in production).</li><li>Stripe checkout, <span class="nw">VIES-based</span> VAT and KSeF <span class="nw">e-invoicing</span>; Amazon SES bounce and complaint handling over SNS with signature verification; CI/CD with <span class="nw">health-checked</span> deploys; a <span class="nw">90-day</span> EU <span class="nw">go-to-market</span> plan (373 price points across 9 countries).</li></ul>
       </details>
-      <p class="link"><a href="https://protectdent.eu">protectdent.eu ↗</a></p>
     </article>
     <article class="project card noprint" data-skills="ts node pg react swift security">
-      <header><h3>iApply Workforce</h3><span class="status">Production demo</span></header>
+      <header><h3>iApply Workforce</h3><a class="host" href="https://iapply.com.pl">iapply.com.pl ↗</a><span class="status">Production demo</span></header>
       <p>Time, attendance and shift management for staffing agencies: a web app and a native SwiftUI app.</p>
       
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets"><li>Anti-fraud clock-in with expiring QR codes, geofencing and NFC (Web NFC, HID readers, CoreNFC).</li><li>SwiftUI app with its own Socket.IO v4 client, widgets, Live Activities and APNs push sent over HTTP/2 straight from Node.</li><li>Payroll-grade time calculations with decimal arithmetic and rounding rules.</li></ul>
+        <ul class="bullets"><li><span class="nw">Anti-fraud</span> <span class="nw">clock-in</span> with expiring QR codes, geofencing and NFC (Web NFC, HID readers, CoreNFC).</li><li>SwiftUI app with its own Socket.IO v4 client, widgets, Live Activities and APNs push sent over HTTP/2 straight from Node.</li><li><span class="nw">Payroll-grade</span> time calculations with decimal arithmetic and rounding rules.</li></ul>
       </details>
-      <p class="link"><a href="https://iapply.com.pl">iapply.com.pl ↗</a></p>
     </article>
     <article class="project card" data-skills="architecture ts node pg swift cicd security">
       <header><h3>TAXI BOSS</h3><span class="status">Production</span></header>
@@ -509,23 +492,21 @@ html.js .rv.in { opacity: 1; transform: none; }
       
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets"><li>Uber Vehicle Suppliers API: OAuth2 client credentials, per-endpoint rate-limit buckets, token caching, scheduled sync.</li><li>Driver app with an actor-based API client, single-flight token refresh and an offline outbox queue.</li><li>A security remediation cycle, 95 integration tests against a real PostgreSQL and CI/CD from scratch.</li></ul>
+        <ul class="bullets"><li>Uber Vehicle Suppliers API: OAuth2 client credentials, <span class="nw">per-endpoint</span> <span class="nw">rate-limit</span> buckets, token caching, scheduled sync.</li><li>Driver app with an <span class="nw">actor-based</span> API client, <span class="nw">single-flight</span> token refresh and an offline outbox queue.</li><li>Files on AWS S3 (AWS SDK v3, presigned URLs); a security remediation cycle, 95 integration tests against a real PostgreSQL and CI/CD from scratch.</li></ul>
       </details>
-      
     </article>
     <article class="project card noprint" data-skills="ai-sdlc ts react">
-      <header><h3>spin.clinic design system</h3><span class="status">Live · contract</span></header>
+      <header><h3>spin.clinic design system</h3><a class="host" href="https://spin.clinic">spin.clinic ↗</a><span class="status">Live · contract</span></header>
       <p>Design system and motion UI kit for spin.clinic (Next.js 14, Framer Motion): 11K lines, 41 exports, used across 56 product files.</p>
       
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets"><li>Built by 9 parallel coding agents and a QA agent (git worktrees, frozen contracts, a file-ownership map) in about 14.5 hours, with no merge conflicts.</li><li>FLIP card-to-fullscreen morphing with History API integration, spring motion tokens driven by gesture velocity, full keyboard and reduced-motion support.</li></ul>
+        <ul class="bullets"><li>Built by 9 parallel coding agents and a QA agent (git worktrees, frozen contracts, a <span class="nw">file-ownership</span> map) in about 14.5 hours, with no merge conflicts.</li><li>FLIP <span class="nw">card-to-fullscreen</span> morphing with History API integration, spring motion tokens driven by gesture velocity, full keyboard and <span class="nw">reduced-motion</span> support.</li></ul>
       </details>
-      <p class="link"><a href="https://spin.clinic">spin.clinic ↗</a></p>
     </article>
   </div>
-  <p class="also noprint">Also: CashFlow (iOS finance advisor: SwiftUI, Fastify, Claude with structured outputs), AiBizBox (document-AI SaaS with PII masking), XyliMelts (D2C store with a React Three Fiber hero and the most mature CI/CD), Novus Ignis (verifiable deliberation MVP).</p>
-  <p class="also print-only">Also: iApply Workforce (shift tracking for staffing agencies: web and a native SwiftUI app), the spin.clinic design system (see Experience), CashFlow (iOS finance advisor with Claude), AiBizBox (document-AI SaaS), XyliMelts (D2C store with a 3D hero).</p>
+  <p class="also noprint">Also: CashFlow (iOS finance advisor: SwiftUI, Fastify, Claude with structured outputs), AiBizBox (<span class="nw">document-AI</span> SaaS with PII masking), XyliMelts (D2C store with a React Three Fiber hero and the most mature CI/CD), Novus Ignis (verifiable deliberation MVP).</p>
+  <p class="also print-only">Also: iApply Workforce (shift tracking for staffing agencies: web and a native SwiftUI app), the spin.clinic design system (see Experience), CashFlow (iOS finance advisor with Claude), AiBizBox (<span class="nw">document-AI</span> SaaS), XyliMelts (D2C store with a 3D hero).</p>
 </section>
 
 <section id="skills" class="rv">
@@ -534,7 +515,7 @@ html.js .rv.in { opacity: 1; transform: none; }
     <div><h3>AI and SDLC</h3><ul class="chips"><li class="pill">AI-assisted SDLC</li><li class="pill">Agentic coding</li><li class="pill">Multi-agent orchestration</li><li class="pill">Claude Code</li><li class="pill">OpenAI Codex</li><li class="pill">MCP</li><li class="pill">LLM integration</li><li class="pill">Structured outputs</li><li class="pill">Prompt caching</li><li class="pill">Document AI / OCR</li><li class="pill">LLM pipelines</li><li class="pill">Prompt engineering</li></ul></div>
     <div><h3>Architecture</h3><ul class="chips"><li class="pill">Solution architecture</li><li class="pill">System design</li><li class="pill">Domain modules</li><li class="pill">State machines</li><li class="pill">Event-driven design (LISTEN/NOTIFY, SSE, queues)</li><li class="pill">Integration architecture (OAuth2, signed webhooks, idempotency)</li><li class="pill">Security architecture</li><li class="pill">ADRs</li></ul></div>
     <div><h3>Engineering</h3><ul class="chips"><li class="pill">TypeScript</li><li class="pill">Node.js (Fastify, Express)</li><li class="pill">React</li><li class="pill">Next.js</li><li class="pill">PostgreSQL</li><li class="pill">Prisma</li><li class="pill">Drizzle</li><li class="pill">Redis / BullMQ</li><li class="pill">REST / OpenAPI</li><li class="pill">Swift / SwiftUI</li></ul></div>
-    <div><h3>Delivery and operations</h3><ul class="chips"><li class="pill">CI/CD (GitHub Actions)</li><li class="pill">Automated testing (Vitest, XCTest)</li><li class="pill">Docker</li><li class="pill">Linux (nginx, PM2, systemd)</li><li class="pill">Backups and disaster recovery</li><li class="pill">Sentry</li></ul></div>
+    <div><h3>Delivery and operations</h3><ul class="chips"><li class="pill">CI/CD (GitHub Actions)</li><li class="pill">Automated testing (Vitest, XCTest)</li><li class="pill">Docker</li><li class="pill">Linux (nginx, PM2, systemd)</li><li class="pill">AWS (S3, SES, SNS integrations)</li><li class="pill">Backups and disaster recovery</li><li class="pill">Sentry</li></ul></div>
     <div><h3>Domains</h3><ul class="chips"><li class="pill">CRM</li><li class="pill">B2B commerce</li><li class="pill">Payments (Stripe, PayU, Przelewy24)</li><li class="pill">E-invoicing (KSeF 2.0)</li><li class="pill">Accounting</li><li class="pill">HR tech</li><li class="pill">Fleet management (Uber API)</li></ul></div>
   </div>
 </section>

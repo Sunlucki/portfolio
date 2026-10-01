@@ -30,6 +30,7 @@ const month = (ym) => {
 const when = ({ start, end }) =>
   end === start ? `<time datetime="${start}">${month(start)}</time>` : `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}`;
 const whenText = ({ start, end }) => (end === start ? month(start) : `${month(start)} – ${end ? month(end) : 'present'}`);
+const txt = (s) => esc(s).replace(/([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/gu, '<span class="nw">$1</span>');
 const host = (url) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 // a section title as the site draws its own: heavy capitals, the first one outlined in a dashed box
 const title = (text) => `<span class="tt">${esc(text[0])}</span>${esc(text.slice(1))}`;
@@ -172,9 +173,9 @@ html.js .step:not(.on) .panel { display: none; }
 
 /* experience */
 .timeline { list-style: none; border-left: 1.5px solid var(--line); margin-left: 6px; }
-.job { position: relative; padding: 0 0 26px 26px; display: grid; grid-template-columns: 170px 1fr; gap: 6px 22px; }
+.job { position: relative; padding: 0 0 24px 26px; }
 .job::before { content: ''; position: absolute; left: -6px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgb(127 176 255 / 0.15); }
-.job .dates { color: var(--muted); font-size: 0.9rem; padding-top: 2px; }
+.job .dates { color: var(--muted); }
 .job h3 { font-size: 1.12rem; }
 .job .org { color: var(--accent); font-size: 0.95rem; margin-bottom: 4px; }
 .job .org a { text-decoration: none; }
@@ -186,7 +187,9 @@ html.js .step:not(.on) .panel { display: none; }
 .project { transition: opacity 0.3s, border-color 0.3s; }
 .project.dim { opacity: 0.28; }
 .project.hit { border-color: rgb(127 176 255 / 0.7); }
-.project header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.project header { display: flex; align-items: baseline; gap: 6px 12px; flex-wrap: wrap; }
+.project .host { color: var(--accent); text-decoration: none; font-size: 0.85rem; }
+.project .status { margin-left: auto; }
 .project h3 { font-size: 1.3rem; font-weight: 600; }
 .project .status { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
 .project > p { margin-top: 8px; }
@@ -199,6 +202,7 @@ html.js .step:not(.on) .panel { display: none; }
 .project .link a { color: var(--accent); text-decoration: none; }
 .also { margin-top: 16px; color: var(--muted); }
 .print-only { display: none; }
+.nw { white-space: nowrap; }
 
 /* skills, education, languages */
 .skills { display: grid; gap: 18px; }
@@ -221,7 +225,6 @@ html.js .rv.in { opacity: 1; transform: none; }
   .avatar { order: -1; width: 132px; }
   .numbers { grid-template-columns: repeat(2, 1fr); }
   .numbers .value { font-size: 1.75rem; }
-  .job { grid-template-columns: 1fr; }
   .projects, .pair { grid-template-columns: 1fr; }
   section { padding-top: 48px; }
 }
@@ -241,7 +244,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .hero { padding: 0 0 9pt; }
   .slats { opacity: 0.35; }
   .hero-in { grid-template-columns: 1fr auto; gap: 18pt; }
-  .eyebrow { font-size: 7pt; margin-bottom: 3pt; }
+  .eyebrow { display: none; }
   h1.name, .numbers .value { background: none; -webkit-text-fill-color: currentColor; color: var(--head); }
   h1.name { font-size: 30pt; }
   h1.name span { display: inline; }
@@ -284,9 +287,8 @@ html.js .rv.in { opacity: 1; transform: none; }
   .fit summary .pill { display: none; }
   .fit details p { display: inline; padding: 0; }
   .timeline { margin-left: 3pt; }
-  .job { padding: 0 0 5pt 13pt; grid-template-columns: 76pt 1fr; gap: 0 10pt; break-inside: avoid; }
+  .job { padding: 0 0 5pt 13pt; break-inside: avoid; }
   .job::before { left: -4pt; top: 3pt; width: 6pt; height: 6pt; box-shadow: none; }
-  .job .dates { font-size: 8pt; padding-top: 1pt; }
   .job h3 { font-size: 9.2pt; }
   .job .org { font-size: 8.4pt; margin-bottom: 1pt; }
   .projects { display: block; }
@@ -300,7 +302,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .project details { margin-top: 3pt; }
   .project summary { display: none; }
   .project details ul { margin-top: 0; }
-  .project .link { margin-top: 2pt; font-size: 7.8pt; }
+  .project .host { font-size: 7.8pt; }
   .also { margin-top: 5pt; }
   .skills { gap: 2pt; }
   .skills > div h3 { display: inline; font-size: 8.5pt; color: var(--accent); }
@@ -308,8 +310,6 @@ html.js .rv.in { opacity: 1; transform: none; }
   .chips { display: inline; }
   .chips li { display: inline; border: 0; padding: 0; font-size: 8.6pt; color: var(--text); }
   .chips li:not(:last-child)::after { content: ', '; }
-  #education h2.title { display: none; }
-  #education { padding-top: 6pt; }
   .pair { display: block; }
   .pair .card { background: none; border: 0; padding: 0; border-radius: 0; }
   .pair .card h3 { display: inline; font-size: 8.5pt; color: var(--accent); }
@@ -356,9 +356,9 @@ html.js .rv.in { opacity: 1; transform: none; }
 <main id="main" class="wrap">
 <section id="summary" class="rv">
   <h2 class="title">${title('Summary')}</h2>
-  <p class="lead">${esc(cv.summary)}</p>
+  <p class="lead">${txt(cv.summary)}</p>
   <ul class="numbers">
-    ${cv.numbers.map((n) => `<li class="card"><span class="value">${esc(n.value)}</span><span class="label">${esc(n.label)}</span></li>`).join('\n    ')}
+    ${cv.numbers.map((n) => `<li class="card"><span class="value">${esc(n.value)}</span><span class="label">${txt(n.label)}</span></li>`).join('\n    ')}
   </ul>
 </section>
 
@@ -370,16 +370,16 @@ html.js .rv.in { opacity: 1; transform: none; }
       .map(
         (s, i) => `<li class="step${i === 0 ? ' on' : ''}">
       <h3><button type="button" aria-expanded="${i === 0}" aria-controls="step-${i + 1}"><span class="n">${String(i + 1).padStart(2, '0')}</span>${esc(s.title)}</button></h3>
-      <p class="panel" id="step-${i + 1}">${esc(s.text)}</p>
+      <p class="panel" id="step-${i + 1}">${txt(s.text)}</p>
     </li>`,
       )
       .join('\n    ')}
   </ol>
-  <p class="tools"><b>Tools:</b> ${esc(cv.tools)}</p>
+  <p class="tools"><b>Tools:</b> ${txt(cv.tools)}</p>
   <div class="ai">
     <h3>AI systems in production</h3>
     <ul class="bullets">
-      ${cv.aiSystems.map((a) => `<li>${esc(a)}</li>`).join('\n      ')}
+      ${cv.aiSystems.map((a) => `<li>${txt(a)}</li>`).join('\n      ')}
     </ul>
   </div>
 </section>
@@ -393,7 +393,7 @@ html.js .rv.in { opacity: 1; transform: none; }
       .map(
         (f, i) => `<details${i < 2 ? ' open' : ''}>
       <summary><h3>${esc(f.ask)}</h3><span class="pill">Evidence</span></summary>
-      <p>${esc(f.evidence)}</p>
+      <p>${txt(f.evidence)}</p>
     </details>`,
       )
       .join('\n    ')}
@@ -406,12 +406,9 @@ html.js .rv.in { opacity: 1; transform: none; }
     ${cv.experience
       .map(
         (j) => `<li class="job">
-      <p class="dates">${when(j)}</p>
-      <div>
-        <h3>${esc(j.role)}</h3>
-        <p class="org">${j.url ? `<a href="${esc(j.url)}">${esc(j.org)}</a>` : esc(j.org)}${j.place ? ` · ${esc(j.place)}` : ''}</p>
-        <p>${esc(j.text)}</p>
-      </div>
+      <h3>${esc(j.role)}</h3>
+      <p class="org">${j.url ? `<a href="${esc(j.url)}">${esc(j.org)}</a>` : esc(j.org)}${j.place ? ` · ${esc(j.place)}` : ''} · <span class="dates">${when(j)}</span></p>
+      <p>${txt(j.text)}</p>
     </li>`,
       )
       .join('\n    ')}
@@ -430,20 +427,19 @@ html.js .rv.in { opacity: 1; transform: none; }
     ${cv.projects
       .map(
         (p) => `<article class="project card${p.pdf === false ? ' noprint' : ''}" data-skills="${p.skills.join(' ')}">
-      <header><h3>${esc(p.name)}</h3><span class="status">${esc(p.status)}</span></header>
-      <p>${esc(p.text)}</p>
+      <header><h3>${esc(p.name)}</h3>${p.url ? `<a class="host" href="${esc(p.url)}">${esc(host(p.url))} ↗</a>` : ''}<span class="status">${esc(p.status)}</span></header>
+      <p>${txt(p.text)}</p>
       ${p.metrics ? `<ul class="metrics">${p.metrics.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : ''}
       <details open>
         <summary>How it is built</summary>
-        <ul class="bullets">${p.points.map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+        <ul class="bullets">${p.points.map((x) => `<li>${txt(x)}</li>`).join('')}</ul>
       </details>
-      ${p.url ? `<p class="link"><a href="${esc(p.url)}">${esc(host(p.url))} ↗</a></p>` : ''}
     </article>`,
       )
       .join('\n    ')}
   </div>
-  <p class="also noprint">${esc(cv.alsoBuilt)}</p>
-  <p class="also print-only">${esc(cv.alsoInPdf)}</p>
+  <p class="also noprint">${txt(cv.alsoBuilt)}</p>
+  <p class="also print-only">${txt(cv.alsoInPdf)}</p>
 </section>
 
 <section id="skills" class="rv">

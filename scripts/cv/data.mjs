@@ -39,7 +39,7 @@ export const summary =
 export const numbers = [
   { value: '10+', label: 'production systems shipped in 2026, as the sole architect' },
   { value: '94%', label: 'of my 2026 commits co-authored with Claude' },
-  { value: '127 → 84', label: 'audit findings reproduced by skeptic agents, then fixed' },
+  { value: '84 of 127', label: 'audit findings confirmed by skeptic agents, then fixed' },
   { value: '9 + 1', label: 'parallel coding agents and a QA agent: an 11K-line design system in ~14.5 h' },
   { value: '700+', label: 'automated tests on the largest platform (339 REST endpoints)' },
   { value: '23', label: 'interface languages on one EU platform' },
@@ -74,7 +74,7 @@ export const sdlc = [
 ];
 
 export const tools =
-  'Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (browser automation, iOS Simulator, design tools) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM';
+  'Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (Chrome browser automation, iOS Simulator, Figma, Spline) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM';
 
 export const aiSystems = [
   'LLM lead-qualification pipeline (PROTECTDENT): map-based discovery, site crawling, evidence-based scoring from 0 to 100 and reply-intent classification into 8 intents; 7,800+ qualified B2B accounts.',
@@ -103,11 +103,15 @@ export const fit = [
   },
   {
     ask: 'Infrastructure choices: security, cost, performance, scalability',
-    evidence: 'Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker); backups with restore tests; security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.',
+    evidence: 'Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, signature-verified (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search instead of pgvector for a 500-item catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.',
   },
   {
     ask: 'Business value and stakeholders',
-    evidence: 'Co-founder and board member of a software company; earlier co-owned a business and led a creative team; sales materials that state plainly what a system does and does not do; a 90-day EU go-to-market plan with pricing research across 9 countries.',
+    evidence: 'Co-founder and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier co-owned a business and led a creative team; a 90-day EU go-to-market plan with pricing research across 9 countries.',
+  },
+  {
+    ask: 'Communication with technical and non-technical audiences',
+    evidence: 'For engineers: specs, ADRs, runbooks and audit reports with file-and-line evidence. For buyers and owners: proposals, seller cheat sheets, minute-by-minute demo scripts and plain tables of what a system does, what is coming and what not to promise.',
   },
   {
     ask: 'Leadership',
@@ -127,11 +131,19 @@ export const experience = [
   },
   {
     org: 'STYLEICON (own studio)',
-    role: 'Founder; independent product engineer and architect since 2026',
-    start: '2025-01',
+    role: 'Independent Product Engineer & Architect',
+    start: '2026-01',
     end: null,
     place: 'Poznań',
-    text: 'Web, branding and video studio in 2025. Since January 2026: designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026).',
+    text: 'Designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026); since August 2026 through SIMBIA sp. z o.o.',
+  },
+  {
+    org: 'STYLEICON (own studio)',
+    role: 'Owner: web, branding and video studio',
+    start: '2025-01',
+    end: '2025-12',
+    place: 'Poznań',
+    text: 'Websites, brand identities and video production for local businesses.',
   },
   {
     org: 'spin.clinic',
@@ -219,12 +231,12 @@ export const projects = [
   {
     name: 'PROTECTDENT',
     url: 'https://protectdent.eu',
-    status: 'Production',
+    status: 'Production · client platform, licensed',
     text: '23-language EU e-commerce for medical-device consumables, with an LLM lead-qualification pipeline for B2B sales.',
     metrics: ['23 languages', '600+ tests', '7,800+ qualified B2B accounts'],
     points: [
       'The LLM lead-qualification pipeline and the 4-model fallback chain with a vision assistant (see AI systems in production).',
-      'Stripe checkout, VIES-based VAT and KSeF e-invoicing; CI/CD with health-checked deploys; a 90-day EU go-to-market plan (373 price points across 9 countries).',
+      'Stripe checkout, VIES-based VAT and KSeF e-invoicing; Amazon SES bounce and complaint handling over SNS with signature verification; CI/CD with health-checked deploys; a 90-day EU go-to-market plan (373 price points across 9 countries).',
     ],
     skills: ['llm', 'ts', 'node', 'pg', 'react', 'cicd', 'payments'],
   },
@@ -248,7 +260,7 @@ export const projects = [
     points: [
       'Uber Vehicle Suppliers API: OAuth2 client credentials, per-endpoint rate-limit buckets, token caching, scheduled sync.',
       'Driver app with an actor-based API client, single-flight token refresh and an offline outbox queue.',
-      'A security remediation cycle, 95 integration tests against a real PostgreSQL and CI/CD from scratch.',
+      'Files on AWS S3 (AWS SDK v3, presigned URLs); a security remediation cycle, 95 integration tests against a real PostgreSQL and CI/CD from scratch.',
     ],
     skills: ['architecture', 'ts', 'node', 'pg', 'swift', 'cicd', 'security'],
   },
@@ -288,7 +300,7 @@ export const skills = [
   },
   {
     group: 'Delivery and operations',
-    items: ['CI/CD (GitHub Actions)', 'Automated testing (Vitest, XCTest)', 'Docker', 'Linux (nginx, PM2, systemd)', 'Backups and disaster recovery', 'Sentry'],
+    items: ['CI/CD (GitHub Actions)', 'Automated testing (Vitest, XCTest)', 'Docker', 'Linux (nginx, PM2, systemd)', 'AWS (S3, SES, SNS integrations)', 'Backups and disaster recovery', 'Sentry'],
   },
   {
     group: 'Domains',
