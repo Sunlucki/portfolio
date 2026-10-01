@@ -591,15 +591,19 @@ async function elixir(): Promise<Live> {
 }
 
 // The Elixir gummies' Cherry Cola pouch (2026-10-01, his model: scripts/prepare-scenes.mjs), as the Elixir bottle: its
-// print on it (front and back), glossy as the pouch's foil, turning and floating over the galaxy, motes in cherry red,
-// and round it two cherries and a cola gummy cut out of its print, out and bobbing.
-const CHERRY = '#ff2d55';
+// two prints in turn (every five seconds, hopping as it changes), glossy as the pouch's foil, turning and floating over
+// the galaxy, motes in the print's colour, and round it what is cut out of the print (two cherries and a cola gummy out
+// of the first, three cartoon cherries out of the second), falling in and flying out anew with each print.
+const POUCHES = [
+  { color: '#ff2d55', fruit: 'cherry' }, // red, cola bottles
+  { color: '#00b85c', fruit: 'cherry-v2' }, // violet and green, bears
+];
 async function gummies(): Promise<Live> {
-  const print = picture('/scenes/gummies.webp');
+  const prints = POUCHES.map((_, i) => picture(`/scenes/gummies-${i}.webp`));
   const galaxyImage = new Image();
   galaxyImage.src = '/scenes/galaxy.webp';
-  const [parts] = await Promise.all([model('/scenes/gummies.bin'), print.ready, galaxyImage.decode()]);
-  print.anisotropy = 8;
+  const [parts] = await Promise.all([model('/scenes/gummies.bin'), prints[0].ready, galaxyImage.decode()]);
+  for (const print of prints) print.anisotropy = 8;
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
@@ -617,9 +621,11 @@ async function gummies(): Promise<Live> {
     light.position.set(x, y, z);
     scene.add(light);
   }
-  const sky = cosmos(scene, galaxyImage, CHERRY);
+  const sky = cosmos(scene, galaxyImage, POUCHES[0].color);
+  const tint = new THREE.Color(POUCHES[0].color);
+  const tinted = tint.clone();
 
-  const foil = new THREE.MeshPhysicalMaterial({ map: print, roughness: 0.38, metalness: 0.05, clearcoat: 0.9, clearcoatRoughness: 0.18 });
+  const foil = new THREE.MeshPhysicalMaterial({ map: prints[0], roughness: 0.38, metalness: 0.05, clearcoat: 0.9, clearcoatRoughness: 0.18 });
   const pouch = new THREE.Group();
   for (const { geometry } of parts) pouch.add(new THREE.Mesh(geometry, foil));
   const box = new THREE.Box3().setFromObject(pouch);
@@ -629,9 +635,16 @@ async function gummies(): Promise<Live> {
   holder.scale.setScalar(4 / Math.max(extent.x, extent.y, extent.z));
   const pivot = new THREE.Group().add(holder);
   scene.add(pivot);
-  const fruits = fruitSet(scene, 'cherry', 3, 1.2);
+  const fruitSets = POUCHES.map(({ fruit }) => fruitSet(scene, fruit, 3, 1.2));
+  fruitSets[1].group.visible = false;
+  const fruitIn = { pouch: 0, at: -10 }; // (out from the first: as on the cover's still)
+  let fruitOut: { pouch: number; at: number } | null = null;
 
   let time = 0;
+  let shown = 0; // the print on
+  let wanted = 0;
+  let changing: number | null = null; // when its change began
+  let swapped = false;
   return {
     scene,
     camera,
@@ -639,11 +652,37 @@ async function gummies(): Promise<Live> {
     toneMapping: THREE.NoToneMapping,
     step(dt) {
       time += dt;
+      // a print every five seconds (only to one that has come)
+      const due = Math.floor(time / 5) % POUCHES.length;
+      if (due !== wanted && prints[due].image) wanted = due;
       sky.step(time);
-      placeFruits(fruits, time, -10, true); // (out from the first: as on the cover's still)
-      pivot.position.y = Math.sin(time * 1.5) * 0.12;
+      tinted.lerp(tint, 0.06);
+      sky.tint(tinted);
+      if (changing === null && wanted !== shown) {
+        changing = time;
+        swapped = false;
+      }
+      let { y, scale, tilt } = hop(0);
+      if (changing !== null) {
+        const k = Math.min((time - changing) / HOP, 1);
+        ({ y, scale, tilt } = hop(k));
+        if (k >= 0.5 && !swapped) {
+          shown = wanted;
+          foil.map = prints[shown];
+          foil.needsUpdate = true;
+          tint.set(POUCHES[shown].color);
+          fruitOut = { ...fruitIn };
+          Object.assign(fruitIn, { pouch: shown, at: time });
+          swapped = true;
+        }
+        if (k >= 1) changing = null;
+      }
+      pivot.position.y = Math.sin(time * 1.5) * 0.12 + y;
+      pivot.scale.setScalar(scale);
+      placeFruits(fruitSets[fruitIn.pouch], time, fruitIn.at, true);
+      if (fruitOut && placeFruits(fruitSets[fruitOut.pouch], time, fruitOut.at, false)) fruitOut = null;
       const turn = turnOf<Turn>('gummies').update(dt);
-      pivot.rotation.set(turn.x, turn.y, 0);
+      pivot.rotation.set(turn.x, turn.y, tilt);
     },
   };
 }

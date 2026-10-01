@@ -126,12 +126,18 @@ for (const mesh of meshes('POUCHER/POUCHER V2.obj')) {
 writeFileSync(join(OUT, 'poucher.bin'), pack(can, boxOf(can)));
 
 // The gummies' Cherry Cola pouch (2026-10-01): his model, made in Spline (sources/scenes/cherry-cola.glb in the
-// knowledge base), a pillow pouch with no material nor UVs, the same mesh three times over: one of them, its faces
-// split into its front and back by which way they face, each given the pouch's print by a flat projection from the
-// front (ŻELKI ELIXIR/OKLADKA.png, scripts/prepare-media.py scenes: a sheet folded at the pouch's foot, its left half
-// the front and its right half the back, both lying on their side, their feet at the fold; the halves' long edges
-// trimmed a little, so the print keeps its proportions on the pouch's face), and stood up a quarter turn clockwise.
-const ART = [4252 / 2, 1890]; // (the print's halves, px)
+// knowledge base), a stand-up pouch with no material nor UVs, the same mesh three times over, standing as he made it
+// (its full, rounded foot down: his call). One of them, split into its front and back (by which way its faces look,
+// and its foot along its middle), is given the print (ŻELKI ELIXIR/OKLADKA.png, and OKLADKA V2.png the same way:
+// scripts/prepare-media.py scenes) as the supplier's die line lays it out (OPAKOWANIA (żelki)/0-Overview.pdf): a
+// sheet 360 by 160 mm, the front's panel (150 mm, its top at the sheet's left edge), the foot (60 mm, folded in), then
+// the back's panel, its top at the right edge, the pouch's 160 mm running up and down the sheet. The model is in
+// millimetres too (160 across), so across the print goes on at its size; down a side it runs from the top (the top's
+// 9.5 mm seal left off) over the face and round the foot to its middle, the panel's own foot on the pouch's bottom
+// edge: the model stands lower than the pouch (129 mm), so the print is pressed down by a twelfth to show all of it.
+const SHEET = 360; // mm
+const PANEL = 150;
+const SEAL = 9.5;
 function glbMesh(file) {
   const data = readFileSync(file);
   const jsonLength = data.readUInt32LE(12);
@@ -150,32 +156,52 @@ function glbMesh(file) {
   return { position: read(primitive.attributes.POSITION), normal: read(primitive.attributes.NORMAL), index: Uint32Array.from(read(primitive.indices)) };
 }
 const raw = glbMesh(join(KB, 'sources', 'scenes', 'cherry-cola.glb'));
+const p = raw.position;
 const [lo, hi] = [[Infinity, Infinity], [-Infinity, -Infinity]];
-for (let i = 0; i < raw.position.length; i += 3)
-  for (let k = 0; k < 2; k++) [lo[k], hi[k]] = [Math.min(lo[k], raw.position[i + k]), Math.max(hi[k], raw.position[i + k])];
-const [width, height] = [hi[0] - lo[0], hi[1] - lo[1]];
-const trim = (1 - ART[0] / ART[1] / (width / height)) / 2; // (of the halves' height, at each long edge)
+for (let i = 0; i < p.length; i += 3)
+  for (let k = 0; k < 2; k++) [lo[k], hi[k]] = [Math.min(lo[k], p[i + k]), Math.max(hi[k], p[i + k])];
+const width = hi[0] - lo[0];
+const press = (PANEL - SEAL) / (hi[1] - lo[1]); // (mm of print to a mm down the model)
+// the foot (its rounding begins about 6 mm up): its front and back edges at each millimetre across
+const foot = lo[1] + 6;
+const edges = Array.from({ length: Math.ceil(width) + 1 }, () => [-Infinity, Infinity]);
+for (let i = 0; i < p.length; i += 3) {
+  if (p[i + 1] >= foot) continue;
+  const edge = edges[Math.round(p[i] - lo[0])];
+  [edge[0], edge[1]] = [Math.max(edge[0], p[i + 2]), Math.min(edge[1], p[i + 2])];
+}
+edges.forEach((edge, i) => {
+  if (edge[0] > -Infinity) return; // (a millimetre with no vertex: from the nearest on either side)
+  let [a, b] = [i, i];
+  while (edges[a][0] === -Infinity) a--;
+  while (edges[b][0] === -Infinity) b++;
+  edges[i] = edges[a].map((v, j) => v + ((edges[b][j] - v) * (i - a)) / (b - a));
+});
+const edgeAt = (x) => edges[Math.round(x - lo[0])];
 const side = (front) => {
   const map = new Map();
   const position = [];
   const normal = [];
   const uv = [];
   const index = [];
-  const p = raw.position;
   for (let t = 0; t < raw.index.length; t += 3) {
     const [a, b, c] = [raw.index[t], raw.index[t + 1], raw.index[t + 2]];
-    // (which way the face looks: its normal's z, from its corners)
+    // which side a face is on: on the foot, which side of its middle; elsewhere, which way it looks (its normal's z)
+    const [cx, cy, cz] = [0, 1, 2].map((k) => (p[a * 3 + k] + p[b * 3 + k] + p[c * 3 + k]) / 3);
     const [ux, uy, vx, vy] = [p[b * 3] - p[a * 3], p[b * 3 + 1] - p[a * 3 + 1], p[c * 3] - p[a * 3], p[c * 3 + 1] - p[a * 3 + 1]];
-    if (ux * vy - uy * vx >= 0 !== front) continue;
+    const [ahead, behind] = edgeAt(cx);
+    if ((cy < foot ? cz > (ahead + behind) / 2 : ux * vy - uy * vx >= 0) !== front) continue;
     for (const v of [a, b, c]) {
       if (!map.has(v)) {
         map.set(v, position.length / 3);
         const [x, y, z] = [p[v * 3], p[v * 3 + 1], p[v * 3 + 2]];
-        const [nx, ny, nz] = [raw.normal[v * 3], raw.normal[v * 3 + 1], raw.normal[v * 3 + 2]];
-        position.push(y, -x, z); // (stood up: a quarter turn clockwise)
-        normal.push(ny, -nx, nz);
-        const across = (x - lo[0]) / width;
-        uv.push(front ? across / 2 : 0.5 + (1 - across) / 2, trim + (1 - 2 * trim) * ((y - lo[1]) / height));
+        position.push(x, y, z);
+        normal.push(raw.normal[v * 3], raw.normal[v * 3 + 1], raw.normal[v * 3 + 2]);
+        // how far down from the top, over the face and round the foot
+        const [forth, back] = edgeAt(x);
+        const down = hi[1] - y + (y < foot ? Math.max(0, front ? forth - z : z - back) : 0);
+        const along = (SEAL + down * press) / SHEET;
+        uv.push(front ? along : 1 - along, (x - lo[0]) / width);
       }
       index.push(map.get(v));
     }

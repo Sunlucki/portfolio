@@ -187,7 +187,7 @@ GRAPHICS = {
               + [f"{ML}/ELIXIR BUTELKI/2026/ART/{f}.png" for f in ("BLUEBERRY", "LEMON HAZE", "STRAWBERRY", "ZEN", "ZKITTLEZ")],
     "poucher": [f"{MLSITE}/POUCHER/CITRUS/Poucher-Citrus-{f}.png" for f in ("Pouch", "Open", "Produktowe")]
                + [f"{MLSITE}/POUCHER/{f}/{f} TOP.jpg" for f in POUCHERS],
-    "elixir-gummies": [f"{ML}/ŻELKI ELIXIR/OKLADKA.png"],
+    "elixir-gummies": [f"{ML}/ŻELKI ELIXIR/{f}.png" for f in ("OKLADKA", "OKLADKA V2")],
     # (2026-10-01, his archive's other clients, their print in 3D over these: CHANG's wrapped trailer, its 3D prototype,
     # the two menus, the logo and the menus' pictures made with AI; Currywurst Po Polsku's logo (on its menu's cover),
     # menu for its screens and stories; Lizard Moving's cards, phone case and logo; Magic Patron's sticker; Slovianka's
@@ -478,14 +478,17 @@ def scenes():
     for path in sorted(glob.glob(os.path.join(MLSITE, "flavour-particles", "*.webp"))):  # the fruits round the bottle, as they are
         shutil.copyfile(path, out("scenes", "fruit-" + os.path.basename(path)))
         size += os.path.getsize(path)
-    # the gummies' Cherry Cola pouch (2026-10-01): its print for its model (ŻELKI ELIXIR/OKLADKA.png, its front and back
-    # halves; scripts/prepare-scenes.mjs), and round it two cherries and a cola gummy, cut out of that print with Apple
-    # Vision (scripts/cutout.swift, kept in the knowledge base's sources/scenes)
-    im = Image.open(os.path.join(ML, "ŻELKI ELIXIR", "OKLADKA.png")).convert("RGB")
-    im.resize((2560, round(im.height * 2560 / im.width)), Image.LANCZOS).save(out("scenes", "gummies.webp"), "WEBP", quality=82, method=6)
-    size += os.path.getsize(out("scenes", "gummies.webp"))
+    # the gummies' Cherry Cola pouch (2026-10-01): its two prints for its model (ŻELKI ELIXIR/OKLADKA.png and OKLADKA
+    # V2.png, each its front, foot and back as the die line lays them out; scripts/prepare-scenes.mjs), and round it,
+    # cut out of each print with Apple Vision (scripts/cutout.swift, kept in the knowledge base's sources/scenes), two
+    # cherries and a cola gummy for the first, three of the second's cartoon cherries for the second
+    for i, name in enumerate(("OKLADKA.png", "OKLADKA V2.png")):
+        im = Image.open(os.path.join(ML, "ŻELKI ELIXIR", name)).convert("RGB")
+        im.resize((2560, round(im.height * 2560 / im.width)), Image.LANCZOS).save(out("scenes", f"gummies-{i}.webp"), "WEBP", quality=82, method=6)
+        size += os.path.getsize(out("scenes", f"gummies-{i}.webp"))
     for n in (1, 2, 3):
         size += to_webp(os.path.join(SCENES, f"cherry-cola-fruit-{n}.png"), out("scenes", f"fruit-cherry-{n}.webp"), width=256, q=82)
+        size += to_webp(os.path.join(SCENES, f"cherry-cola-v2-fruit-{n}.png"), out("scenes", f"fruit-cherry-v2-{n}.webp"), width=256, q=82)
     return size
 
 # HYPE's event badges on a lanyard (2026-10-01, his call, after React Bits' Lanyard: src/vendor/react-bits/Lanyard.tsx):
