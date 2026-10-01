@@ -111,6 +111,7 @@ const de: Copy = {
     demo: '{name}: Produktdemo',
     sites: 'Websites',
     scenarios: 'Szenarien',
+    stores: 'Shops auf der Plattform',
     crm: {
       category: 'Eigenes Produkt · SIMBIA CRM',
       name: 'CRM & Buchhaltung',

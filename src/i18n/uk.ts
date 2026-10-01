@@ -112,6 +112,7 @@ const uk: Copy = {
     demo: '{name}: демо продукту',
     sites: 'Сайти',
     scenarios: 'Сценарії',
+    stores: 'Магазини на платформі',
     crm: {
       category: 'Власний продукт · SIMBIA CRM',
       name: 'CRM і бухгалтерська система',

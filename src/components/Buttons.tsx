@@ -1,4 +1,4 @@
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, X } from 'lucide-react';
 import { t } from '../i18n';
 
 type ContactButtonProps = { label?: string; href?: string };
@@ -20,16 +20,24 @@ export function ContactButton({ label = t.buttons.contact, href = '#contact' }: 
   );
 }
 
+const LIVE =
+  'inline-flex items-center gap-2 whitespace-nowrap rounded-full border-2 border-[#D7E2EA] px-8 py-3 text-sm font-medium uppercase tracking-widest text-[#D7E2EA] transition-colors duration-200 hover:bg-[#D7E2EA]/10 sm:px-10 sm:py-3.5 sm:text-base';
+
 export function LiveProjectButton({ href, label = t.buttons.live }: { href: string; label?: string }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      className="inline-flex items-center gap-2 whitespace-nowrap rounded-full border-2 border-[#D7E2EA] px-8 py-3 text-sm font-medium uppercase tracking-widest text-[#D7E2EA] transition-colors duration-200 hover:bg-[#D7E2EA]/10 sm:px-10 sm:py-3.5 sm:text-base"
-    >
+    <a href={href} target="_blank" rel="noreferrer" className={LIVE}>
       {label}
       <ArrowUpRight aria-hidden className="h-4 w-4" />
     </a>
+  );
+}
+
+// The same button for a project live on several sites: it shows them (and hides them again)
+export function LiveSitesButton({ open, onClick }: { open: boolean; onClick: () => void }) {
+  return (
+    <button type="button" aria-expanded={open} onClick={onClick} className={LIVE}>
+      {open ? t.buttons.close : t.buttons.live}
+      {open ? <X aria-hidden className="h-4 w-4" /> : <ArrowUpRight aria-hidden className="h-4 w-4" />}
+    </button>
   );
 }

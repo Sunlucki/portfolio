@@ -97,6 +97,9 @@ WORK = {  # project card images (col1a, col1b, col2 per project)
     "taxiboss-1": f"{TAXI}/04-3d-showcase.png", "taxiboss-2": f"{TAXI}/15-dashboard-top.png", "taxiboss-3": f"{SITES}/tb_0.jpg",
     "spin-1": f"{SITES}/sck_1.jpg", "spin-2": f"{SITES}/sc_0.jpg", "spin-3": f"{SITES}/sck_0.jpg",
 }
+# The B2B card's stores (2026-10-01): each its own site's icon (its 512 px favicon), 256 px, transparency kept
+STORES = {name: os.path.join(HOME, "Developer", folder, "public", "favicon-512.png")
+          for name, folder in (("protectdent", "PROTECTDENT"), ("xylimelts", "XYLIMELTS"), ("mind-logistic", "MIND LOGISTIC"))}
 # Marquee: branding, print and social media only (the sites are in the WordPress card). Covers from
 # #STYLEICON/WEB/ASSETS; where those live in iCloud only, the byte-identical copies in the old styleicon.pl uploads.
 COVERS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICON REACT APP", "OLD WORDPRESS SITE",
@@ -413,6 +416,8 @@ if __name__ == "__main__":
     n = hero_frames()
     s = sum(to_webp(p, out("work", f"{k}.webp"), width=1600, q=78) for k, p in WORK.items())
     print(f"work: {len(WORK)} images {s/1e6:.1f}MB")
+    s = sum(to_webp(p, out("work", f"store-{k}.webp"), width=256, q=85) for k, p in STORES.items())
+    print(f"store icons: {len(STORES)} {s/1e3:.0f}KB")
     s = wp_frames()
     print(f"wordpress slides: {sum(map(len, WP.values()))} images {s/1e6:.1f}MB")
     s = wp_demos()

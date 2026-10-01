@@ -112,6 +112,7 @@ const en = {
     demo: '{name}: product demo',
     sites: 'Sites',
     scenarios: 'Scenarios',
+    stores: 'Stores on the platform',
     crm: {
       category: 'Own product · SIMBIA CRM',
       name: 'CRM & Accounting System',

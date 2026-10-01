@@ -153,6 +153,8 @@ export type Project = {
   promo?: { id: 'crm' | 'hr' | 'b2b' | 'taxi'; chapters: Chapter[] };
   // or a slideshow of sites, in place of the screenshots
   slides?: Slide[];
+  // the stores it runs: its live button shows them in the promo's window, each its icon linking to it
+  stores?: { name: string; href: string; icon: string }[];
 };
 
 // A promo's scenarios: its scenes (src/promo), each under its label.
@@ -189,7 +191,12 @@ export const PROJECTS: Project[] = [
   {
     ...texts(t.projects.b2b),
     stack: ['React', 'Node.js', 'PostgreSQL', 'Three.js'],
-    live: 'https://bosspartners.pl',
+    // the three stores (2026-10-01), their icons their own sites' (scripts/prepare-media.py)
+    stores: [
+      { name: 'PROTECTDENT', href: 'https://protectdent.eu', icon: '/work/store-protectdent.webp' },
+      { name: 'XyliMelts', href: 'https://xylimelts.pl', icon: '/work/store-xylimelts.webp' },
+      { name: 'Mind Logistic', href: 'https://bosspartners.pl', icon: '/work/store-mind-logistic.webp' },
+    ],
     images: ['/work/b2b-1.webp', '/work/b2b-2.webp', '/work/b2b-3.webp'],
     promo: {
       id: 'b2b',

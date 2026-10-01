@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { SectionTitle } from '../components/SectionTitle';
-import { LiveProjectButton } from '../components/Buttons';
+import { LiveProjectButton, LiveSitesButton } from '../components/Buttons';
 import { PROJECTS, type Project, type Slide } from '../content';
 import { fill, t } from '../i18n';
 
@@ -92,6 +92,7 @@ type CardProps = {
 function ProjectCard({ project, index, progress, range, targetScale, playing, cardRef }: CardProps) {
   const scale = useTransform(progress, range, [1, targetScale]);
   const { promo } = project;
+  const [stores, setStores] = useState(false); // the stores shown in the promo's window, by the live button
 
   return (
     <div ref={cardRef} className="sticky top-24 flex h-[85vh] items-start justify-center md:top-32">
@@ -114,7 +115,9 @@ function ProjectCard({ project, index, progress, range, targetScale, playing, ca
               </p>
             </div>
           </div>
-          {project.live ? (
+          {project.stores ? (
+            <LiveSitesButton open={stores} onClick={() => setStores((open) => !open)} />
+          ) : project.live ? (
             <LiveProjectButton href={project.live} label={project.liveLabel} />
           ) : project.slides ? null : (
             <span className="rounded-full border-2 border-[#D7E2EA]/30 px-8 py-3 text-sm uppercase tracking-widest text-[#D7E2EA]/50 sm:px-10 sm:py-3.5">
@@ -133,16 +136,22 @@ function ProjectCard({ project, index, progress, range, targetScale, playing, ca
             className={`relative aspect-video w-full overflow-hidden md:aspect-auto md:h-[var(--gallery)] ${RADIUS}`}
             style={{ ['--gallery' as string]: GALLERY }}
             role="region"
-            aria-label={fill(t.projects.demo, { name: project.name })}
+            aria-label={stores ? t.projects.stores : fill(t.projects.demo, { name: project.name })}
           >
-            <img src={project.images[2]} alt={project.alts[2]} loading="lazy" className="absolute inset-0 h-full w-full object-cover object-left-top" />
-            {playing && (
-              <Suspense fallback={null}>
-                {/* over the screenshot, on the promo's own paper, so its margins melt into the stage */}
-                <div className="absolute inset-0 animate-[fade-in_0.6s_ease-out] bg-[linear-gradient(180deg,#f8f9fb,#f3f4f8_62%,#eceef3)]">
-                  <Promo id={promo.id} chapters={promo.chapters} />
-                </div>
-              </Suspense>
+            {stores && project.stores ? (
+              <Stores stores={project.stores} />
+            ) : (
+              <>
+                <img src={project.images[2]} alt={project.alts[2]} loading="lazy" className="absolute inset-0 h-full w-full object-cover object-left-top" />
+                {playing && (
+                  <Suspense fallback={null}>
+                    {/* over the screenshot, on the promo's own paper, so its margins melt into the stage */}
+                    <div className="absolute inset-0 animate-[fade-in_0.6s_ease-out] bg-[linear-gradient(180deg,#f8f9fb,#f3f4f8_62%,#eceef3)]">
+                      <Promo id={promo.id} chapters={promo.chapters} />
+                    </div>
+                  </Suspense>
+                )}
+              </>
             )}
           </div>
         ) : (
@@ -169,6 +178,26 @@ function ProjectCard({ project, index, progress, range, targetScale, playing, ca
           </div>
         )}
       </motion.article>
+    </div>
+  );
+}
+
+// The stores a platform runs, in its promo's window: each its icon, name and address, a link to it.
+function Stores({ stores }: { stores: NonNullable<Project['stores']> }) {
+  return (
+    <div className="absolute inset-0 flex animate-[fade-in_0.4s_ease-out] flex-col items-center justify-center gap-4 bg-[radial-gradient(ellipse_at_center,#1b1f27,#0C0C0C_72%)] sm:gap-8">
+      <p className="text-[10px] uppercase tracking-[0.25em] text-[#D7E2EA]/55 sm:text-sm">{t.projects.stores}</p>
+      <ul className="flex items-start justify-center gap-5 sm:gap-12 md:gap-16">
+        {stores.map((store) => (
+          <li key={store.href}>
+            <a href={store.href} target="_blank" rel="noreferrer" className="group flex flex-col items-center text-center">
+              <img src={store.icon} alt="" width={128} height={128} className="h-16 w-16 transition-transform duration-300 group-hover:scale-105 sm:h-24 sm:w-24 md:h-32 md:w-32" />
+              <span className="mt-2 text-xs font-medium text-[#D7E2EA] sm:mt-3 sm:text-base">{store.name}</span>
+              <span className="text-[10px] text-[#D7E2EA]/50 sm:text-xs">{new URL(store.href).host}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
