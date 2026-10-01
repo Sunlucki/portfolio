@@ -23,7 +23,7 @@ I design, build and run software products end to end, and I run the whole softwa
 1. **Specify.** Requirements become written specs the agents follow: MASTER_PROMPT, CLAUDE.md and AGENTS.md, skill packs, phases with a Definition of Done. Architecture decisions are recorded as ADRs (29 on one MVP).
 2. **Orchestrate.** Coding agents work in parallel in git worktrees against frozen contracts and a file-ownership map, with handoff prompts between models. The spin.clinic design system was built this way by 9 agents and a QA agent: 11K lines in about 14.5 hours, with no merge conflicts.
 3. **Test.** Agents write and run the tests: Vitest, node:test, supertest against a real PostgreSQL, contract tests with golden fixtures shared by a TypeScript API and a Swift app, XCTest. 700+, 600+ and 269 tests on the three largest platforms.
-4. **Review and validate.** Adversarial multi-agent audits: a skeptic agent has to reproduce every finding before it is fixed and pinned by a regression test. 127 findings, 84 confirmed and fixed on SIMBIA CRM; 52 findings, 20 confirmed on AiBizBox; an accounting review that ran 28 agents and 750 tool calls.
+4. **Review and validate.** Adversarial multi-agent audits: a skeptic agent confirms or rejects every finding by reproducing it, and only confirmed ones are fixed and pinned by a regression test (84 of 127 confirmed on SIMBIA CRM, 20 of 52 on AiBizBox); an accounting review ran as a multi-agent audit of 28 agents and 750 tool calls.
 5. **Ship.** On the main platforms (SIMBIA CRM, PROTECTDENT, XyliMelts): GitHub Actions with PostgreSQL and Redis service containers, a database backup before every deploy, migrations, health-gated automatic rollback and smoke tests.
 6. **Operate.** Daily off-site backups with weekly automated restore tests (SIMBIA CRM), Sentry, health endpoints and alerts. Incidents get a postmortem: after a sync failure wiped a working copy, the code was rebuilt from the agents’ session logs and checked against production.
 
@@ -41,8 +41,8 @@ I design, build and run software products end to end, and I run the whole softwa
 - **System and application architecture:** Sole architect of 10+ production systems: domain modules without I/O, state machines (orders with 20 to 24 states), invariants enforced in PostgreSQL triggers, event streams (LISTEN/NOTIFY to SSE), queues with lease locks and circuit breakers, a payment adapter registry, 29 ADRs on one MVP.
 - **AI-assisted SDLC: development, testing, CI/CD:** My 2026 projects were built this way, from written specs to tested releases; the main platforms ship through CI/CD with health checks and automatic rollback. About 94% of my 2026 commits are co-authored with Claude.
 - **Agentic coding and autonomous software engineering:** Task orchestration across parallel agents (worktrees, frozen contracts, ownership maps), quality gates (tests, Definition of Done), validation by skeptic agents that must reproduce each finding, decisions recorded as ADRs.
-- **AI systems: AI workflows, single- and multi-agent:** LLM pipelines in production (lead qualification, intent classification, document AI with human review, multi-provider routing) and multi-agent orchestration for the engineering work itself.
-- **Infrastructure choices: security, cost, performance, scalability:** Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, signature-verified (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search instead of pgvector for a 500-item catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.
+- **AI systems: AI workflows, single- and multi-agent:** AI workflows in production: LLM pipelines for lead qualification, reply-intent classification and document AI with human review, with multi-provider routing; multi-agent systems: a multi-agent audit system (28 agents, 750 tool calls) and parallel coding agents for the engineering itself.
+- **Infrastructure choices: security, cost, performance, scalability:** Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, signature-verified (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search chosen over pgvector (vector/semantic search) for a 500-item catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.
 - **Business value and stakeholders:** Co-founder and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier co-owned a business and led a creative team; a 90-day EU go-to-market plan with pricing research across 9 countries.
 - **Communication with technical and non-technical audiences:** For engineers: specs, ADRs, runbooks and audit reports with file-and-line evidence. For buyers and owners: proposals, seller cheat sheets, minute-by-minute demo scripts and plain tables of what a system does, what is coming and what not to promise.
 - **Leadership:** Pro bono tech lead of a foundation’s MVP (2026); leader of a creative and marketing team (2022–2025).
@@ -55,11 +55,23 @@ Aug 2026 – present · Poznań · remote
 
 A software company that builds and licenses vertical platforms: CRM, workforce management, fleet management and B2B commerce. I own the architecture and the AI-assisted delivery process. The company runs its sales and statutory accounting on our own CRM.
 
-### Independent Product Engineer & Architect, STYLEICON (own studio)
+### Independent Product Engineer & Solutions Architect, STYLEICON (own studio)
 
 Jan 2026 – present · Poznań
 
 Designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026); since August 2026 through SIMBIA sp. z o.o.
+
+### Design System Engineer (contract), spin.clinic
+
+Sep 2026 – Sep 2026
+
+Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.
+
+### Tech Lead (pro bono), Fundacja Novus Ignis
+
+Sep 2026 – Sep 2026
+
+Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.
 
 ### Owner: web, branding and video studio, STYLEICON (own studio)
 
@@ -67,29 +79,17 @@ Jan 2025 – Dec 2025 · Poznań
 
 Websites, brand identities and video production for local businesses.
 
-### Design System Engineer (contract), spin.clinic
+### Co-owner, Black Point Barbershop
 
-Sep 2026
+Oct 2020 – May 2025 · Poznań
 
-Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.
-
-### Tech Lead (pro bono), Fundacja Novus Ignis
-
-Sep 2026
-
-Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.
+Co-founded and ran a barbershop and creative hub: identity, a website with online booking, social media and video.
 
 ### Marketing & Team Leader; shareholder and President of the Management Board, Black Point Group sp. z o.o.
 
 Sep 2022 – Jan 2025 · Poznań
 
 Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.
-
-### Co-owner, Black Point Barbershop
-
-Oct 2020 – May 2025 · Poznań
-
-Co-founded and ran a barbershop and creative hub: identity, a website with online booking, social media and video.
 
 ### Web Developer, GreenView
 

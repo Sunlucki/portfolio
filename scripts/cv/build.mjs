@@ -27,9 +27,10 @@ const month = (ym) => {
   const [y, m] = ym.split('-');
   return m ? `${MONTHS[+m - 1]} ${y}` : y;
 };
-const when = ({ start, end }) =>
-  end === start ? `<time datetime="${start}">${month(start)}</time>` : `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}`;
-const whenText = ({ start, end }) => (end === start ? month(start) : `${month(start)} – ${end ? month(end) : 'present'}`);
+const when = ({ start, end }) => `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}`;
+const whenText = ({ start, end }) => `${month(start)} – ${end ? month(end) : 'present'}`;
+// newest first: the roles still going, then by when they ended, then by when they began
+const byRecency = (a, b) => (b.end ?? '9999').localeCompare(a.end ?? '9999') || b.start.localeCompare(a.start);
 const txt = (s) => esc(s).replace(/([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/gu, '<span class="nw">$1</span>');
 const host = (url) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 // a section title as the site draws its own: heavy capitals, the first one outlined in a dashed box
@@ -277,7 +278,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .ai h3, .skills h3, .pair h3 { font-size: 7.4pt; margin-bottom: 3pt; text-transform: none; font-weight: 500; color: var(--text); }
   .bullets { gap: 2pt; }
   .bullets li { padding-left: 10pt; }
-  .bullets li::before { width: 4.5pt; height: 4.5pt; top: 0.6em; }
+  .bullets li::before { content: '•'; background: none; width: auto; height: auto; top: 0; color: #b600a8; }
   .fit { display: block; }
   .fit details { display: block; background: none; border: 0; border-radius: 0; padding: 0; break-inside: avoid; }
   .fit details + details { margin-top: 3pt; }
@@ -403,7 +404,8 @@ html.js .rv.in { opacity: 1; transform: none; }
 <section id="experience" class="rv">
   <h2 class="title">${title('Experience')}</h2>
   <ol class="timeline">
-    ${cv.experience
+    ${[...cv.experience]
+      .sort(byRecency)
       .map(
         (j) => `<li class="job">
       <h3>${esc(j.role)}</h3>
@@ -427,7 +429,7 @@ html.js .rv.in { opacity: 1; transform: none; }
     ${cv.projects
       .map(
         (p) => `<article class="project card${p.pdf === false ? ' noprint' : ''}" data-skills="${p.skills.join(' ')}">
-      <header><h3>${esc(p.name)}</h3>${p.url ? `<a class="host" href="${esc(p.url)}">${esc(host(p.url))} ↗</a>` : ''}<span class="status">${esc(p.status)}</span></header>
+      <header><h3>${esc(p.name)}</h3>${p.url ? `<a class="host" href="${esc(p.url)}">${esc(host(p.url))}<span class="noprint"> ↗</span></a>` : ''}<span class="status">${esc(p.status)}</span></header>
       <p>${txt(p.text)}</p>
       ${p.metrics ? `<ul class="metrics">${p.metrics.map((m) => `<li>${esc(m)}</li>`).join('')}</ul>` : ''}
       <details open>
@@ -541,7 +543,7 @@ const md = [
   '',
   '## Experience',
   '',
-  ...cv.experience.flatMap((j) => [`### ${j.role}, ${j.org}`, '', `${whenText(j)}${j.place ? ` · ${j.place}` : ''}`, '', j.text, '']),
+  ...[...cv.experience].sort(byRecency).flatMap((j) => [`### ${j.role}, ${j.org}`, '', `${whenText(j)}${j.place ? ` · ${j.place}` : ''}`, '', j.text, '']),
   '## Projects',
   '',
   ...cv.projects.flatMap((p) => [`### ${p.name}${p.url ? ` (${p.url})` : ''}`, '', `${p.status}. ${p.text}`, '', ...(p.metrics ? [p.metrics.join(' · '), ''] : []), ...p.points.map((x) => `- ${x}`), '']),

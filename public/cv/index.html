@@ -214,7 +214,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .ai h3, .skills h3, .pair h3 { font-size: 7.4pt; margin-bottom: 3pt; text-transform: none; font-weight: 500; color: var(--text); }
   .bullets { gap: 2pt; }
   .bullets li { padding-left: 10pt; }
-  .bullets li::before { width: 4.5pt; height: 4.5pt; top: 0.6em; }
+  .bullets li::before { content: '•'; background: none; width: auto; height: auto; top: 0; color: #b600a8; }
   .fit { display: block; }
   .fit details { display: block; background: none; border: 0; border-radius: 0; padding: 0; break-inside: avoid; }
   .fit details + details { margin-top: 3pt; }
@@ -324,7 +324,7 @@ html.js .rv.in { opacity: 1; transform: none; }
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-4"><span class="n">04</span>Review and validate</button></h3>
-      <p class="panel" id="step-4">Adversarial <span class="nw">multi-agent</span> audits: a skeptic agent has to reproduce every finding before it is fixed and pinned by a regression test. 127 findings, 84 confirmed and fixed on SIMBIA CRM; 52 findings, 20 confirmed on AiBizBox; an accounting review that ran 28 agents and 750 tool calls.</p>
+      <p class="panel" id="step-4">Adversarial <span class="nw">multi-agent</span> audits: a skeptic agent confirms or rejects every finding by reproducing it, and only confirmed ones are fixed and pinned by a regression test (84 of 127 confirmed on SIMBIA CRM, 20 of 52 on AiBizBox); an accounting review ran as a <span class="nw">multi-agent</span> audit of 28 agents and 750 tool calls.</p>
     </li>
     <li class="step">
       <h3><button type="button" aria-expanded="false" aria-controls="step-5"><span class="n">05</span>Ship</button></h3>
@@ -366,11 +366,11 @@ html.js .rv.in { opacity: 1; transform: none; }
     </details>
     <details>
       <summary><h3>AI systems: AI workflows, single- and multi-agent</h3><span class="pill">Evidence</span></summary>
-      <p>LLM pipelines in production (lead qualification, intent classification, document AI with human review, <span class="nw">multi-provider</span> routing) and <span class="nw">multi-agent</span> orchestration for the engineering work itself.</p>
+      <p>AI workflows in production: LLM pipelines for lead qualification, <span class="nw">reply-intent</span> classification and document AI with human review, with <span class="nw">multi-provider</span> routing; <span class="nw">multi-agent</span> systems: a <span class="nw">multi-agent</span> audit system (28 agents, 750 tool calls) and parallel coding agents for the engineering itself.</p>
     </details>
     <details>
       <summary><h3>Infrastructure choices: security, cost, performance, scalability</h3><span class="pill">Evidence</span></summary>
-      <p><span class="nw">Self-managed</span> Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, <span class="nw">signature-verified</span> (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search instead of pgvector for a <span class="nw">500-item</span> catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, <span class="nw">HMAC-signed</span> webhooks, signed URLs, PII masking, GDPR.</p>
+      <p><span class="nw">Self-managed</span> Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, <span class="nw">signature-verified</span> (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search chosen over pgvector (vector/semantic search) for a <span class="nw">500-item</span> catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, <span class="nw">HMAC-signed</span> webhooks, signed URLs, PII masking, GDPR.</p>
     </details>
     <details>
       <summary><h3>Business value and stakeholders</h3><span class="pill">Evidence</span></summary>
@@ -396,9 +396,19 @@ html.js .rv.in { opacity: 1; transform: none; }
       <p>A software company that builds and licenses vertical platforms: CRM, workforce management, fleet management and B2B commerce. I own the architecture and the <span class="nw">AI-assisted</span> delivery process. The company runs its sales and statutory accounting on our own CRM.</p>
     </li>
     <li class="job">
-      <h3>Independent Product Engineer &amp; Architect</h3>
+      <h3>Independent Product Engineer &amp; Solutions Architect</h3>
       <p class="org">STYLEICON (own studio) · Poznań · <span class="dates"><time datetime="2026-01">Jan 2026</time> – present</span></p>
       <p>Designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026); since August 2026 through SIMBIA sp. z o.o.</p>
+    </li>
+    <li class="job">
+      <h3>Design System Engineer (contract)</h3>
+      <p class="org"><a href="https://spin.clinic">spin.clinic</a> · <span class="dates"><time datetime="2026-09">Sep 2026</time> – <time datetime="2026-09">Sep 2026</time></span></p>
+      <p>Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.</p>
+    </li>
+    <li class="job">
+      <h3>Tech Lead (pro bono)</h3>
+      <p class="org">Fundacja Novus Ignis · <span class="dates"><time datetime="2026-09">Sep 2026</time> – <time datetime="2026-09">Sep 2026</time></span></p>
+      <p><span class="nw">Re-architected</span> and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.</p>
     </li>
     <li class="job">
       <h3>Owner: web, branding and video studio</h3>
@@ -406,24 +416,14 @@ html.js .rv.in { opacity: 1; transform: none; }
       <p>Websites, brand identities and video production for local businesses.</p>
     </li>
     <li class="job">
-      <h3>Design System Engineer (contract)</h3>
-      <p class="org"><a href="https://spin.clinic">spin.clinic</a> · <span class="dates"><time datetime="2026-09">Sep 2026</time></span></p>
-      <p>Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.</p>
-    </li>
-    <li class="job">
-      <h3>Tech Lead (pro bono)</h3>
-      <p class="org">Fundacja Novus Ignis · <span class="dates"><time datetime="2026-09">Sep 2026</time></span></p>
-      <p><span class="nw">Re-architected</span> and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.</p>
+      <h3>Co-owner</h3>
+      <p class="org">Black Point Barbershop · Poznań · <span class="dates"><time datetime="2020-10">Oct 2020</time> – <time datetime="2025-05">May 2025</time></span></p>
+      <p><span class="nw">Co-founded</span> and ran a barbershop and creative hub: identity, a website with online booking, social media and video.</p>
     </li>
     <li class="job">
       <h3>Marketing &amp; Team Leader; shareholder and President of the Management Board</h3>
       <p class="org">Black Point Group sp. z o.o. · Poznań · <span class="dates"><time datetime="2022-09">Sep 2022</time> – <time datetime="2025-01">Jan 2025</time></span></p>
       <p>Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.</p>
-    </li>
-    <li class="job">
-      <h3>Co-owner</h3>
-      <p class="org">Black Point Barbershop · Poznań · <span class="dates"><time datetime="2020-10">Oct 2020</time> – <time datetime="2025-05">May 2025</time></span></p>
-      <p><span class="nw">Co-founded</span> and ran a barbershop and creative hub: identity, a website with online booking, social media and video.</p>
     </li>
     <li class="job">
       <h3>Web Developer</h3>
@@ -451,7 +451,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   <p class="filter-note" aria-live="polite"></p>
   <div class="projects">
     <article class="project card" data-skills="ai-sdlc architecture ts node pg react swift cicd security payments">
-      <header><h3>SIMBIA CRM</h3><a class="host" href="https://crm.simbia.eu">crm.simbia.eu ↗</a><span class="status">Production · runs my company</span></header>
+      <header><h3>SIMBIA CRM</h3><a class="host" href="https://crm.simbia.eu">crm.simbia.eu<span class="noprint"> ↗</span></a><span class="status">Production · runs my company</span></header>
       <p>Sales CRM with full <span class="nw">double-entry</span> accounting for a Polish limited company: KSeF 2.0 <span class="nw">e-invoicing</span>, PSD2 open banking, <span class="nw">registry-based</span> lead generation and a SwiftUI companion app.</p>
       <ul class="metrics"><li>~110K lines of TypeScript</li><li>~240 REST endpoints</li><li>57 PostgreSQL tables</li><li>269 tests</li></ul>
       <details open>
@@ -460,7 +460,7 @@ html.js .rv.in { opacity: 1; transform: none; }
       </details>
     </article>
     <article class="project card" data-skills="architecture ts node pg react cicd security payments">
-      <header><h3>B2B Commerce Platform</h3><a class="host" href="https://bosspartners.pl">bosspartners.pl ↗</a><span class="status">Production · licensed to Mind Logistic</span></header>
+      <header><h3>B2B Commerce Platform</h3><a class="host" href="https://bosspartners.pl">bosspartners.pl<span class="noprint"> ↗</span></a><span class="status">Production · licensed to Mind Logistic</span></header>
       <p>Wholesale platform that replaced a client’s WooCommerce store in production: company accounts with spend limits and approval flows, contract price books, RFQ and quotes, trade credit with aging and dunning.</p>
       <ul class="metrics"><li>~140K lines of TypeScript</li><li>339 REST endpoints</li><li>66 data models</li><li>700+ tests</li></ul>
       <details open>
@@ -469,7 +469,7 @@ html.js .rv.in { opacity: 1; transform: none; }
       </details>
     </article>
     <article class="project card" data-skills="llm ts node pg react cicd payments">
-      <header><h3>PROTECTDENT</h3><a class="host" href="https://protectdent.eu">protectdent.eu ↗</a><span class="status">Production · client platform, licensed</span></header>
+      <header><h3>PROTECTDENT</h3><a class="host" href="https://protectdent.eu">protectdent.eu<span class="noprint"> ↗</span></a><span class="status">Production · client platform, licensed</span></header>
       <p><span class="nw">23-language</span> EU <span class="nw">e-commerce</span> for <span class="nw">medical-device</span> consumables, with an LLM <span class="nw">lead-qualification</span> pipeline for B2B sales.</p>
       <ul class="metrics"><li>23 languages</li><li>600+ tests</li><li>7,800+ qualified B2B accounts</li></ul>
       <details open>
@@ -478,7 +478,7 @@ html.js .rv.in { opacity: 1; transform: none; }
       </details>
     </article>
     <article class="project card noprint" data-skills="ts node pg react swift security">
-      <header><h3>iApply Workforce</h3><a class="host" href="https://iapply.com.pl">iapply.com.pl ↗</a><span class="status">Production demo</span></header>
+      <header><h3>iApply Workforce</h3><a class="host" href="https://iapply.com.pl">iapply.com.pl<span class="noprint"> ↗</span></a><span class="status">Production demo</span></header>
       <p>Time, attendance and shift management for staffing agencies: a web app and a native SwiftUI app.</p>
       
       <details open>
@@ -496,7 +496,7 @@ html.js .rv.in { opacity: 1; transform: none; }
       </details>
     </article>
     <article class="project card noprint" data-skills="ai-sdlc ts react">
-      <header><h3>spin.clinic design system</h3><a class="host" href="https://spin.clinic">spin.clinic ↗</a><span class="status">Live · contract</span></header>
+      <header><h3>spin.clinic design system</h3><a class="host" href="https://spin.clinic">spin.clinic<span class="noprint"> ↗</span></a><span class="status">Live · contract</span></header>
       <p>Design system and motion UI kit for spin.clinic (Next.js 14, Framer Motion): 11K lines, 41 exports, used across 56 product files.</p>
       
       <details open>

@@ -61,7 +61,7 @@ export const sdlc = [
   },
   {
     title: 'Review and validate',
-    text: 'Adversarial multi-agent audits: a skeptic agent has to reproduce every finding before it is fixed and pinned by a regression test. 127 findings, 84 confirmed and fixed on SIMBIA CRM; 52 findings, 20 confirmed on AiBizBox; an accounting review that ran 28 agents and 750 tool calls.',
+    text: 'Adversarial multi-agent audits: a skeptic agent confirms or rejects every finding by reproducing it, and only confirmed ones are fixed and pinned by a regression test (84 of 127 confirmed on SIMBIA CRM, 20 of 52 on AiBizBox); an accounting review ran as a multi-agent audit of 28 agents and 750 tool calls.',
   },
   {
     title: 'Ship',
@@ -99,11 +99,11 @@ export const fit = [
   },
   {
     ask: 'AI systems: AI workflows, single- and multi-agent',
-    evidence: 'LLM pipelines in production (lead qualification, intent classification, document AI with human review, multi-provider routing) and multi-agent orchestration for the engineering work itself.',
+    evidence: 'AI workflows in production: LLM pipelines for lead qualification, reply-intent classification and document AI with human review, with multi-provider routing; multi-agent systems: a multi-agent audit system (28 agents, 750 tool calls) and parallel coding agents for the engineering itself.',
   },
   {
     ask: 'Infrastructure choices: security, cost, performance, scalability',
-    evidence: 'Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, signature-verified (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search instead of pgvector for a 500-item catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.',
+    evidence: 'Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, signature-verified (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search chosen over pgvector (vector/semantic search) for a 500-item catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.',
   },
   {
     ask: 'Business value and stakeholders',
@@ -131,7 +131,7 @@ export const experience = [
   },
   {
     org: 'STYLEICON (own studio)',
-    role: 'Independent Product Engineer & Architect',
+    role: 'Independent Product Engineer & Solutions Architect',
     start: '2026-01',
     end: null,
     place: 'Poznań',
