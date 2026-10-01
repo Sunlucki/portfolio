@@ -44,8 +44,7 @@ export function StackSection() {
       : t.stack.swipe;
 
   return (
-    // (on phones it comes up over the numbers' stage as its last number goes: its lower half is empty by then)
-    <section id="stack" className="relative -mt-[45svh] px-5 pb-20 pt-24 sm:px-8 md:mt-0 md:px-10 md:pb-28 md:pt-32">
+    <section id="stack" className="relative px-5 pb-20 pt-24 sm:px-8 md:px-10 md:pb-28 md:pt-32">
       <SectionTitle text={t.stack.title} className="mx-auto max-w-6xl" />
       <FadeIn
         as="p"

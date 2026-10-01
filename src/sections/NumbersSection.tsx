@@ -4,132 +4,114 @@ import { SpeedNumber } from '../components/SpeedNumber';
 import { NUMBERS, NUMBERS_CAPTION, NUMBERS_TITLE } from '../content';
 import { LOCALE } from '../i18n';
 
-const GAP = 38; // degrees between the numbers on the drum
-const TURN_VH = 55; // scroll per number
-const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// The numbers on see-through cards in rows that slide slowly in alternating directions as the page scrolls, as the
+// Graphics section's covers once did (his call, 2026-10-01: the drum that turned through them one by one made the
+// block long): two rows on screens, three on phones, each card's number racing up to its value as soon as its row
+// comes into view, so no zeros show (and again the next time). A soft glow behind the rows, for the glass to show;
+// their ends fade into the page.
+const dealt = (count: number) =>
+  Array.from({ length: count }, (_, row) => NUMBERS.map((n, i) => ({ ...n, i })).filter(({ i }) => Math.floor((i * count) / NUMBERS.length) === row));
+const ROWS = { wide: dealt(2), phone: dealt(3) };
+const PHONE = '(max-width: 767px)';
+const SPEED = 0.15; // pixels of slide per pixel of scroll
+const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; // (then the rows stand still)
+const FADE = 'linear-gradient(to right, transparent, #000 10%, #000 90%, transparent)';
 
-/**
- * The numbers: a drum that turns as the page scrolls (after React Bits Pro's 3D Text Reveal), a number on
- * every face. The stage sticks while the section scrolls past; the drum's angle follows the scroll, eased.
- * A number races up to its value (SpeedNumber) as soon as it comes into view, so no zeros show; one that goes
- * back down out of view resets, so it races again next time. Above
- * the drum, a heading whose letters scatter from the cursor.
- */
 export function NumbersSection() {
   const section = useRef<HTMLElement>(null);
-  const faces = useRef<(HTMLDivElement | null)[]>([]);
-  const [ran, setRan] = useState(() => NUMBERS.map(() => still));
+  const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [phone, setPhone] = useState(() => window.matchMedia(PHONE).matches);
+  const [seen, setSeen] = useState<boolean[]>([]);
+  const rows = phone ? ROWS.phone : ROWS.wide;
 
   useEffect(() => {
-    const el = section.current;
-    if (!el || still) return;
-    let frame = 0;
-    let angle = -Infinity;
-    let drawn = ''; // the drum as last laid out, to skip frames where it rests
-    let last = performance.now();
-    const flags = NUMBERS.map(() => false);
-    const tick = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      const p = Math.min(1, Math.max(0, -rect.top / Math.max(1, rect.height - vh)));
-      // the first number comes up from below to the front, the last goes on up past it
-      const target = -0.6 * GAP + p * (NUMBERS.length - 1 + 1.2) * GAP;
-      angle = angle === -Infinity ? target : angle + (target - angle) * (1 - Math.exp(-dt * 9));
-      const radius = Math.min(vh * 0.42, 460);
-      const pose = `${angle.toFixed(2)} ${radius.toFixed(0)}`;
-      frame = requestAnimationFrame(tick);
-      if (pose === drawn) return;
-      drawn = pose;
-      let changed = false;
-      faces.current.forEach((face, i) => {
-        if (!face) return;
-        const tilt = angle - i * GAP; // below the front while it's coming, above once it has passed
-        const seen = Math.max(0, 1 - (Math.abs(tilt) / (GAP * 1.9)) ** 1.5);
-        // on the drum's rim, turned about its axis, which lies a radius behind the front
-        face.style.transform = `translate(-50%, -50%) translateZ(${(-radius).toFixed(0)}px) rotateX(${tilt.toFixed(2)}deg) translateZ(${radius.toFixed(0)}px)`;
-        face.style.opacity = seen.toFixed(3);
-        face.style.visibility = seen > 0 ? 'visible' : 'hidden';
-        const run = tilt <= -GAP * 1.9 ? false : tilt < GAP * 1.9 ? true : flags[i]; // (in view: |tilt| < 1.9 faces)
-        if (run !== flags[i]) {
-          flags[i] = run;
-          changed = true;
-        }
-      });
-      if (changed) setRan([...flags]);
-    };
-    // turn only while the section is on screen
-    const observer = new IntersectionObserver(([entry]) => {
-      cancelAnimationFrame(frame);
-      if (entry.isIntersecting) {
-        last = performance.now();
-        frame = requestAnimationFrame(tick);
-      }
-    });
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      cancelAnimationFrame(frame);
-    };
+    const query = window.matchMedia(PHONE);
+    const change = () => setPhone(query.matches);
+    query.addEventListener('change', change);
+    return () => query.removeEventListener('change', change);
   }, []);
 
-  const face = (n: (typeof NUMBERS)[number], i: number) => (
-    <>
-      <div className="font-black leading-none" style={{ fontSize: 'clamp(3.6rem, 15vw, 9rem)' }}>
-        <SpeedNumber value={n.value} suffix={n.suffix} run={ran[i]} />
-      </div>
-      <p className="mt-3 text-xs uppercase tracking-[0.2em] text-[#D7E2EA]/60 sm:text-sm">{n.label}</p>
-    </>
-  );
+  // the rows' slide, from where the section is on the screen
+  useEffect(() => {
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      const el = section.current;
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY;
+      const offset = still ? 0 : (window.scrollY - top + window.innerHeight) * SPEED;
+      rowRefs.current.forEach((row, i) => {
+        // (a row holds three copies of its cards; it starts one copy to the left, so both its ends stay filled)
+        if (row) row.style.transform = `translate3d(${(i % 2 ? -1 : 1) * (offset - 120) - row.scrollWidth / 3}px, 0, 0)`;
+      });
+    };
+    const schedule = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    return () => {
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [phone]);
 
-  if (still) {
-    return (
-      <section id="numbers" className="px-5 py-24 text-center sm:px-8 md:px-10 md:py-32">
-        <ScatterText text={NUMBERS_TITLE} className="text-balance text-[clamp(2.4rem,7vw,6rem)] font-black leading-[0.95]" letterClassName="hero-heading" />
-        <p className="mt-4 font-light italic text-[#D7E2EA]/80">{NUMBERS_CAPTION}</p>
-        <ul className="mt-16 flex flex-col items-center gap-16">
-          {NUMBERS.map((n, i) => (
-            <li key={n.label} className="flex flex-col items-center">
-              {face(n, i)}
-            </li>
-          ))}
-        </ul>
-      </section>
+  // a row's numbers race as it comes into view
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) =>
+      setSeen((was) => {
+        const next = [...was];
+        for (const entry of entries) next[rowRefs.current.indexOf(entry.target as HTMLDivElement)] = entry.isIntersecting;
+        return next;
+      }),
     );
-  }
+    rowRefs.current.slice(0, rows.length).forEach((row) => row && observer.observe(row));
+    return () => observer.disconnect();
+  }, [rows]);
 
   return (
-    <section ref={section} id="numbers" className="relative" style={{ height: `calc(100svh + ${NUMBERS.length * TURN_VH}vh)` }}>
-      <div className="sticky top-0 flex h-svh flex-col items-center overflow-hidden px-5 pt-[11vh] text-center sm:px-8 md:px-10">
+    <section ref={section} id="numbers" className="overflow-hidden py-24 text-center md:py-32">
+      <div className="px-5 sm:px-8 md:px-10">
         <ScatterText text={NUMBERS_TITLE} className="text-balance text-[clamp(2.4rem,7vw,6rem)] font-black leading-[0.95]" letterClassName="hero-heading" />
-        <p className="mt-4 max-w-[640px] font-light italic leading-relaxed text-[#D7E2EA]/80" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>
+        <p className="mx-auto mt-4 max-w-[640px] font-light italic leading-relaxed text-[#D7E2EA]/80" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>
           {NUMBERS_CAPTION}
         </p>
-        <ul className="sr-only">
-          {NUMBERS.map((n) => (
-            <li key={n.label}>
-              {n.value.toLocaleString(LOCALE)}
-              {n.suffix} {n.label}
-            </li>
+      </div>
+      <ul className="sr-only">
+        {NUMBERS.map((n) => (
+          <li key={n.label}>
+            {n.value.toLocaleString(LOCALE)}
+            {n.suffix} {n.label}
+          </li>
+        ))}
+      </ul>
+      <div aria-hidden className="relative mt-12 md:mt-16">
+        <div className="pointer-events-none absolute inset-x-0 -inset-y-10" style={{ background: 'radial-gradient(60% 55% at 50% 50%, rgb(127 176 255 / 0.13), transparent 75%)' }} />
+        <div className="relative flex flex-col gap-3" style={{ maskImage: FADE, WebkitMaskImage: FADE }}>
+          {rows.map((cards, r) => (
+            <div
+              key={`${phone}-${r}`}
+              ref={(el) => {
+                rowRefs.current[r] = el;
+              }}
+              className="flex w-max gap-3"
+              style={{ willChange: 'transform' }}
+            >
+              {[...cards, ...cards, ...cards].map((n, k) => (
+                <div
+                  key={k}
+                  className="flex w-[232px] shrink-0 flex-col items-start justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] px-6 py-6 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] backdrop-blur-md sm:w-[300px] md:w-[380px] md:px-8 md:py-8"
+                >
+                  <div className="font-black leading-none text-[#D7E2EA]" style={{ fontSize: 'clamp(2rem, 4.4vw, 3.4rem)' }}>
+                    <SpeedNumber value={n.value} suffix={n.suffix} run={!!seen[r]} />
+                  </div>
+                  <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/60 sm:text-xs">{n.label}</p>
+                </div>
+              ))}
+            </div>
           ))}
-        </ul>
-        {/* the drum: its axis across the stage, the front face at the stage's depth */}
-        <div aria-hidden className="relative w-full flex-1" style={{ perspective: 1100 }}>
-          <div className="absolute left-1/2 top-[48%]" style={{ transformStyle: 'preserve-3d' }}>
-            {NUMBERS.map((n, i) => (
-              <div
-                key={n.label}
-                ref={(el) => {
-                  faces.current[i] = el;
-                }}
-                className="absolute left-0 top-0 flex w-[92vw] max-w-[900px] flex-col items-center"
-                style={{ backfaceVisibility: 'hidden', visibility: 'hidden' }}
-              >
-                {face(n, i)}
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>

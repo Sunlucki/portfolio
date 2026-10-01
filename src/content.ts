@@ -64,7 +64,7 @@ export const VIDEO_VIEWS = [
 ] as const;
 export const NUMBERS = [
   { value: 600_000, suffix: '+', label: t.numbers.code },
-  { value: VIDEO_VIEWS.reduce((sum, { views }) => sum + views, 0) * 100_000, suffix: '+', label: t.numbers.views },
+  { value: Math.floor((VIDEO_VIEWS.reduce((sum, { views }) => sum + views, 0) * 100_000) / 1_000_000), suffix: '+ MLN', label: t.numbers.views }, // (millions as N+ MLN, his call)
   { value: HOURS, suffix: '+', label: t.numbers.hours },
   { value: 238, suffix: '', label: t.numbers.projects },
   { value: 1_200, suffix: '+', label: t.numbers.designs },
