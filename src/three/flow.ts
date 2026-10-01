@@ -1,8 +1,9 @@
 /**
  * What the Mobile Apps, Graphics and Video sections share with the particle scene behind them
  * (three/FlowScene.tsx): the iPhone is built of particles in the Apps section and becomes the model, breaks up
- * again as the page scrolls on, its particles fly behind the Graphics covers and build the Video section's first
- * films (on phones, the iPhone again, with PLAY over it). No three.js in here: the sections import it.
+ * again as the page scrolls on, its particles swirl as a vortex inside the Graphics section's rings of covers and
+ * build the Video section's first films (on phones, the iPhone again, with PLAY over it). No three.js in here: the
+ * sections import it.
  *
  * The scene finds its places by these attributes: [data-flow="apps"] (the Apps section's stage for the phone),
  * [data-flow="graphics"] (the Graphics section), [data-flow="films"] (the Video section's grid; its first films,
@@ -10,6 +11,8 @@
  * [data-flow="music"] (the Music section's stage, whose floor the particles build last).
  */
 export const flow = {
+  // the Graphics section's rings of covers: their radius on the screen (px), for the vortex inside them
+  rings: { radius: 0 },
   // the Apps section's phone: its screens, the one on it, and which app's it is
   phone: { images: [] as string[], shown: 0, app: 0 },
   // phones: the films' pictures, for the Video section's iPhone to show as a grid on its screen
@@ -28,6 +31,10 @@ export const flow = {
   layer: null as ((layer: FlowLayer) => void) | null,
 };
 export type FlowLayer = 'page' | 'fly' | 'feed';
+
+// The scene's camera (its field of view 30°) stands this many screen heights from the page's plane: the Graphics
+// section's rings are drawn with this perspective, so the vortex and the rings round it are seen alike.
+export const PERSPECTIVE = 1 / (2 * Math.tan((30 / 2) * (Math.PI / 180)));
 
 // Is this a phone? Its Video section is the iPhone and the full-screen feed, not the grid of films.
 export const phoneLayout = () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches;

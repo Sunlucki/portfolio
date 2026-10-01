@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
 import { MOBILE_APPS } from '../content';
-import { flow, phoneLayout } from './flow';
+import { flow, phoneLayout, PERSPECTIVE } from './flow';
 import { FOV as MUSIC_FOV, RIM, inPlay, placeCamera } from './musicFloor';
 import { NOISE_GLSL } from './noise';
 
@@ -13,8 +13,9 @@ import { NOISE_GLSL } from './noise';
  * canvas stuck to the screen behind them). In the Apps section the iPhone (the contact section's iPhone 17 Pro Max,
  * MajdyModels, CC BY 4.0) gathers out of particles strewn round its place and becomes the model, as the About
  * portrait does out of the manifesto's; it stands there swaying, the apps' screens on its display, a new one pushing
- * in from the right, a new app turning it round. Scrolled on, it breaks up again: its particles drift up behind the
- * Graphics covers as a slow cloud, and land on the Video section's first films, which then show (their cards'
+ * in from the right, a new app turning it round. Scrolled on, it breaks up again: its particles swirl up the middle
+ * of the screen as a vortex inside the Graphics section's rings of covers (the rings' back halves drawn under this
+ * canvas, their front halves over it), and land on the Video section's first films, which then show (their cards'
  * opacity, set here). On phones the Video section shows no grid: the particles build the iPhone again there, the
  * films on its screen as a grid, PLAY in particles standing out in front of it; tapped, the phone flies at the camera
  * until its screen fills the view, its picture splitting into red, green and blue, and the section's feed opens;
@@ -29,7 +30,7 @@ const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduc
 const HEIGHT = 2; // the phone, scaled to this height
 const FOV = 30;
 const DISTANCE = 20;
-const TALL = 2 * DISTANCE * Math.tan(THREE.MathUtils.degToRad(FOV / 2)); // world height seen at the page's plane
+const TALL = DISTANCE / PERSPECTIVE; // world height seen at the page's plane (flow.ts: the rings share the camera's view)
 const COUNT = small ? 7000 : 14000;
 const CARDS = 9; // at most this many films are built of particles: the first ones, in view as the grid comes up
 const PUSH_S = 0.55;
@@ -81,8 +82,8 @@ const screenFragment = /* glsl */ `
 `;
 
 // The particles: each has a place on the phone (aPhone, in its model's units; w: 1 on its display), one in the
-// cloud, on desktops one on a film's card (aTile: which, and where on it) and one on the Music stage's floor
-// (aMusic). Where it is: strewn round the phone, gathered on it (uAssemble), in the cloud (uLeave), on its card or
+// vortex, on desktops one on a film's card (aTile: which, and where on it) and one on the Music stage's floor
+// (aMusic). Where it is: strewn round the phone, gathered on it (uAssemble), in the vortex (uLeave), on its card or
 // on phones on the phone again (uLand), on the Music stage's floor (uOnward); each particle in its own time,
 // swirling on the way.
 const particleVertex = /* glsl */ `
@@ -92,7 +93,7 @@ const particleVertex = /* glsl */ `
   uniform float uOnward, uBuilt, uMorph; // on to the Music stage's floor; the floor shown; its button (0 PLAY, 1 all of it)
   uniform mat4 uMusicView; // the Music stage's camera (and its floor's turn): from the floor to its canvas
   uniform vec4 uStage; // the Music stage's canvas on the page's plane: left, bottom, width, height
-  uniform vec4 uCloud; // its width and height, how far it has drifted
+  uniform vec4 uCloud; // the vortex: its radius at the top, its height, how far it has risen, how far it has turned
   uniform vec4 uTiles[${CARDS}]; // the films' cards on the page's plane: left, bottom, width, height
   attribute vec4 aPhone;
   attribute vec4 aRand;
@@ -111,11 +112,17 @@ const particleVertex = /* glsl */ `
     vec3 middle = (uPhoneA * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
     vec3 away = normalize(aRand.xyz - 0.5 + 1e-4);
     vec3 strewn = middle + away * vec3(1.8, 1.2, 1.0) * (3.0 + 5.0 * aRand.w);
-    // the cloud: over the whole screen, a little behind the page, drifting up as the page scrolls on
+    // the vortex: a funnel up the middle of the screen, wider at its top, inside the Graphics section's rings; its
+    // particles rise as the page scrolls on and turn round its axis, faster nearer it, most of them in five spiral
+    // arms on its wall, the rest strewn inside
     float up = fract(aRand.y + uCloud.z * (0.5 + 0.8 * aRand.w));
-    vec3 cloud = vec3((aRand.x - 0.5) * uCloud.x, (up - 0.5) * uCloud.y, -1.0 - 6.0 * aRand.z);
+    bool onArm = aRand.x < 0.65;
+    float across = onArm ? 0.6 + 0.4 * aRand.z : sqrt(aRand.z);
+    float radius = uCloud.x * (0.3 + 0.7 * up) * across;
+    float angle = (onArm ? floor(fract(aRand.x * 7.13) * 5.0) * 1.25664 + (aRand.w - 0.5) * 0.55 : aRand.w * 6.28318) + up * 4.0 + uCloud.w * (1.0 + 1.5 * (1.0 - across));
+    vec3 cloud = vec3(cos(angle) * radius, (up - 0.5) * uCloud.y, sin(angle) * radius);
     vec3 wind = vec3(aRand.xy * 4.0, uTime * 0.08);
-    cloud.xy += vec2(snoise(wind), snoise(wind + 7.0)) * 0.8;
+    cloud += vec3(snoise(wind), snoise(wind + 7.0), snoise(wind + 13.0)) * 0.1 * uCloud.x;
     vec4 card = uTiles[int(aTile.x + 0.5)];
     vec3 onCard = vec3(card.x + aTile.y * card.z, card.y + aTile.z * card.w, 0.0);
     vec3 end = mix(onCard, onB, uMobile);
@@ -142,7 +149,7 @@ const particleVertex = /* glsl */ `
     vec4 mv = modelViewMatrix * vec4(p, 1.0);
     gl_Position = projectionMatrix * mv;
     gl_PointSize = (0.05 + 0.06 * aRand.w) * (1.0 + 0.4 * aPhone.w * (1.0 - l)) * (1.0 - 0.45 * o) * uPixel / -mv.z;
-    // seen where the phone or the cards don't show yet, the cloud fading at its edges
+    // seen where the phone or the cards don't show yet, the vortex fading at its ends
     float edge = smoothstep(0.0, 0.12, up) * (1.0 - smoothstep(0.88, 1.0, up));
     float atA = a * (1.0 - l);
     float atCloud = l * (1.0 - d);
@@ -643,7 +650,10 @@ function Scene() {
     u.uAssemble.value = r.assemble;
     u.uLeave.value = r.leave;
     u.uLand.value = r.land;
-    u.uCloud.value.set(TALL * (canvas.width / Math.max(1, canvas.height)) * 1.15, TALL * 1.2, (window.scrollY / vh) * 0.3, 0);
+    // the vortex: inside the rings (their radius on the screen, a third of its width till they tell it), turning by
+    // itself and further as the page scrolls on
+    const rings = flow.rings.radius || canvas.width * 0.3;
+    u.uCloud.value.set(rings * 0.62 * perPx, TALL * 1.15, (window.scrollY / vh) * 0.3, r.time * 0.5 + (window.scrollY / vh) * 1.6);
 
     // on to the Music section: the particles leave the phone (phones: once it is on its way up the screen) or the
     // films as its stage comes up, and build the stage's floor, done as it reaches the middle of the screen; then

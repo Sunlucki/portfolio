@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect } from 'react';
 import { HeroSection } from './sections/HeroSection';
 import { ManifestoSection } from './sections/ManifestoSection';
-import { MarqueeSection } from './sections/MarqueeSection';
+import { GraphicsSection } from './sections/GraphicsSection';
 import { AboutSection } from './sections/AboutSection';
 import { NumbersSection } from './sections/NumbersSection';
 import { ServicesSection } from './sections/ServicesSection';
@@ -50,7 +50,7 @@ export default function App() {
       <ProjectsSection />
       <FlowSections>
         <AppsSection />
-        <MarqueeSection />
+        <GraphicsSection />
         <VideoSection />
         <MusicSection />
       </FlowSections>

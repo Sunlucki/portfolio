@@ -152,8 +152,10 @@ export function VideoSection() {
 
   return (
     <section id="video" className="px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
-      <SectionTitle text={t.video.title} className="mb-4 md:mb-6" />
-      <Views />
+      <div className="text-shade">
+        <SectionTitle text={t.video.title} className="mb-4 md:mb-6" />
+        <Views />
+      </div>
       {phone ? (
         <>
           {/* the iPhone's place (the scene behind builds it) and PLAY in the middle of its screen: the scene draws it in

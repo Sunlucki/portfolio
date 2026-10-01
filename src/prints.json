@@ -677,29 +677,18 @@
  ],
  "alibia": [
   {
-   "kind": "card",
-   "w": 85,
-   "h": 55,
-   "front": "/scenes/print/alibia-0-front.webp",
-   "frontGloss": "/scenes/print/alibia-0-front-gloss.webp",
-   "frontBump": "/scenes/print/alibia-0-front-bump.webp",
-   "back": "/scenes/print/alibia-0-back.webp",
-   "backGloss": "/scenes/print/alibia-0-back-gloss.webp",
-   "backBump": "/scenes/print/alibia-0-back-bump.webp"
-  },
-  {
    "kind": "stickers",
    "w": 80,
    "h": 80,
    "fronts": [
-    "/scenes/print/alibia-1-front0.webp",
-    "/scenes/print/alibia-1-front1.webp",
-    "/scenes/print/alibia-1-front2.webp",
-    "/scenes/print/alibia-1-front3.webp",
-    "/scenes/print/alibia-1-front4.webp",
-    "/scenes/print/alibia-1-front5.webp",
-    "/scenes/print/alibia-1-front6.webp",
-    "/scenes/print/alibia-1-front7.webp"
+    "/scenes/print/alibia-0-front0.webp",
+    "/scenes/print/alibia-0-front1.webp",
+    "/scenes/print/alibia-0-front2.webp",
+    "/scenes/print/alibia-0-front3.webp",
+    "/scenes/print/alibia-0-front4.webp",
+    "/scenes/print/alibia-0-front5.webp",
+    "/scenes/print/alibia-0-front6.webp",
+    "/scenes/print/alibia-0-front7.webp"
    ]
   }
  ],
@@ -743,6 +732,7 @@
    "kind": "card",
    "w": 90,
    "h": 50,
+   "corner": 5,
    "front": "/scenes/print/lizard-moving-0-front.webp",
    "back": "/scenes/print/lizard-moving-0-back.webp"
   }
@@ -789,8 +779,9 @@
   },
   {
    "kind": "card",
-   "w": 90,
-   "h": 50,
+   "w": 50,
+   "h": 90,
+   "metal": true,
    "front": "/scenes/print/da-vinci-1-front.webp",
    "frontGloss": "/scenes/print/da-vinci-1-front-gloss.webp",
    "back": "/scenes/print/da-vinci-1-back.webp",

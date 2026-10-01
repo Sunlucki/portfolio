@@ -103,3 +103,53 @@ body {
 .egg-glitch {
   animation: egg-glitch 0.9s steps(1, end) 0.25s both;
 }
+
+/* The Graphics section's covers (GraphicsSection): pointed at, a cover grows with a spring's bounce and says what a
+   click does (a damped spring, where linear() easing is known; an overshoot elsewhere) */
+.cover-face {
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@supports (transition-timing-function: linear(0, 1)) {
+  .cover-face {
+    transition: transform 0.8s
+      linear(0, 0.009, 0.035 2.1%, 0.141, 0.281 6.7%, 0.723 12.9%, 0.938 16.7%, 1.017, 1.077, 1.121, 1.149 24.3%, 1.159, 1.163, 1.161, 1.154 29.9%, 1.129 32.8%, 1.051 39.6%, 1.017 43.1%, 0.991, 0.977 51%, 0.974 53.8%, 0.975 57.1%, 0.997 69.8%, 1.003 76.9%, 1.004 83.8%, 1);
+  }
+}
+.cover-label {
+  opacity: 0;
+  transition: opacity 0.25s ease-out;
+}
+.cover:focus-visible .cover-face {
+  transform: scale(1.1);
+}
+.cover:focus-visible .cover-label {
+  opacity: 1;
+}
+@media (hover: hover) and (pointer: fine) {
+  .cover:hover .cover-face {
+    transform: scale(1.1);
+  }
+  .cover:hover .cover-label {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cover-face {
+    transition: none;
+  }
+}
+
+/* The headings over the particle scene (Apps, Graphics, Video, Music): the page's black under their words, fading out
+   round them, so the particles going behind the words come and go softly (his call) */
+.text-shade {
+  position: relative;
+  isolation: isolate;
+}
+.text-shade::before {
+  content: '';
+  position: absolute;
+  inset: -35% -6%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(closest-side, #0c0c0c 62%, rgb(12 12 12 / 0));
+}

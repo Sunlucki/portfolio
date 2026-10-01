@@ -806,11 +806,10 @@ type Sheet = {
   back?: string;
   frontGloss?: string;
   backGloss?: string;
-  frontBump?: string; // (blind embossing: the paper's height)
-  backBump?: string;
   metal?: boolean; // (its gloss maps' blue is metal: gold foil)
   holo?: boolean; // (and their red holographic: the foil's colours)
   round?: boolean; // (a round sticker: a disc, its picture the circle in it)
+  corner?: number; // (its corners cut round: their radius, mm)
   inner?: string[]; // a folded card's inside: the cover's, the back's
   // a folder's
   page?: number[];
@@ -822,7 +821,6 @@ type Sheet = {
 };
 const PRINTS = printsJson as Record<string, Sheet[]>;
 const SHUFFLE = { split: 0.35, gap: 0.08, deal: 0.32 }; // seconds: the halves part, each card's turn after the last, its way in
-const EMBOSS = 8; // how high a blind-embossed mark stands (its bump map's scale)
 
 // a soft round spot, white at its middle (a shadow when drawn dark, a glow when light)
 function spot(alpha: number) {
@@ -856,14 +854,12 @@ async function sheets(name: SceneName): Promise<Live> {
     back: thing.back ?? thing.inside ? picture((thing.back ?? thing.inside)!) : null,
     frontGloss: thing.frontGloss ?? thing.outsideGloss ? picture((thing.frontGloss ?? thing.outsideGloss)!) : null,
     backGloss: thing.backGloss ? picture(thing.backGloss) : null,
-    frontBump: thing.frontBump ? picture(thing.frontBump) : null,
-    backBump: thing.backBump ? picture(thing.backBump) : null,
     inner: (thing.inner ?? []).map((url) => picture(url)),
     metal: !!thing.metal,
     holo: !!thing.holo,
   }));
-  for (const side of sides) for (const data of [side.frontGloss, side.backGloss, side.frontBump, side.backBump]) if (data) data.colorSpace = THREE.NoColorSpace; // (data, not colour)
-  const maps = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss, sides[i].frontBump, sides[i].backBump, ...sides[i].inner];
+  for (const side of sides) for (const data of [side.frontGloss, side.backGloss]) if (data) data.colorSpace = THREE.NoColorSpace; // (data, not colour)
+  const maps = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss, ...sides[i].inner];
   const ready = (i: number) => maps(i).every((texture) => !texture || texture.image);
   await Promise.all(maps(0).map((texture) => texture?.ready));
 
@@ -890,10 +886,30 @@ async function sheets(name: SceneName): Promise<Live> {
   const box = new THREE.BoxGeometry(1, 1, 1);
   // (a round sticker's: its edge, its front facing us, its back; turned so its caps' pictures stand upright)
   const disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 96).rotateX(Math.PI / 2).rotateZ(Math.PI / 2);
+  // (a card with its corners cut round, of the box's unit size: in its own units the corners are quarter ellipses, round
+  // once it is scaled to the card; its front, its back and its edge, the front and the back mapped as the box's are)
+  const rounded = (thing: Sheet) => {
+    const [rx, ry] = [thing.corner! / thing.w, thing.corner! / thing.h];
+    const shape = new THREE.Shape().moveTo(-0.5 + rx, -0.5);
+    shape.absellipse(0.5 - rx, -0.5 + ry, rx, ry, -Math.PI / 2, 0, false, 0);
+    shape.absellipse(0.5 - rx, 0.5 - ry, rx, ry, 0, Math.PI / 2, false, 0);
+    shape.absellipse(-0.5 + rx, 0.5 - ry, rx, ry, Math.PI / 2, Math.PI, false, 0);
+    shape.absellipse(-0.5 + rx, -0.5 + ry, rx, ry, Math.PI, Math.PI * 1.5, false, 0);
+    const geometry = new THREE.ExtrudeGeometry(shape, { depth: 1, bevelEnabled: false, curveSegments: 10 }).translate(0, 0, -0.5);
+    const [caps, sides] = geometry.groups;
+    const [at, uv] = [geometry.getAttribute('position'), geometry.getAttribute('uv')];
+    for (let v = caps.start; v < caps.start + caps.count; v++) uv.setXY(v, at.getZ(v) > 0 ? at.getX(v) + 0.5 : 0.5 - at.getX(v), at.getY(v) + 0.5);
+    const half = caps.count / 2; // (its back's faces, then its front's)
+    geometry.clearGroups();
+    geometry.addGroup(caps.start, half, 1);
+    geometry.addGroup(caps.start + half, half, 0);
+    geometry.addGroup(sides.start, sides.count, 2);
+    return geometry;
+  };
   // (a blank side: the paper; a gloss map's green is the roughness, and on a thing with metal its blue the metal; on a
   // holographic one its red the foil's thin film, the colours)
   const thickness = film();
-  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null, metal = false, bump: THREE.Texture | null = null, holo = false) =>
+  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null, metal = false, holo = false) =>
     holo && gloss
       ? new THREE.MeshPhysicalMaterial({
           map,
@@ -913,7 +929,6 @@ async function sheets(name: SceneName): Promise<Live> {
           roughnessMap: gloss,
           roughness: gloss ? 1 : 0.62,
           ...(metal && gloss ? { metalnessMap: gloss, metalness: 1 } : {}),
-          ...(bump ? { bumpMap: bump, bumpScale: EMBOSS } : {}),
         });
   const pivot = new THREE.Group();
   scene.add(pivot);
@@ -1038,9 +1053,13 @@ async function sheets(name: SceneName): Promise<Live> {
           : thing.inner
             ? card(i)
             : side.fronts.map((map) => {
-                const front = paper(map, side.frontGloss, side.metal, side.frontBump, side.holo);
-                const back = paper(side.back, side.backGloss, side.metal, side.backBump, side.holo);
-                const mesh = thing.round ? new THREE.Mesh(disc, [edge, front, back]) : new THREE.Mesh(box, [edge, edge, edge, edge, front, back]);
+                const front = paper(map, side.frontGloss, side.metal, side.holo);
+                const back = paper(side.back, side.backGloss, side.metal, side.holo);
+                const mesh = thing.round
+                  ? new THREE.Mesh(disc, [edge, front, back])
+                  : thing.corner
+                    ? new THREE.Mesh(rounded(thing), [front, back, edge])
+                    : new THREE.Mesh(box, [edge, edge, edge, edge, front, back]);
                 mesh.scale.set(size.w, size.h, size.t);
                 return mesh;
               });

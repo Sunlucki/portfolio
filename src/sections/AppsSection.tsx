@@ -51,10 +51,12 @@ export function AppsSection() {
 
   return (
     <section id="apps" className="px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
-      <SectionTitle text={MOBILE_APPS.title} className="mb-4 md:mb-6" />
-      <p className="mx-auto max-w-[640px] text-center font-light italic leading-relaxed text-[#D7E2EA]/80" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>
-        {MOBILE_APPS.caption}
-      </p>
+      <div className="text-shade">
+        <SectionTitle text={MOBILE_APPS.title} className="mb-4 md:mb-6" />
+        <p className="mx-auto max-w-[640px] text-center font-light italic leading-relaxed text-[#D7E2EA]/80" style={{ fontSize: 'clamp(1rem, 1.6vw, 1.2rem)' }}>
+          {MOBILE_APPS.caption}
+        </p>
+      </div>
 
       <div className="mx-auto mt-10 grid max-w-6xl items-center gap-6 md:mt-14 md:grid-cols-[1fr_1.2fr] md:gap-10">
         <div className="order-2 md:order-1">

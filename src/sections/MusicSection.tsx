@@ -136,7 +136,9 @@ export function MusicSection() {
 
   return (
     <section id="music" className="px-4 pb-24 pt-16 sm:px-6 md:px-10 md:pt-24">
-      <SectionTitle text={t.music.title} className="mb-4 md:mb-6" />
+      <div className="text-shade">
+        <SectionTitle text={t.music.title} className="mb-4 md:mb-6" />
+      </div>
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 items-center gap-4 md:mt-10 md:grid-cols-[1.3fr_1fr] md:gap-10">
         <div className="min-w-0">

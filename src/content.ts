@@ -298,10 +298,11 @@ export const PROJECTS: Project[] = [
   },
 ];
 
-// Marquee: project covers from the STYLEICON archive (scripts/prepare-media.py), their words in t.graphics.tiles.
+// The Graphics section's covers (sections/GraphicsSection.tsx: on its rings, eight a ring, in this order), from the
+// STYLEICON archive (scripts/prepare-media.py), their words in t.graphics.tiles.
 // `?v` busts the 30-day cache. Branding, print and social media only: the sites are in the WordPress card (Bogdan,
 // 2026-09-30).
-export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=9`, alt }));
+export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=10`, alt }));
 
 // The covers' projects (2026-10-01): each with all its pictures (public/graphics/<slug>/N.webp, sized in graphics.json by
 // scripts/prepare-media.py) and when it was, from the dates of its PSDs on his desktop (Проэкты/АРХИВ); a cover opens
@@ -344,7 +345,7 @@ export const GRAPHICS = Object.fromEntries(
     {
       slug,
       when: GRAPHICS_DATES[slug],
-      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp`, width, height })),
+      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp?v=2`, width, height })), // (?v: a 30-day cache)
       ...t.graphics.projects[slug],
     },
   ]),
@@ -353,8 +354,8 @@ export const GRAPHICS = Object.fromEntries(
 export const COVER_OF: [GraphicsSlug, number][] = [
   ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', 0], ['hype', 0], ['ihor', 0],
   ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['chang', 0], ['lizard-moving', 0],
-  ['adaya', 0], ['soul-nation', 0], ['currywurst', 1], ['perfumeria-outlet', 0], ['alibia', 1], ['yana-lashes', 0],
-  ['strimat', 0], ['depilacja', 0], ['black-point', 2], ['kreem', 1], ['black-point', 7], ['magic-patron', 0],
+  ['adaya', 0], ['soul-nation', 0], ['currywurst', 0], ['perfumeria-outlet', 0], ['alibia', 1], ['yana-lashes', 0],
+  ['strimat', 0], ['depilacja', 0], ['black-point', 2], ['kreem', 0], ['black-point', 7], ['magic-patron', 0],
   ['time-relax-body', 0], ['zero-sladu', 0], ['na-serio-na-zarty', 0], ['stories-beauty', 0], ['slovianka', 0],
   ['profi-dokument', 0], ['profi-dokument', 1], ['ihor', 1],
 ];
