@@ -155,6 +155,10 @@ The site speaks English, Russian, Ukrainian, Polish, German, Italian and French.
 
 Each language has its own page for search engines: the build (`vite.config.ts`) writes `index.html` for English and `/ru/index.html` and the rest, each with its title and description, a canonical link, `hreflang` links to all the others (and `x-default` to `/`), Open Graph and Twitter cards, and schema.org data about Bogdan (Person, WebSite, ProfilePage); plus `sitemap.xml` with every page and its translations, which `public/robots.txt` points to. The key file for IndexNow (Bing, Yandex and the others that share it) is `public/<key>.txt`; after a deploy that changes the words, the pages can be sent to `https://api.indexnow.org/indexnow` with that key.
 
+## CV
+
+`/cv/` is Bogdan's CV, in the site's look, for applications (`public/cv/`, not linked from the page, `noindex`): his headline and summary, the numbers, how he delivers with AI agents (the six steps of his SDLC, each with its evidence, picked one at a time), a role-fit list (what a Solutions Architect role asks, each with what shows it), his experience on a timeline, the projects (filtered by skill), skills, education and languages. Its words are written once, in `scripts/cv/data.mjs` (facts from the knowledge base's `data/profile.json` only), and `node scripts/cv/build.mjs` writes the page and, from the same words, `cv.md` and `resume.json` (JSON Resume) for the agents that score CVs, and the PDF, printed from the page by headless Chrome: A4, dark to the edge (the sheets' padding repeats on every sheet), three pages, one column with no letter-spacing, so a parser reads it word by word in order, tagged. Everything on the page is in its HTML, so it reads without JavaScript. A copy with his phone number, for one application only and never published: `node scripts/cv/build.mjs --out <dir> --phone "…" --pdf <name>.pdf`.
+
 ## Project layout
 
 ```
@@ -171,6 +175,7 @@ src/
 scripts/
   prepare-media.py      builds hero frames (+ Vision cut-outs), card images, the WordPress slides and films, marquee tiles, icons and the music from local sources
   prepare-scenes.mjs    the Graphics covers' 3D models (Mind Logistic's bottle and can), small, for src/three/miniScenes.ts
+  cv/                   the CV: its words (data.mjs) and the page, Markdown, JSON Resume and PDF made from them (build.mjs)
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
   estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
   prepare-about.py      phone scene assets (cut-out, poster, recoloured iPhone model)
@@ -179,7 +184,7 @@ scripts/
   prepare-models.py     the manifesto's heart, brain and bulb with hands, baked from models into point sets
   prepare-bands.mjs     each track's spectrum for the music stage (needs ffmpeg)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
-public/                 generated media (hero/, work/, tiles/, graphics/, scenes/, about/, models/, egg/; music/ and video/ not in git)
+public/                 generated media (hero/, work/, tiles/, graphics/, scenes/, about/, models/, egg/; music/ and video/ not in git) and the CV (cv/)
 ```
 
 ## Develop

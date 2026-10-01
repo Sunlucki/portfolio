@@ -1,0 +1,317 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/v1.0.0/schema.json",
+  "basics": {
+    "name": "Bogdan Nenadović",
+    "label": "Product Engineer & Solutions Architect",
+    "image": "https://sunlucki.pl/cv/portrait.jpg",
+    "email": "hello@sunlucki.pl",
+    "url": "https://sunlucki.pl",
+    "summary": "I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.",
+    "location": {
+      "city": "Poznań",
+      "countryCode": "PL"
+    },
+    "profiles": [
+      {
+        "network": "LinkedIn",
+        "username": "sunlucki",
+        "url": "https://www.linkedin.com/in/sunlucki"
+      },
+      {
+        "network": "GitHub",
+        "username": "Sunlucki",
+        "url": "https://github.com/Sunlucki"
+      }
+    ]
+  },
+  "work": [
+    {
+      "name": "SIMBIA sp. z o.o.",
+      "position": "Co-founder, Board Member & Solutions Architect",
+      "url": "https://simbia.eu",
+      "startDate": "2026-08",
+      "summary": "A software company that builds and licenses vertical platforms: CRM, workforce management, fleet management and B2B commerce. I own the architecture and the AI-assisted delivery process. The company runs its sales and statutory accounting on our own CRM."
+    },
+    {
+      "name": "STYLEICON (own studio)",
+      "position": "Founder; independent product engineer and architect since 2026",
+      "startDate": "2025-01",
+      "summary": "Web, branding and video studio in 2025. Since January 2026: designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026)."
+    },
+    {
+      "name": "spin.clinic",
+      "position": "Design System Engineer (contract)",
+      "url": "https://spin.clinic",
+      "startDate": "2026-09",
+      "endDate": "2026-09",
+      "summary": "Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours."
+    },
+    {
+      "name": "Black Point Group sp. z o.o.",
+      "position": "Marketing & Team Leader; shareholder and President of the Management Board",
+      "startDate": "2022-09",
+      "endDate": "2025-01",
+      "summary": "Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication."
+    },
+    {
+      "name": "Black Point Barbershop",
+      "position": "Co-owner",
+      "startDate": "2020-10",
+      "endDate": "2025-05",
+      "summary": "Co-founded and ran a barbershop and creative hub: identity, a website with online booking, social media and video."
+    },
+    {
+      "name": "GreenView",
+      "position": "Web Developer",
+      "startDate": "2017-05",
+      "endDate": "2020-08",
+      "summary": "Websites from UX/UI to WordPress deployment: responsive builds, usability testing, work directly with clients and marketing teams."
+    }
+  ],
+  "volunteer": [
+    {
+      "organization": "Fundacja Novus Ignis",
+      "position": "Tech Lead (pro bono)",
+      "startDate": "2026-09",
+      "endDate": "2026-09",
+      "summary": "Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests."
+    }
+  ],
+  "education": [
+    {
+      "institution": "WSB University in Poznań",
+      "area": "Computer Science, specialization: Computer Graphics",
+      "studyType": "BSc",
+      "startDate": "2016",
+      "endDate": "2018"
+    }
+  ],
+  "skills": [
+    {
+      "name": "AI-assisted SDLC",
+      "keywords": [
+        "Specify",
+        "Orchestrate",
+        "Test",
+        "Review and validate",
+        "Ship",
+        "Operate"
+      ]
+    },
+    {
+      "name": "AI and SDLC",
+      "keywords": [
+        "AI-assisted SDLC",
+        "Agentic coding",
+        "Multi-agent orchestration",
+        "Claude Code",
+        "OpenAI Codex",
+        "MCP",
+        "LLM integration",
+        "Structured outputs",
+        "Prompt caching",
+        "Document AI / OCR",
+        "LLM pipelines",
+        "Prompt engineering"
+      ]
+    },
+    {
+      "name": "Architecture",
+      "keywords": [
+        "Solution architecture",
+        "System design",
+        "Domain modules",
+        "State machines",
+        "Event-driven design (LISTEN/NOTIFY, SSE, queues)",
+        "Integration architecture (OAuth2, signed webhooks, idempotency)",
+        "Security architecture",
+        "ADRs"
+      ]
+    },
+    {
+      "name": "Engineering",
+      "keywords": [
+        "TypeScript",
+        "Node.js (Fastify, Express)",
+        "React",
+        "Next.js",
+        "PostgreSQL",
+        "Prisma",
+        "Drizzle",
+        "Redis / BullMQ",
+        "REST / OpenAPI",
+        "Swift / SwiftUI"
+      ]
+    },
+    {
+      "name": "Delivery and operations",
+      "keywords": [
+        "CI/CD (GitHub Actions)",
+        "Automated testing (Vitest, XCTest)",
+        "Docker",
+        "Linux (nginx, PM2, systemd)",
+        "Backups and disaster recovery",
+        "Sentry"
+      ]
+    },
+    {
+      "name": "Domains",
+      "keywords": [
+        "CRM",
+        "B2B commerce",
+        "Payments (Stripe, PayU, Przelewy24)",
+        "E-invoicing (KSeF 2.0)",
+        "Accounting",
+        "HR tech",
+        "Fleet management (Uber API)"
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "language": "English",
+      "fluency": "C2"
+    },
+    {
+      "language": "Polish",
+      "fluency": "C2"
+    },
+    {
+      "language": "Ukrainian",
+      "fluency": "native"
+    },
+    {
+      "language": "Russian",
+      "fluency": "native"
+    }
+  ],
+  "projects": [
+    {
+      "name": "SIMBIA CRM",
+      "description": "Production · runs my company. Sales CRM with full double-entry accounting for a Polish limited company: KSeF 2.0 e-invoicing, PSD2 open banking, registry-based lead generation and a SwiftUI companion app.",
+      "highlights": [
+        "~110K lines of TypeScript",
+        "~240 REST endpoints",
+        "57 PostgreSQL tables",
+        "269 tests",
+        "Accounting invariants enforced inside PostgreSQL: deferred constraint triggers, immutable journals, gapless numbering; 8 government XML filings validated against the official XSD schemas.",
+        "Realtime updates from PostgreSQL LISTEN/NOTIFY to Server-Sent Events with per-role filtering; IMAP IDLE sync that puts client replies on the lead timeline in about 4 seconds.",
+        "Zero-touch deploys with health-gated automatic rollback; daily off-site backups with weekly automated restore checks.",
+        "Built through orchestrated coding agents with written specs and adversarial multi-agent audits: 127 findings, 84 confirmed and fixed."
+      ],
+      "url": "https://crm.simbia.eu",
+      "keywords": [
+        "AI-assisted SDLC",
+        "Architecture",
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL",
+        "React",
+        "Swift / iOS",
+        "CI/CD & testing",
+        "Security",
+        "Payments & e-invoicing"
+      ]
+    },
+    {
+      "name": "B2B Commerce Platform",
+      "description": "Production · licensed to Mind Logistic. Wholesale platform that replaced a client’s WooCommerce store in production: company accounts with spend limits and approval flows, contract price books, RFQ and quotes, trade credit with aging and dunning.",
+      "highlights": [
+        "~140K lines of TypeScript",
+        "339 REST endpoints",
+        "66 data models",
+        "700+ tests",
+        "Payment adapter registry for 7 gateways (Stripe, PayU, Przelewy24, Tpay, Autopay, Paynow, Revolut) with gateway-specific auth and signed-webhook verification.",
+        "Marketplace channel engine (Allegro, Shopify, WooCommerce, Shoper, Empik, Erli): job queue, exponential backoff, nightly reconciliation, AES-256-GCM encrypted credentials.",
+        "Migrated live customers, orders and products from WooCommerce, upgrading legacy password hashes to bcrypt transparently."
+      ],
+      "url": "https://bosspartners.pl",
+      "keywords": [
+        "Architecture",
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL",
+        "React",
+        "CI/CD & testing",
+        "Security",
+        "Payments & e-invoicing"
+      ]
+    },
+    {
+      "name": "PROTECTDENT",
+      "description": "Production. 23-language EU e-commerce for medical-device consumables, with an LLM lead-qualification pipeline for B2B sales.",
+      "highlights": [
+        "23 languages",
+        "600+ tests",
+        "7,800+ qualified B2B accounts",
+        "The LLM lead-qualification pipeline and the 4-model fallback chain with a vision assistant (see AI systems in production).",
+        "Stripe checkout, VIES-based VAT and KSeF e-invoicing; CI/CD with health-checked deploys; a 90-day EU go-to-market plan (373 price points across 9 countries)."
+      ],
+      "url": "https://protectdent.eu",
+      "keywords": [
+        "LLM in production",
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL",
+        "React",
+        "CI/CD & testing",
+        "Payments & e-invoicing"
+      ]
+    },
+    {
+      "name": "iApply Workforce",
+      "description": "Production demo. Time, attendance and shift management for staffing agencies: a web app and a native SwiftUI app.",
+      "highlights": [
+        "Anti-fraud clock-in with expiring QR codes, geofencing and NFC (Web NFC, HID readers, CoreNFC).",
+        "SwiftUI app with its own Socket.IO v4 client, widgets, Live Activities and APNs push sent over HTTP/2 straight from Node.",
+        "Payroll-grade time calculations with decimal arithmetic and rounding rules."
+      ],
+      "url": "https://iapply.com.pl",
+      "keywords": [
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL",
+        "React",
+        "Swift / iOS",
+        "Security"
+      ]
+    },
+    {
+      "name": "TAXI BOSS",
+      "description": "Production. Fleet management for Uber and Bolt partner fleets, with a native SwiftUI driver app.",
+      "highlights": [
+        "Uber Vehicle Suppliers API: OAuth2 client credentials, per-endpoint rate-limit buckets, token caching, scheduled sync.",
+        "Driver app with an actor-based API client, single-flight token refresh and an offline outbox queue.",
+        "A security remediation cycle, 95 integration tests against a real PostgreSQL and CI/CD from scratch."
+      ],
+      "keywords": [
+        "Architecture",
+        "TypeScript",
+        "Node.js",
+        "PostgreSQL",
+        "Swift / iOS",
+        "CI/CD & testing",
+        "Security"
+      ]
+    },
+    {
+      "name": "spin.clinic design system",
+      "description": "Live · contract. Design system and motion UI kit for spin.clinic (Next.js 14, Framer Motion): 11K lines, 41 exports, used across 56 product files.",
+      "highlights": [
+        "Built by 9 parallel coding agents and a QA agent (git worktrees, frozen contracts, a file-ownership map) in about 14.5 hours, with no merge conflicts.",
+        "FLIP card-to-fullscreen morphing with History API integration, spring motion tokens driven by gesture velocity, full keyboard and reduced-motion support."
+      ],
+      "url": "https://spin.clinic",
+      "keywords": [
+        "AI-assisted SDLC",
+        "TypeScript",
+        "React"
+      ]
+    }
+  ],
+  "meta": {
+    "canonical": "https://sunlucki.pl/cv/resume.json",
+    "version": "v1.0.0",
+    "lastModified": "2026-10-01"
+  }
+}

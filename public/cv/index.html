@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bogdan Nenadović · CV · Product Engineer &amp; Solutions Architect (AI-assisted SDLC)</title>
+<meta name="description" content="Bogdan Nenadović, product engineer &amp; solutions architect in Poznań, Poland. 10+ production systems shipped in 2026, as the sole architect; AI-assisted SDLC with Claude Code and Codex.">
+<meta name="author" content="Bogdan Nenadović">
+<meta name="robots" content="noindex, follow">
+<link rel="canonical" href="https://sunlucki.pl/cv/">
+<link rel="alternate" type="text/markdown" href="cv.md" title="This CV as Markdown">
+<link rel="alternate" type="application/json" href="resume.json" title="This CV as JSON Resume">
+<link rel="alternate" type="application/pdf" href="Bogdan_Nenadovic_CV.pdf" title="This CV as PDF">
+<meta name="theme-color" content="#0C0C0C">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;900&display=swap">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ProfilePage","url":"https://sunlucki.pl/cv/","dateModified":"2026-10-01","mainEntity":{"@type":"Person","@id":"https://sunlucki.pl/#person","name":"Bogdan Nenadović","alternateName":["Bohdan Nenadovych"],"jobTitle":"Product Engineer & Solutions Architect","description":"I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.","email":"mailto:hello@sunlucki.pl","url":"https://sunlucki.pl/","image":"https://sunlucki.pl/cv/portrait.jpg","address":{"@type":"PostalAddress","addressLocality":"Poznań","addressCountry":"PL"},"worksFor":{"@type":"Organization","name":"SIMBIA sp. z o.o.","url":"https://simbia.eu"},"alumniOf":{"@type":"CollegeOrUniversity","name":"WSB University in Poznań"},"knowsLanguage":[{"@type":"Language","name":"English"},{"@type":"Language","name":"Polish"},{"@type":"Language","name":"Ukrainian"},{"@type":"Language","name":"Russian"}],"knowsAbout":["AI-assisted SDLC","Agentic coding","Multi-agent orchestration","Claude Code","OpenAI Codex","MCP","LLM integration","Structured outputs","Prompt caching","Document AI / OCR","LLM pipelines","Prompt engineering","Solution architecture","System design","Domain modules","State machines","Event-driven design (LISTEN/NOTIFY, SSE, queues)","Integration architecture (OAuth2, signed webhooks, idempotency)","Security architecture","ADRs","TypeScript","Node.js (Fastify, Express)","React","Next.js","PostgreSQL","Prisma","Drizzle","Redis / BullMQ","REST / OpenAPI","Swift / SwiftUI","CI/CD (GitHub Actions)","Automated testing (Vitest, XCTest)","Docker","Linux (nginx, PM2, systemd)","Backups and disaster recovery","Sentry","CRM","B2B commerce","Payments (Stripe, PayU, Przelewy24)","E-invoicing (KSeF 2.0)","Accounting","HR tech","Fleet management (Uber API)"],"sameAs":["https://www.linkedin.com/in/sunlucki","https://github.com/Sunlucki"]}}</script>
+<style>
+:root {
+  --bg: #0c0c0c; --panel: #111216; --edge: rgb(85 87 94 / 0.55); --line: rgb(215 226 234 / 0.14);
+  --text: #d7e2ea; --muted: rgb(215 226 234 / 0.66); --head: #bbccd7; --accent: #7fb0ff; --blue: #1261d6;
+  --cta: linear-gradient(123deg, #18011f 7%, #b600a8 37%, #7621b0 72%, #be4c00 100%);
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: var(--bg); color-scheme: dark; scroll-behavior: smooth; scroll-padding-top: 72px; }
+body { font: 300 16px/1.6 Kanit, system-ui, sans-serif; color: var(--text); -webkit-font-smoothing: antialiased; }
+a { color: inherit; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+.skip { position: absolute; left: -999px; }
+.skip:focus { left: 16px; top: 16px; z-index: 9; background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 999px; }
+
+/* top bar */
+.topnav { position: sticky; top: 0; z-index: 5; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgb(12 12 12 / 0.72); border-bottom: 1px solid var(--line); }
+.topnav .wrap { display: flex; align-items: center; gap: 22px; height: 56px; }
+.topnav .mono { font-weight: 900; letter-spacing: 0.04em; text-decoration: none; color: var(--head); }
+.topnav nav { display: flex; gap: 18px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+.topnav nav a { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.16em; text-decoration: none; color: var(--muted); white-space: nowrap; }
+.topnav nav a:hover { color: var(--text); }
+
+/* buttons, pills */
+.btn { display: inline-flex; align-items: center; gap: 8px; border: 2px solid var(--text); border-radius: 999px; padding: 9px 20px; font-size: 0.8rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.12em; text-decoration: none; white-space: nowrap; transition: background 0.2s; }
+.btn:hover { background: rgb(215 226 234 / 0.1); }
+.btn.cta { border: 0; color: #fff; background: var(--cta); outline: 2px solid #fff; outline-offset: -3px; box-shadow: 0 4px 4px rgb(181 1 167 / 0.25), 4px 4px 12px #7721b1 inset; padding: 11px 24px; }
+.btn.small { padding: 6px 14px; font-size: 0.72rem; border-width: 1.5px; }
+.pill { display: inline-flex; align-items: center; border: 1px solid rgb(215 226 234 / 0.3); border-radius: 999px; padding: 4px 12px; font-size: 0.8rem; color: rgb(215 226 234 / 0.88); background: none; font-family: inherit; font-weight: 400; }
+button.pill { cursor: pointer; transition: background 0.2s, color 0.2s; }
+.pill.on, button.pill[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+/* the hero */
+.hero { position: relative; overflow: hidden; padding: 72px 0 56px; border-bottom: 1px solid var(--line); }
+.slats { position: absolute; inset: 0; opacity: 0.55; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='46'%3E%3Crect x='4' y='4' width='10' height='38' rx='5' fill='%231261d6'/%3E%3C/svg%3E"); -webkit-mask-image: radial-gradient(ellipse 60% 75% at 78% 30%, #000, transparent 72%); mask-image: radial-gradient(ellipse 60% 75% at 78% 30%, #000, transparent 72%); }
+.hero-in { position: relative; display: grid; grid-template-columns: 1fr auto; gap: 40px; align-items: center; }
+.eyebrow { text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.75rem; color: var(--muted); margin-bottom: 14px; }
+h1.name { font-weight: 900; text-transform: uppercase; line-height: 0.88; letter-spacing: -0.01em; font-size: clamp(3.2rem, 10vw, 7.6rem); background: linear-gradient(180deg, #646973 0%, #bbccd7 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+h1.name span { display: block; }
+.role { margin-top: 18px; font-size: clamp(1.05rem, 2.2vw, 1.5rem); font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text); }
+.focus { margin-top: 6px; color: var(--accent); font-weight: 400; }
+.facts { list-style: none; margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px 18px; color: var(--muted); font-size: 0.92rem; }
+.contacts { margin-top: 26px; display: flex; flex-wrap: wrap; gap: 10px; }
+.avatar { width: clamp(150px, 22vw, 250px); height: auto; aspect-ratio: 1; border-radius: 50%; object-fit: cover; padding: 4px; background: var(--cta); box-shadow: 0 0 60px rgb(18 97 214 / 0.35); }
+
+/* sections */
+section { padding: 64px 0 8px; }
+h2.title { font-weight: 900; text-transform: uppercase; color: var(--head); font-size: clamp(2.3rem, 7vw, 5.2rem); line-height: 0.92; letter-spacing: -0.01em; margin-bottom: 26px; }
+.tt { display: inline-block; color: transparent; -webkit-text-stroke: 1.5px var(--accent); outline: 1.5px dashed rgb(127 176 255 / 0.7); outline-offset: 3px; margin-right: 0.04em; }
+h3 { font-weight: 500; color: var(--text); }
+.lead { font-size: 1.12rem; max-width: 64ch; }
+.sub { color: var(--muted); margin: -12px 0 22px; text-transform: uppercase; letter-spacing: 0.16em; font-size: 0.78rem; }
+.card { background: var(--panel); border: 1.5px solid var(--edge); border-radius: 26px; padding: 22px 24px; }
+
+/* numbers */
+.numbers { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 30px; }
+.numbers .value { display: block; white-space: nowrap; font-weight: 900; font-size: clamp(2rem, 4.4vw, 3.1rem); line-height: 1; background: linear-gradient(180deg, #646973, #bbccd7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.numbers .label { display: block; margin-top: 8px; color: var(--muted); font-size: 0.9rem; line-height: 1.4; }
+
+/* the SDLC steps: tabs in a row when wide, all of them when not driven */
+.steps { list-style: none; counter-reset: step; }
+.step h3 button { all: unset; cursor: pointer; display: flex; align-items: baseline; gap: 12px; width: 100%; padding: 14px 0; border-top: 1px solid var(--line); font-weight: 500; font-size: 1.1rem; }
+.step .n { font-weight: 900; font-size: 1.6rem; background: linear-gradient(180deg, #646973, #bbccd7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; min-width: 2.2ch; }
+.step .panel { padding: 0 0 16px 3.2ch; color: var(--text); max-width: 75ch; }
+html.js .step:not(.on) .panel { display: none; }
+.step.on h3 button { color: var(--accent); }
+@media screen and (min-width: 900px) {
+  html.js .steps { display: grid; grid-template-columns: repeat(6, 1fr); column-gap: 10px; }
+  html.js .step { display: contents; }
+  html.js .step h3 { grid-row: 1; }
+  html.js .step h3 button { flex-direction: column; gap: 4px; border-top: 2px solid var(--line); padding-top: 16px; transition: border-color 0.25s, color 0.25s; }
+  html.js .step.on h3 button { border-top-color: var(--accent); }
+  html.js .step .panel { grid-row: 2; grid-column: 1 / -1; padding: 18px 0 0; font-size: 1.05rem; }
+}
+.tools { margin-top: 22px; color: var(--muted); }
+.tools b { color: var(--text); font-weight: 500; }
+.ai { margin-top: 30px; }
+.ai h3 { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+.bullets { list-style: none; display: grid; gap: 10px; }
+.bullets li { position: relative; padding-left: 20px; }
+.bullets li::before { content: ''; position: absolute; left: 0; top: 0.68em; width: 8px; height: 8px; border-radius: 50%; background: var(--cta); }
+
+/* role fit */
+.fit { display: grid; gap: 10px; }
+.fit details { background: var(--panel); border: 1.5px solid var(--edge); border-radius: 20px; padding: 0 20px; }
+.fit summary { cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 15px 0; font-weight: 500; }
+.fit summary::-webkit-details-marker { display: none; }
+.fit summary .pill { flex-shrink: 0; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; }
+.fit details[open] summary .pill { background: var(--text); color: var(--bg); }
+.fit details p { padding: 0 0 16px; color: var(--text); }
+.expand { margin: -8px 0 16px; }
+
+/* experience */
+.timeline { list-style: none; border-left: 1.5px solid var(--line); margin-left: 6px; }
+.job { position: relative; padding: 0 0 26px 26px; display: grid; grid-template-columns: 170px 1fr; gap: 6px 22px; }
+.job::before { content: ''; position: absolute; left: -6px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px rgb(127 176 255 / 0.15); }
+.job .dates { color: var(--muted); font-size: 0.9rem; padding-top: 2px; }
+.job h3 { font-size: 1.12rem; }
+.job .org { color: var(--accent); font-size: 0.95rem; margin-bottom: 4px; }
+.job .org a { text-decoration: none; }
+
+/* projects */
+.filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+.filter-note { color: var(--muted); font-size: 0.85rem; min-height: 1.4em; margin: -8px 0 12px; }
+.projects { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+.project { transition: opacity 0.3s, border-color 0.3s; }
+.project.dim { opacity: 0.28; }
+.project.hit { border-color: rgb(127 176 255 / 0.7); }
+.project header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.project h3 { font-size: 1.3rem; font-weight: 600; }
+.project .status { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); }
+.project > p { margin-top: 8px; }
+.metrics { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.metrics li { font-size: 0.78rem; border-radius: 999px; padding: 3px 10px; background: rgb(127 176 255 / 0.12); color: var(--accent); }
+.project details { margin-top: 12px; }
+.project summary { cursor: pointer; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted); }
+.project details ul { margin-top: 10px; }
+.project .link { margin-top: 12px; font-size: 0.9rem; }
+.project .link a { color: var(--accent); text-decoration: none; }
+.also { margin-top: 16px; color: var(--muted); }
+.print-only { display: none; }
+
+/* skills, education, languages */
+.skills { display: grid; gap: 18px; }
+.skills h3 { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+.chips { list-style: none; display: flex; flex-wrap: wrap; gap: 7px; }
+.pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.pair h3 { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.8rem; color: var(--muted); margin-bottom: 8px; }
+footer { margin-top: 64px; padding: 26px 0 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.85rem; }
+footer p + p { margin-top: 8px; }
+footer .consent { font-size: 0.75rem; }
+
+/* coming in as they scroll in (only when driven, and not when motion is reduced) */
+html.js .rv { opacity: 0; transform: translateY(26px); transition: opacity 0.7s ease, transform 0.7s ease; }
+html.js .rv.in { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { html.js .rv { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+@media screen and (max-width: 760px) {
+  .hero { padding-top: 40px; }
+  .hero-in { grid-template-columns: 1fr; }
+  .avatar { order: -1; width: 132px; }
+  .numbers { grid-template-columns: repeat(2, 1fr); }
+  .numbers .value { font-size: 1.75rem; }
+  .job { grid-template-columns: 1fr; }
+  .projects, .pair { grid-template-columns: 1fr; }
+  section { padding-top: 48px; }
+}
+
+/* the PDF: A4 sheets, dark to the edge (the padding repeats on every sheet), every panel open, no controls */
+@page { size: A4; margin: 0; }
+@media print {
+  html, body { background: var(--bg); -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body { font-size: 8.5pt; line-height: 1.36; }
+  .print-only { display: block; }
+  /* one column and no letter-spacing: CV parsers read a PDF line by line, and spaced capitals come out as letters */
+  body * { letter-spacing: 0 !important; }
+  .page-pad { padding: 9.5mm 12.5mm; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .topnav, .noprint, .filters, .filter-note, .expand, .skip { display: none !important; }
+  .wrap { max-width: none; padding: 0; }
+  html.js .rv { opacity: 1 !important; transform: none !important; }
+  .hero { padding: 0 0 9pt; }
+  .slats { opacity: 0.35; }
+  .hero-in { grid-template-columns: 1fr auto; gap: 18pt; }
+  .eyebrow { font-size: 7pt; margin-bottom: 3pt; }
+  h1.name, .numbers .value { background: none; -webkit-text-fill-color: currentColor; color: var(--head); }
+  h1.name { font-size: 30pt; }
+  h1.name span { display: inline; }
+  .role { font-size: 11pt; margin-top: 6pt; }
+  .focus { margin-top: 1pt; }
+  .facts { margin-top: 5pt; font-size: 8.4pt; gap: 2pt 12pt; }
+  .contacts { margin-top: 7pt; gap: 4pt; }
+  .btn { padding: 2.5pt 8pt; font-size: 7.6pt; border-width: 1px; text-transform: none; }
+  .avatar { order: 0; width: 84pt; padding: 2.5pt; }
+  section { padding: 9pt 0 0; }
+  h2.title { font-size: 14pt; margin-bottom: 4pt; break-after: avoid; }
+  .tt { display: inline; color: var(--accent); -webkit-text-stroke: 0; outline: none; margin: 0; }
+  .sub { margin: -2pt 0 5pt; font-size: 7.4pt; text-transform: none; break-after: avoid; }
+  .sub + * { break-before: avoid; }
+  .lead { font-size: 9.2pt; max-width: none; }
+  .numbers { grid-template-columns: repeat(6, 1fr); gap: 5pt; margin-top: 7pt; }
+  .numbers .value { font-size: 14pt; white-space: nowrap; }
+  .numbers .label { font-size: 6.9pt; margin-top: 2pt; line-height: 1.3; }
+  .card { padding: 7pt 10pt; border-radius: 10pt; border-width: 1px; }
+  html.js .steps, .steps { display: block; }
+  html.js .step, .step { display: block; break-inside: avoid; }
+  .step h3 { display: inline; }
+  .step h3 button { display: inline !important; width: auto !important; padding: 0; border: 0 !important; font-size: 8.6pt; font-weight: 500; color: var(--accent) !important; }
+  .step .n { font-size: 8.6pt; min-width: 0; margin-right: 3pt; background: none; -webkit-text-fill-color: currentColor; color: var(--accent); }
+  html.js .step .panel, .step .panel { display: inline !important; padding: 0; font-size: 8.6pt; }
+  .step h3::after { content: ':'; color: var(--accent); font-weight: 500; }
+  .step + .step { margin-top: 3pt; }
+  .tools { margin-top: 5pt; }
+  .ai { margin-top: 6pt; }
+  .ai h3, .skills h3, .pair h3 { font-size: 7.4pt; margin-bottom: 3pt; text-transform: none; font-weight: 500; color: var(--text); }
+  .bullets { gap: 2pt; }
+  .bullets li { padding-left: 10pt; }
+  .bullets li::before { width: 4.5pt; height: 4.5pt; top: 0.6em; }
+  .fit { display: block; }
+  .fit details { display: block; background: none; border: 0; border-radius: 0; padding: 0; break-inside: avoid; }
+  .fit details + details { margin-top: 3pt; }
+  .fit summary { display: inline; padding: 0; }
+  .fit summary h3 { display: inline; font-size: 8.6pt; color: var(--accent); }
+  .fit summary h3::after { content: ':'; }
+  .fit summary .pill { display: none; }
+  .fit details p { display: inline; padding: 0; }
+  .timeline { margin-left: 3pt; }
+  .job { padding: 0 0 5pt 13pt; grid-template-columns: 76pt 1fr; gap: 0 10pt; break-inside: avoid; }
+  .job::before { left: -4pt; top: 3pt; width: 6pt; height: 6pt; box-shadow: none; }
+  .job .dates { font-size: 8pt; padding-top: 1pt; }
+  .job h3 { font-size: 9.2pt; }
+  .job .org { font-size: 8.4pt; margin-bottom: 1pt; }
+  .projects { display: block; }
+  .project { break-inside: avoid; }
+  .project + .project { margin-top: 5pt; }
+  .project h3 { font-size: 9.8pt; }
+  .project .status { font-size: 7.4pt; text-transform: none; }
+  .project > p { margin-top: 2pt; }
+  .metrics { margin-top: 3pt; gap: 3pt; }
+  .metrics li { font-size: 7.4pt; padding: 1pt 6pt; }
+  .project details { margin-top: 3pt; }
+  .project summary { display: none; }
+  .project details ul { margin-top: 0; }
+  .project .link { margin-top: 2pt; font-size: 7.8pt; }
+  .also { margin-top: 5pt; }
+  .skills { gap: 2pt; }
+  .skills > div h3 { display: inline; font-size: 8.5pt; color: var(--accent); }
+  .skills > div h3::after { content: ': '; }
+  .chips { display: inline; }
+  .chips li { display: inline; border: 0; padding: 0; font-size: 8.6pt; color: var(--text); }
+  .chips li:not(:last-child)::after { content: ', '; }
+  #education h2.title { display: none; }
+  #education { padding-top: 6pt; }
+  .pair { display: block; }
+  .pair .card { background: none; border: 0; padding: 0; border-radius: 0; }
+  .pair .card h3 { display: inline; font-size: 8.5pt; color: var(--accent); }
+  .pair .card h3::after { content: ': '; }
+  .pair .card p { display: inline; }
+  footer { margin-top: 6pt; padding: 4pt 0 0; font-size: 7pt; }
+  footer p + p { margin-top: 2pt; }
+  footer .consent { font-size: 6.6pt; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<div class="topnav noprint">
+  <div class="wrap">
+    <a class="mono" href="#top">BN</a>
+    <nav aria-label="Sections">
+      <a href="#summary">Summary</a><a href="#sdlc">AI SDLC</a><a href="#fit">Role fit</a><a href="#experience">Experience</a><a href="#projects">Projects</a><a href="#skills">Skills</a>
+    </nav>
+    <a class="btn small" href="Bogdan_Nenadovic_CV.pdf" download>PDF</a>
+  </div>
+</div>
+<div class="page-pad">
+<header class="hero" id="top">
+  <div class="slats" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <div>
+      <p class="eyebrow">Curriculum vitae</p>
+      <h1 class="name"><span>Bogdan</span> <span>Nenadović</span></h1>
+      <p class="role">Product Engineer &amp; Solutions Architect</p>
+      <p class="focus">AI-assisted SDLC · agentic coding · CRM, commerce and fintech platforms</p>
+      <ul class="facts"><li>Poznań, Poland (CET)</li><li>Remote · B2B through my own company, SIMBIA sp. z o.o.</li><li>English C2 · Polish C2 · Ukrainian native · Russian native</li></ul>
+      <p class="contacts">
+        <a class="btn" href="mailto:hello@sunlucki.pl">hello@sunlucki.pl</a>
+        
+        <a class="btn" href="https://sunlucki.pl">sunlucki.pl</a>
+        <a class="btn" href="https://www.linkedin.com/in/sunlucki">linkedin.com/in/sunlucki</a>
+        <a class="btn" href="https://github.com/Sunlucki">github.com/Sunlucki</a>
+        <a class="btn cta noprint" href="Bogdan_Nenadovic_CV.pdf" download>Download PDF</a>
+      </p>
+    </div>
+    <img class="avatar" src="portrait.jpg" width="250" height="250" alt="Portrait of Bogdan Nenadović">
+  </div>
+</header>
+
+<main id="main" class="wrap">
+<section id="summary" class="rv">
+  <h2 class="title"><span class="tt">S</span>ummary</h2>
+  <p class="lead">I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.</p>
+  <ul class="numbers">
+    <li class="card"><span class="value">10+</span><span class="label">production systems shipped in 2026, as the sole architect</span></li>
+    <li class="card"><span class="value">94%</span><span class="label">of my 2026 commits co-authored with Claude</span></li>
+    <li class="card"><span class="value">127 → 84</span><span class="label">audit findings reproduced by skeptic agents, then fixed</span></li>
+    <li class="card"><span class="value">9 + 1</span><span class="label">parallel coding agents and a QA agent: an 11K-line design system in ~14.5 h</span></li>
+    <li class="card"><span class="value">700+</span><span class="label">automated tests on the largest platform (339 REST endpoints)</span></li>
+    <li class="card"><span class="value">23</span><span class="label">interface languages on one EU platform</span></li>
+  </ul>
+</section>
+
+<section id="sdlc" class="rv">
+  <h2 class="title"><span class="tt">A</span>I-assisted SDLC</h2>
+  <p class="sub">How I deliver, step by step</p>
+  <ol class="steps">
+    <li class="step on">
+      <h3><button type="button" aria-expanded="true" aria-controls="step-1"><span class="n">01</span>Specify</button></h3>
+      <p class="panel" id="step-1">Requirements become written specs the agents follow: MASTER_PROMPT, CLAUDE.md and AGENTS.md, skill packs, phases with a Definition of Done. Architecture decisions are recorded as ADRs (29 on one MVP).</p>
+    </li>
+    <li class="step">
+      <h3><button type="button" aria-expanded="false" aria-controls="step-2"><span class="n">02</span>Orchestrate</button></h3>
+      <p class="panel" id="step-2">Coding agents work in parallel in git worktrees against frozen contracts and a file-ownership map, with handoff prompts between models. The spin.clinic design system was built this way by 9 agents and a QA agent: 11K lines in about 14.5 hours, with no merge conflicts.</p>
+    </li>
+    <li class="step">
+      <h3><button type="button" aria-expanded="false" aria-controls="step-3"><span class="n">03</span>Test</button></h3>
+      <p class="panel" id="step-3">Agents write and run the tests: Vitest, node:test, supertest against a real PostgreSQL, contract tests with golden fixtures shared by a TypeScript API and a Swift app, XCTest. 700+, 600+ and 269 tests on the three largest platforms.</p>
+    </li>
+    <li class="step">
+      <h3><button type="button" aria-expanded="false" aria-controls="step-4"><span class="n">04</span>Review and validate</button></h3>
+      <p class="panel" id="step-4">Adversarial multi-agent audits: a skeptic agent has to reproduce every finding before it is fixed and pinned by a regression test. 127 findings, 84 confirmed and fixed on SIMBIA CRM; 52 findings, 20 confirmed on AiBizBox; an accounting review that ran 28 agents and 750 tool calls.</p>
+    </li>
+    <li class="step">
+      <h3><button type="button" aria-expanded="false" aria-controls="step-5"><span class="n">05</span>Ship</button></h3>
+      <p class="panel" id="step-5">On the main platforms (SIMBIA CRM, PROTECTDENT, XyliMelts): GitHub Actions with PostgreSQL and Redis service containers, a database backup before every deploy, migrations, health-gated automatic rollback and smoke tests.</p>
+    </li>
+    <li class="step">
+      <h3><button type="button" aria-expanded="false" aria-controls="step-6"><span class="n">06</span>Operate</button></h3>
+      <p class="panel" id="step-6">Daily off-site backups with weekly automated restore tests (SIMBIA CRM), Sentry, health endpoints and alerts. Incidents get a postmortem: after a sync failure wiped a working copy, the code was rebuilt from the agents’ session logs and checked against production.</p>
+    </li>
+  </ol>
+  <p class="tools"><b>Tools:</b> Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (browser automation, iOS Simulator, design tools) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM</p>
+  <div class="ai">
+    <h3>AI systems in production</h3>
+    <ul class="bullets">
+      <li>LLM lead-qualification pipeline (PROTECTDENT): map-based discovery, site crawling, evidence-based scoring from 0 to 100 and reply-intent classification into 8 intents; 7,800+ qualified B2B accounts.</li>
+      <li>Multi-provider LLM routing: a 4-model fallback chain with hard timeouts, quotas, caching and a call log; a vision assistant that maps a photo of dental equipment to compatible products.</li>
+      <li>Document AI: OCR, then a vision LLM, field extraction and human review, with personal data masked before any LLM call (AiBizBox, SIMBIA).</li>
+      <li>Claude features with structured outputs validated by Zod, prompt caching and atomic per-user quotas (CashFlow); an LLM ingest pipeline that rejects quotes that are not verbatim (Novus Ignis).</li>
+    </ul>
+  </div>
+</section>
+
+<section id="fit" class="rv">
+  <h2 class="title"><span class="tt">R</span>ole fit</h2>
+  <p class="sub">Solutions Architect · AI-assisted SDLC: what the role asks, and what shows it</p>
+  <p class="expand noprint"><button type="button" class="pill" data-expand>Open all</button></p>
+  <div class="fit">
+    <details open>
+      <summary><h3>System and application architecture</h3><span class="pill">Evidence</span></summary>
+      <p>Sole architect of 10+ production systems: domain modules without I/O, state machines (orders with 20 to 24 states), invariants enforced in PostgreSQL triggers, event streams (LISTEN/NOTIFY to SSE), queues with lease locks and circuit breakers, a payment adapter registry, 29 ADRs on one MVP.</p>
+    </details>
+    <details open>
+      <summary><h3>AI-assisted SDLC: development, testing, CI/CD</h3><span class="pill">Evidence</span></summary>
+      <p>My 2026 projects were built this way, from written specs to tested releases; the main platforms ship through CI/CD with health checks and automatic rollback. About 94% of my 2026 commits are co-authored with Claude.</p>
+    </details>
+    <details>
+      <summary><h3>Agentic coding and autonomous software engineering</h3><span class="pill">Evidence</span></summary>
+      <p>Task orchestration across parallel agents (worktrees, frozen contracts, ownership maps), quality gates (tests, Definition of Done), validation by skeptic agents that must reproduce each finding, decisions recorded as ADRs.</p>
+    </details>
+    <details>
+      <summary><h3>AI systems: AI workflows, single- and multi-agent</h3><span class="pill">Evidence</span></summary>
+      <p>LLM pipelines in production (lead qualification, intent classification, document AI with human review, multi-provider routing) and multi-agent orchestration for the engineering work itself.</p>
+    </details>
+    <details>
+      <summary><h3>Infrastructure choices: security, cost, performance, scalability</h3><span class="pill">Evidence</span></summary>
+      <p>Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker); backups with restore tests; security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.</p>
+    </details>
+    <details>
+      <summary><h3>Business value and stakeholders</h3><span class="pill">Evidence</span></summary>
+      <p>Co-founder and board member of a software company; earlier co-owned a business and led a creative team; sales materials that state plainly what a system does and does not do; a 90-day EU go-to-market plan with pricing research across 9 countries.</p>
+    </details>
+    <details>
+      <summary><h3>Leadership</h3><span class="pill">Evidence</span></summary>
+      <p>Pro bono tech lead of a foundation’s MVP (2026); leader of a creative and marketing team (2022–2025).</p>
+    </details>
+  </div>
+</section>
+
+<section id="experience" class="rv">
+  <h2 class="title"><span class="tt">E</span>xperience</h2>
+  <ol class="timeline">
+    <li class="job">
+      <p class="dates"><time datetime="2026-08">Aug 2026</time> – present</p>
+      <div>
+        <h3>Co-founder, Board Member &amp; Solutions Architect</h3>
+        <p class="org"><a href="https://simbia.eu">SIMBIA sp. z o.o.</a> · Poznań · remote</p>
+        <p>A software company that builds and licenses vertical platforms: CRM, workforce management, fleet management and B2B commerce. I own the architecture and the AI-assisted delivery process. The company runs its sales and statutory accounting on our own CRM.</p>
+      </div>
+    </li>
+    <li class="job">
+      <p class="dates"><time datetime="2025-01">Jan 2025</time> – present</p>
+      <div>
+        <h3>Founder; independent product engineer and architect since 2026</h3>
+        <p class="org">STYLEICON (own studio) · Poznań</p>
+        <p>Web, branding and video studio in 2025. Since January 2026: designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026).</p>
+      </div>
+    </li>
+    <li class="job">
+      <p class="dates"><time datetime="2026-09">Sep 2026</time></p>
+      <div>
+        <h3>Design System Engineer (contract)</h3>
+        <p class="org"><a href="https://spin.clinic">spin.clinic</a></p>
+        <p>Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.</p>
+      </div>
+    </li>
+    <li class="job">
+      <p class="dates"><time datetime="2026-09">Sep 2026</time></p>
+      <div>
+        <h3>Tech Lead (pro bono)</h3>
+        <p class="org">Fundacja Novus Ignis</p>
+        <p>Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.</p>
+      </div>
+    </li>
+    <li class="job">
+      <p class="dates"><time datetime="2022-09">Sep 2022</time> – <time datetime="2025-01">Jan 2025</time></p>
+      <div>
+        <h3>Marketing &amp; Team Leader; shareholder and President of the Management Board</h3>
+        <p class="org">Black Point Group sp. z o.o. · Poznań</p>
+        <p>Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.</p>
+      </div>
+    </li>
+    <li class="job">
+      <p class="dates"><time datetime="2020-10">Oct 2020</time> – <time datetime="2025-05">May 2025</time></p>
+      <div>
+        <h3>Co-owner</h3>
+        <p class="org">Black Point Barbershop · Poznań</p>
+        <p>Co-founded and ran a barbershop and creative hub: identity, a website with online booking, social media and video.</p>
+      </div>
+    </li>
+    <li class="job">
+      <p class="dates"><time datetime="2017-05">May 2017</time> – <time datetime="2020-08">Aug 2020</time></p>
+      <div>
+        <h3>Web Developer</h3>
+        <p class="org">GreenView</p>
+        <p>Websites from UX/UI to WordPress deployment: responsive builds, usability testing, work directly with clients and marketing teams.</p>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<section id="projects" class="rv">
+  <h2 class="title"><span class="tt">P</span>rojects</h2>
+  <div class="filters" role="group" aria-label="Show the projects that use a skill">
+    <button type="button" class="pill" data-skill="ai-sdlc" aria-pressed="false">AI-assisted SDLC</button>
+    <button type="button" class="pill" data-skill="llm" aria-pressed="false">LLM in production</button>
+    <button type="button" class="pill" data-skill="architecture" aria-pressed="false">Architecture</button>
+    <button type="button" class="pill" data-skill="ts" aria-pressed="false">TypeScript</button>
+    <button type="button" class="pill" data-skill="node" aria-pressed="false">Node.js</button>
+    <button type="button" class="pill" data-skill="pg" aria-pressed="false">PostgreSQL</button>
+    <button type="button" class="pill" data-skill="react" aria-pressed="false">React</button>
+    <button type="button" class="pill" data-skill="swift" aria-pressed="false">Swift / iOS</button>
+    <button type="button" class="pill" data-skill="cicd" aria-pressed="false">CI/CD &amp; testing</button>
+    <button type="button" class="pill" data-skill="security" aria-pressed="false">Security</button>
+    <button type="button" class="pill" data-skill="payments" aria-pressed="false">Payments &amp; e-invoicing</button>
+  </div>
+  <p class="filter-note" aria-live="polite"></p>
+  <div class="projects">
+    <article class="project card" data-skills="ai-sdlc architecture ts node pg react swift cicd security payments">
+      <header><h3>SIMBIA CRM</h3><span class="status">Production · runs my company</span></header>
+      <p>Sales CRM with full double-entry accounting for a Polish limited company: KSeF 2.0 e-invoicing, PSD2 open banking, registry-based lead generation and a SwiftUI companion app.</p>
+      <ul class="metrics"><li>~110K lines of TypeScript</li><li>~240 REST endpoints</li><li>57 PostgreSQL tables</li><li>269 tests</li></ul>
+      <details open>
+        <summary>How it is built</summary>
+        <ul class="bullets"><li>Accounting invariants enforced inside PostgreSQL: deferred constraint triggers, immutable journals, gapless numbering; 8 government XML filings validated against the official XSD schemas.</li><li>Realtime updates from PostgreSQL LISTEN/NOTIFY to Server-Sent Events with per-role filtering; IMAP IDLE sync that puts client replies on the lead timeline in about 4 seconds.</li><li>Zero-touch deploys with health-gated automatic rollback; daily off-site backups with weekly automated restore checks.</li><li>Built through orchestrated coding agents with written specs and adversarial multi-agent audits: 127 findings, 84 confirmed and fixed.</li></ul>
+      </details>
+      <p class="link"><a href="https://crm.simbia.eu">crm.simbia.eu ↗</a></p>
+    </article>
+    <article class="project card" data-skills="architecture ts node pg react cicd security payments">
+      <header><h3>B2B Commerce Platform</h3><span class="status">Production · licensed to Mind Logistic</span></header>
+      <p>Wholesale platform that replaced a client’s WooCommerce store in production: company accounts with spend limits and approval flows, contract price books, RFQ and quotes, trade credit with aging and dunning.</p>
+      <ul class="metrics"><li>~140K lines of TypeScript</li><li>339 REST endpoints</li><li>66 data models</li><li>700+ tests</li></ul>
+      <details open>
+        <summary>How it is built</summary>
+        <ul class="bullets"><li>Payment adapter registry for 7 gateways (Stripe, PayU, Przelewy24, Tpay, Autopay, Paynow, Revolut) with gateway-specific auth and signed-webhook verification.</li><li>Marketplace channel engine (Allegro, Shopify, WooCommerce, Shoper, Empik, Erli): job queue, exponential backoff, nightly reconciliation, AES-256-GCM encrypted credentials.</li><li>Migrated live customers, orders and products from WooCommerce, upgrading legacy password hashes to bcrypt transparently.</li></ul>
+      </details>
+      <p class="link"><a href="https://bosspartners.pl">bosspartners.pl ↗</a></p>
+    </article>
+    <article class="project card" data-skills="llm ts node pg react cicd payments">
+      <header><h3>PROTECTDENT</h3><span class="status">Production</span></header>
+      <p>23-language EU e-commerce for medical-device consumables, with an LLM lead-qualification pipeline for B2B sales.</p>
+      <ul class="metrics"><li>23 languages</li><li>600+ tests</li><li>7,800+ qualified B2B accounts</li></ul>
+      <details open>
+        <summary>How it is built</summary>
+        <ul class="bullets"><li>The LLM lead-qualification pipeline and the 4-model fallback chain with a vision assistant (see AI systems in production).</li><li>Stripe checkout, VIES-based VAT and KSeF e-invoicing; CI/CD with health-checked deploys; a 90-day EU go-to-market plan (373 price points across 9 countries).</li></ul>
+      </details>
+      <p class="link"><a href="https://protectdent.eu">protectdent.eu ↗</a></p>
+    </article>
+    <article class="project card noprint" data-skills="ts node pg react swift security">
+      <header><h3>iApply Workforce</h3><span class="status">Production demo</span></header>
+      <p>Time, attendance and shift management for staffing agencies: a web app and a native SwiftUI app.</p>
+      
+      <details open>
+        <summary>How it is built</summary>
+        <ul class="bullets"><li>Anti-fraud clock-in with expiring QR codes, geofencing and NFC (Web NFC, HID readers, CoreNFC).</li><li>SwiftUI app with its own Socket.IO v4 client, widgets, Live Activities and APNs push sent over HTTP/2 straight from Node.</li><li>Payroll-grade time calculations with decimal arithmetic and rounding rules.</li></ul>
+      </details>
+      <p class="link"><a href="https://iapply.com.pl">iapply.com.pl ↗</a></p>
+    </article>
+    <article class="project card" data-skills="architecture ts node pg swift cicd security">
+      <header><h3>TAXI BOSS</h3><span class="status">Production</span></header>
+      <p>Fleet management for Uber and Bolt partner fleets, with a native SwiftUI driver app.</p>
+      
+      <details open>
+        <summary>How it is built</summary>
+        <ul class="bullets"><li>Uber Vehicle Suppliers API: OAuth2 client credentials, per-endpoint rate-limit buckets, token caching, scheduled sync.</li><li>Driver app with an actor-based API client, single-flight token refresh and an offline outbox queue.</li><li>A security remediation cycle, 95 integration tests against a real PostgreSQL and CI/CD from scratch.</li></ul>
+      </details>
+      
+    </article>
+    <article class="project card noprint" data-skills="ai-sdlc ts react">
+      <header><h3>spin.clinic design system</h3><span class="status">Live · contract</span></header>
+      <p>Design system and motion UI kit for spin.clinic (Next.js 14, Framer Motion): 11K lines, 41 exports, used across 56 product files.</p>
+      
+      <details open>
+        <summary>How it is built</summary>
+        <ul class="bullets"><li>Built by 9 parallel coding agents and a QA agent (git worktrees, frozen contracts, a file-ownership map) in about 14.5 hours, with no merge conflicts.</li><li>FLIP card-to-fullscreen morphing with History API integration, spring motion tokens driven by gesture velocity, full keyboard and reduced-motion support.</li></ul>
+      </details>
+      <p class="link"><a href="https://spin.clinic">spin.clinic ↗</a></p>
+    </article>
+  </div>
+  <p class="also noprint">Also: CashFlow (iOS finance advisor: SwiftUI, Fastify, Claude with structured outputs), AiBizBox (document-AI SaaS with PII masking), XyliMelts (D2C store with a React Three Fiber hero and the most mature CI/CD), Novus Ignis (verifiable deliberation MVP).</p>
+  <p class="also print-only">Also: iApply Workforce (shift tracking for staffing agencies: web and a native SwiftUI app), the spin.clinic design system (see Experience), CashFlow (iOS finance advisor with Claude), AiBizBox (document-AI SaaS), XyliMelts (D2C store with a 3D hero).</p>
+</section>
+
+<section id="skills" class="rv">
+  <h2 class="title"><span class="tt">S</span>kills</h2>
+  <div class="skills">
+    <div><h3>AI and SDLC</h3><ul class="chips"><li class="pill">AI-assisted SDLC</li><li class="pill">Agentic coding</li><li class="pill">Multi-agent orchestration</li><li class="pill">Claude Code</li><li class="pill">OpenAI Codex</li><li class="pill">MCP</li><li class="pill">LLM integration</li><li class="pill">Structured outputs</li><li class="pill">Prompt caching</li><li class="pill">Document AI / OCR</li><li class="pill">LLM pipelines</li><li class="pill">Prompt engineering</li></ul></div>
+    <div><h3>Architecture</h3><ul class="chips"><li class="pill">Solution architecture</li><li class="pill">System design</li><li class="pill">Domain modules</li><li class="pill">State machines</li><li class="pill">Event-driven design (LISTEN/NOTIFY, SSE, queues)</li><li class="pill">Integration architecture (OAuth2, signed webhooks, idempotency)</li><li class="pill">Security architecture</li><li class="pill">ADRs</li></ul></div>
+    <div><h3>Engineering</h3><ul class="chips"><li class="pill">TypeScript</li><li class="pill">Node.js (Fastify, Express)</li><li class="pill">React</li><li class="pill">Next.js</li><li class="pill">PostgreSQL</li><li class="pill">Prisma</li><li class="pill">Drizzle</li><li class="pill">Redis / BullMQ</li><li class="pill">REST / OpenAPI</li><li class="pill">Swift / SwiftUI</li></ul></div>
+    <div><h3>Delivery and operations</h3><ul class="chips"><li class="pill">CI/CD (GitHub Actions)</li><li class="pill">Automated testing (Vitest, XCTest)</li><li class="pill">Docker</li><li class="pill">Linux (nginx, PM2, systemd)</li><li class="pill">Backups and disaster recovery</li><li class="pill">Sentry</li></ul></div>
+    <div><h3>Domains</h3><ul class="chips"><li class="pill">CRM</li><li class="pill">B2B commerce</li><li class="pill">Payments (Stripe, PayU, Przelewy24)</li><li class="pill">E-invoicing (KSeF 2.0)</li><li class="pill">Accounting</li><li class="pill">HR tech</li><li class="pill">Fleet management (Uber API)</li></ul></div>
+  </div>
+</section>
+
+<section id="education" class="rv">
+  <h2 class="title"><span class="tt">E</span>ducation</h2>
+  <div class="pair">
+    <div class="card">
+      <h3>Education</h3>
+      <p><b>BSc, Computer Science, specialization: Computer Graphics</b> · WSB University in Poznań · 2016–2018</p>
+    </div>
+    <div class="card">
+      <h3>Languages</h3>
+      <p>English: C2 · Polish: C2 · Ukrainian: native · Russian: native</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="wrap">
+  <p>Updated 1 October 2026 · <a href="https://sunlucki.pl/cv/">sunlucki.pl/cv</a> · this CV as <a href="cv.md">Markdown</a> and <a href="resume.json">JSON Resume</a></p>
+  <p class="consent">Wyrażam zgodę na przetwarzanie moich danych osobowych dla potrzeb niezbędnych do realizacji procesu rekrutacji (zgodnie z art. 6 ust. 1 lit. a RODO).</p>
+</footer>
+</div>
+<script>
+(() => {
+  const root = document.documentElement;
+  root.classList.add('js');
+  // sections come in as they scroll in
+  const parts = document.querySelectorAll('.rv');
+  if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const seen = new IntersectionObserver((entries) => entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); seen.unobserve(e.target); } }), { rootMargin: '0px 0px -6% 0px' });
+    parts.forEach((p) => seen.observe(p));
+  } else parts.forEach((p) => p.classList.add('in'));
+  // the SDLC: one step open at a time
+  const steps = [...document.querySelectorAll('.step')];
+  const pick = (i) => steps.forEach((s, k) => { s.classList.toggle('on', k === i); s.querySelector('button').setAttribute('aria-expanded', String(k === i)); });
+  steps.forEach((s, i) => s.querySelector('button').addEventListener('click', () => pick(i)));
+  // projects by skill
+  const cards = [...document.querySelectorAll('.project')];
+  const chips = [...document.querySelectorAll('[data-skill]')];
+  const note = document.querySelector('.filter-note');
+  let active = null;
+  chips.forEach((chip) => chip.addEventListener('click', () => {
+    active = active === chip.dataset.skill ? null : chip.dataset.skill;
+    chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.skill === active)));
+    let hits = 0;
+    cards.forEach((card) => { const hit = !!active && card.dataset.skills.split(' ').includes(active); hits += hit; card.classList.toggle('hit', hit); card.classList.toggle('dim', !!active && !hit); });
+    note.textContent = active ? hits + ' of ' + cards.length + ' projects use ' + chip.textContent + '. Tap it again to show all.' : '';
+  }));
+  // role fit: open all
+  const expand = document.querySelector('[data-expand]');
+  expand?.addEventListener('click', () => { const all = [...document.querySelectorAll('.fit details')]; const open = !all.every((d) => d.open); all.forEach((d) => (d.open = open)); expand.textContent = open ? 'Close all' : 'Open all'; });
+  // printed: every panel open
+  addEventListener('beforeprint', () => { document.querySelectorAll('details').forEach((d) => (d.open = true)); parts.forEach((p) => p.classList.add('in')); });
+})();
+</script>
+</body>
+</html>
