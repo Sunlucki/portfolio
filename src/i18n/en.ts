@@ -214,20 +214,27 @@ const en = {
       'Touch Coffee branding',
       'Da Vinci Tattoo business cards',
       'Black Point T-shirt with the Ant Might print',
-      'Black Point barbershop social media',
+      'CHANG ice cream trailer, wrapped',
+      'Lizard Moving business cards',
       'Adaya branding',
       'Soul Nation Tattoo branding',
-      'Strimat passenger transport',
-      'Profi Dokument branding',
-      'Zero Śladu branding',
-      'Yana Lashes business cards',
-      'Stories Beauty branding',
-      'Black Point T-shirt',
-      'Laser hair removal business cards',
-      'Profi Dokument flyer',
+      'Currywurst Po Polsku menu',
+      'Perfumeria Outlet order insert',
       'Alibia logo',
+      'Yana Lashes business cards',
+      'Strimat passenger transport',
+      'Laser hair removal business cards',
+      'Black Point barbershop social media',
+      'KREEM pâtisserie offer',
+      'Black Point T-shirt',
+      'Magic Patron sticker',
       'Time Relax Body branding',
+      'Zero Śladu branding',
       'Na Serio Na Żarty restaurant social media',
+      'Stories Beauty branding',
+      'Slovianka logo',
+      'Profi Dokument branding',
+      'Profi Dokument flyer',
       'Business card for Ihor Poperechny',
     ],
     open: 'Open the project: {name}',
@@ -237,7 +244,7 @@ const en = {
     turn: 'Drag to turn it', // (a 3D project's scene)
     unfold: 'Tap to open it', // (a folder)
     shuffle: 'Tap to shuffle', // (a deck)
-    things: { logo: 'Logo', folder: 'Folder', deck: 'Tarot deck', card: 'Business card', flyer: 'Flyer', voucher: 'Voucher', guide: 'Aftercare guide', sticker: 'Sticker', badges: 'Badges', wristband: 'Wristband', banner: 'Banner', banners: 'Banners', sign: 'Office sign', certificate: 'Diploma', stickers: 'Stickers', posters: 'Posters' }, // (its printed things' chips)
+    things: { logo: 'Logo', folder: 'Folder', deck: 'Tarot deck', card: 'Business card', flyer: 'Flyer', voucher: 'Voucher', guide: 'Aftercare guide', sticker: 'Sticker', badges: 'Badges', wristband: 'Wristband', banner: 'Banner', banners: 'Banners', sign: 'Office sign', certificate: 'Diploma', stickers: 'Stickers', posters: 'Posters', wrap: 'Trailer wrap', menus: 'Menu boards', insert: 'Order insert', inserts: 'Order inserts' }, // (its printed things' chips)
     blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social media' }, // (a project's pictures' blocks' titles)
     // each cover's project (content.ts GRAPHICS): who it was for, what was wrong, what Bogdan did
     projects: {
@@ -262,6 +269,13 @@ const en = {
       elixir: { name: 'Elixir Panoramixa', kind: 'Mind Logistic: bottle labels, renders and the bottle in 3D', client: '', problem: '', solution: '' },
       poucher: { name: 'Poucher', kind: 'Mind Logistic: caffeine pouches, the can in 3D', client: '', problem: '', solution: '' },
       'elixir-gummies': { name: 'Elixir Cherry Cola', kind: 'Mind Logistic: gummies pouch', client: '', problem: '', solution: '' },
+      chang: { name: 'CHANG', kind: 'Thai rolled ice cream trailers: wraps, menus and sticker', client: 'CHANG sells Thai rolled ice cream from mobile trailers in and around Poznań.', problem: 'None of its trailers had a consistent look, so nothing made them recognisable or set them apart from the competition.', solution: 'A bright cartoon world drawn in Illustrator, its characters the face of the brand, made to wrap the trailers, with room for magnetic menus where prices are written by hand; the menus’ product pictures made with AI instead of a photo shoot. Eight days from the first sketches to the files for print: all six trailers were wrapped.' },
+      currywurst: { name: 'Currywurst Po Polsku', kind: 'Logo, menu, food box stickers and stories', client: '', problem: '', solution: '' },
+      'lizard-moving': { name: 'Lizard Moving', kind: 'Logo, business card and phone case', client: 'A moving company in Calgary, Canada.', problem: '', solution: '' },
+      'magic-patron': { name: 'Magic Patron', kind: 'Thank-you insert and sticker', client: '', problem: '', solution: '' },
+      slovianka: { name: 'Slovianka', kind: 'Logo concepts and business card', client: '', problem: '', solution: '' },
+      kreem: { name: 'KREEM', kind: 'Offer catalogue for a pâtisserie', client: '', problem: '', solution: '' },
+      'perfumeria-outlet': { name: 'Perfumeria Outlet', kind: 'Logo, chatbot avatar, order insert and ads', client: '', problem: '', solution: '' },
     },
   },
   video: {

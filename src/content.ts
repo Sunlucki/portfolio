@@ -301,7 +301,7 @@ export const PROJECTS: Project[] = [
 // Marquee: project covers from the STYLEICON archive (scripts/prepare-media.py), their words in t.graphics.tiles.
 // `?v` busts the 30-day cache. Branding, print and social media only: the sites are in the WordPress card (Bogdan,
 // 2026-09-30).
-export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=8`, alt }));
+export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=9`, alt }));
 
 // The covers' projects (2026-10-01): each with all its pictures (public/graphics/<slug>/N.webp, sized in graphics.json by
 // scripts/prepare-media.py) and when it was, from the dates of its PSDs on his desktop (Проэкты/АРХИВ); a cover opens
@@ -329,6 +329,14 @@ const GRAPHICS_DATES: Record<GraphicsSlug, [string, string?]> = {
   elixir: ['2025-09', '2026-07'],
   poucher: ['2026-07', '2026-08'], // (its 3D can, in his Mind Logistic site's history)
   'elixir-gummies': ['2026-03'],
+  // (2026-10-01, his archive's other clients, from their print files' dates)
+  chang: ['2025-03', '2025-04'],
+  currywurst: ['2025-08', '2025-10'],
+  'lizard-moving': ['2025-02', '2025-04'],
+  'magic-patron': ['2025-03', '2025-04'],
+  slovianka: ['2024-05'],
+  kreem: ['2024-04'],
+  'perfumeria-outlet': ['2026-02', '2026-03'],
 };
 export const GRAPHICS = Object.fromEntries(
   (Object.keys(graphicsSizes) as GraphicsSlug[]).map((slug) => [
@@ -343,11 +351,12 @@ export const GRAPHICS = Object.fromEntries(
 ) as Record<GraphicsSlug, { slug: GraphicsSlug; when: [string, string?]; pictures: { src: string; width: number; height: number }[] } & (typeof t.graphics.projects)[GraphicsSlug]>;
 // cover i (TILES): its project, and which of the project's pictures it shows (-1: its 3D scene, SCENE_OF)
 export const COVER_OF: [GraphicsSlug, number][] = [
-  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', 0],
-  ['hype', 0], ['ihor', 0], ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['black-point', 2],
-  ['adaya', 0], ['soul-nation', 0], ['strimat', 0], ['profi-dokument', 0], ['zero-sladu', 0], ['yana-lashes', 0],
-  ['stories-beauty', 0], ['black-point', 7], ['depilacja', 0], ['profi-dokument', 1], ['alibia', 1], ['time-relax-body', 0],
-  ['na-serio-na-zarty', 0], ['ihor', 1],
+  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', 0], ['hype', 0], ['ihor', 0],
+  ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['chang', 0], ['lizard-moving', 0],
+  ['adaya', 0], ['soul-nation', 0], ['currywurst', 1], ['perfumeria-outlet', 0], ['alibia', 1], ['yana-lashes', 0],
+  ['strimat', 0], ['depilacja', 0], ['black-point', 2], ['kreem', 1], ['black-point', 7], ['magic-patron', 0],
+  ['time-relax-body', 0], ['zero-sladu', 0], ['na-serio-na-zarty', 0], ['stories-beauty', 0], ['slovianka', 0],
+  ['profi-dokument', 0], ['profi-dokument', 1], ['ihor', 1],
 ];
 // The projects that open on a live 3D scene (2026-10-01), Mind Logistic's site's own (src/three/miniScenes.ts): the
 // cover is a still of it (no 3D in the rows, his call), the project opens on the scene, all its pictures under it
@@ -365,7 +374,27 @@ export const LOGO_FILM_OF = logoFilms as Partial<Record<GraphicsSlug, { src: str
 export const PRINT_KINDS = Object.fromEntries(Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => thing.kind)])) as Partial<
   Record<
     GraphicsSlug,
-    ('deck' | 'folder' | 'card' | 'flyer' | 'voucher' | 'guide' | 'sticker' | 'badges' | 'wristband' | 'banner' | 'banners' | 'sign' | 'certificate' | 'stickers' | 'posters')[]
+    (
+      | 'deck'
+      | 'folder'
+      | 'card'
+      | 'flyer'
+      | 'voucher'
+      | 'guide'
+      | 'sticker'
+      | 'badges'
+      | 'wristband'
+      | 'banner'
+      | 'banners'
+      | 'sign'
+      | 'certificate'
+      | 'stickers'
+      | 'posters'
+      | 'wrap'
+      | 'menus'
+      | 'insert'
+      | 'inserts'
+    )[]
   >
 >;
 // (what a tap does to each: a deck, several fronts, shuffles; a folder or a folded card opens or shuts)

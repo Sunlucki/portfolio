@@ -56,6 +56,14 @@ def to_webp(src, dst, width=None, q=78, cover=None, box=None):
     im.save(dst, "WEBP", quality=q, method=6)
     return os.path.getsize(dst)
 
+def raster(src):  # a picture's path, or (a PDF's or an .ai's path, page): that page, 2400 px on its long side
+    if not isinstance(src, tuple):
+        return src
+    path, page = src
+    tmp = tempfile.mkdtemp()
+    subprocess.run(["pdftoppm", "-scale-to", "2400", "-f", str(page), "-l", str(page), "-singlefile", "-png", path, os.path.join(tmp, "page")], check=True)
+    return os.path.join(tmp, "page.png")
+
 def hero_frames():
     for stale in sum((glob.glob(out("hero", d, "*.webp")) for d in ("d", "m", "fg-d", "fg-m")), []):
         os.remove(stale)
@@ -112,24 +120,32 @@ COVERS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICO
 WP_ASSETS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB", "assets")
 COVERS_BACKUP = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB", "WORDPRESS", "BACKUP", "public_html",
                              "styleicon.pl", "wp-content", "uploads")
+ARCHIVE = os.path.join(HOME, "Desktop", "Проэкты", "АРХИВ")  # the past clients' folders
 ML = os.path.join(HOME, "Desktop", "Проэкты", "АКТИВНЫЕ", "MIND LOGIISTIC")  # Mind Logistic's folder (its name so spelt)
 MLSITE = os.path.join(HOME, "Developer", "MIND LOGISTIC", "src", "landing-assets")  # and its site's (his code)
 ELIXIRS = ["BLUBERRY COOKIES", "LEMON HAZE", "STRAWBERRY OG", "ZEN", "ZKITTLEZ OG"]  # the 3D bottle's labels, the site's order
 POUCHERS = ["BLUEBERRY", "SWEET RASPBERRY", "BUBBLE GUM", "CITRUS"]  # the 3D can's flavours
 SCENES = os.path.join(KB, "sources", "scenes")  # stills of the 3D covers, the covers' pictures till they draw
-TILES = [  # dealt into four rows in turn, so the first four lead them (the rows move little: the first ones are seen most)
+TILES = [  # dealt into rows in turn (six, eight on phones), so the first ones lead them (the rows move little: the first ones are seen most)
     # Mind Logistic first (2026-10-01): its sticker on a laptop (his pick), the Elixir bottle's and the Poucher can's 3D
     # scenes (stills of them, under the live scene), the gummies' pouch (its front)
     (f"{ML}/TYPOHRAPHY/STICKER/MOCKUP/01.  Sticker Laptop Mockup.png", (0.18, 0.22, 0.82, 0.86)),
     f"{SCENES}/elixir.png", f"{SCENES}/poucher.png", (f"{ML}/ŻELKI ELIXIR/OKLADKA.png", (0, 0, 0.5, 1)),
     f"{COVERS}/2025/05/HYPE.jpg", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
     f"{COVERS}/2025/05/TouchMockup.jpg", f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", (f"{WP_ASSETS}/Black Point - T-shirt AM.jpg", (0.25, 0.28, 0.75, 0.81)),
-    f"{COVERS}/2025/05/Black-Point-INSTA1.jpg", f"{COVERS}/2025/05/ADAYA.jpg", f"{COVERS}/2025/05/SOUL-NATION.jpg",
-    f"{COVERS}/2025/05/Strimat.jpg", f"{COVERS}/2025/05/Profi-Document.jpg", f"{COVERS}/2025/05/Zero-Sladu.jpg",
-    f"{WP_ASSETS}/Yana lashes.jpg", f"{COVERS}/2025/05/Stories-Beautyc-1.jpg", f"{COVERS}/2025/05/Black-Point-T-shirt-JV.jpg",
-    f"{WP_ASSETS}/Laser BC.jpg", f"{WP_ASSETS}/PD Flayer.jpg", f"{COVERS}/2025/05/ALIBIA-LOGO.jpg",
-    f"{COVERS}/2025/05/Time-Relax-Body-1.jpg", f"{WP_ASSETS}/Na Serio Na Zarty.jpg",
-    f"{WP_ASSETS}/Igor music BC1.jpg",
+    # (2026-10-01, his archive's other clients among the first, where they're seen: CHANG's wrapped trailer, Lizard
+    # Moving's cards, Currywurst Po Polsku's menu, Perfumeria Outlet's order insert; then the rest, placed by how much of
+    # each place is seen as the rows slide (measured on a 1440 px screen and a phone): a project's second covers in the
+    # places seen least)
+    f"{WP_ASSETS}/CHANG.jpg", f"{ARCHIVE}/LIZARD MOVING/Visit Card/Mockup.png",
+    f"{COVERS}/2025/05/ADAYA.jpg", f"{COVERS}/2025/05/SOUL-NATION.jpg",
+    (f"{ARCHIVE}/CURRYWURST/PNG/MENU_.png", (0, 0, 1, 0.33)), f"{ARCHIVE}/PARFUMES/ASSETS/IMAGE ADS/17.03.2026/DRUK2.png",
+    f"{COVERS}/2025/05/ALIBIA-LOGO.jpg", f"{WP_ASSETS}/Yana lashes.jpg", f"{COVERS}/2025/05/Strimat.jpg", f"{WP_ASSETS}/Laser BC.jpg",
+    f"{COVERS}/2025/05/Black-Point-INSTA1.jpg", (f"{ARCHIVE}/KREEM/Oferta KREEM PATISSIERE.pdf", 2),
+    f"{COVERS}/2025/05/Black-Point-T-shirt-JV.jpg", f"{ARCHIVE}/Magic Patrone/Typografia/Sticker Mockup.png",
+    f"{COVERS}/2025/05/Time-Relax-Body-1.jpg", f"{COVERS}/2025/05/Zero-Sladu.jpg", f"{WP_ASSETS}/Na Serio Na Zarty.jpg",
+    f"{COVERS}/2025/05/Stories-Beautyc-1.jpg", (f"{WP_ASSETS}/SLOVIANKA.jpg", (0, 0.18, 1, 0.82)), f"{COVERS}/2025/05/Profi-Document.jpg",
+    f"{WP_ASSETS}/PD Flayer.jpg", f"{WP_ASSETS}/Igor music BC1.jpg",
 ]
 # The covers' projects, each with all its pictures (the one a cover shows among them), for the project a cover opens:
 # from #STYLEICON/WEB/assets, the old site's case pictures (STYLEICON REACT APP/extracted_projects, "~"), or a
@@ -170,6 +186,22 @@ GRAPHICS = {
     "poucher": [f"{MLSITE}/POUCHER/CITRUS/Poucher-Citrus-{f}.png" for f in ("Pouch", "Open", "Produktowe")]
                + [f"{MLSITE}/POUCHER/{f}/{f} TOP.jpg" for f in POUCHERS],
     "elixir-gummies": [f"{ML}/ŻELKI ELIXIR/OKLADKA.png"],
+    # (2026-10-01, his archive's other clients, their print in 3D over these: CHANG's wrapped trailer, its 3D prototype,
+    # the two menus, the logo and the menus' pictures made with AI; Currywurst Po Polsku's logo (on its menu's cover),
+    # menu for its screens and stories; Lizard Moving's cards, phone case and logo; Magic Patron's sticker; Slovianka's
+    # logo concepts and cards; KREEM's offer; Perfumeria Outlet's logo, its chatbot's avatar, its reviews' badge, an ad.
+    # A PDF's or an .ai's page: (file, page))
+    "chang": ["CHANG.jpg", "CHANG - Prototyp.jpg", "CHANG - MENU.png", (f"{ARCHIVE}/CHANG/AI/Chang Logo.ai", 1), "CHANG - Tasty AI.png"],
+    "currywurst": [(f"{ARCHIVE}/CURRYWURST/DO WYSYŁKI/Curry wurst MENU.pdf", 1)]
+                  + [f"{ARCHIVE}/CURRYWURST/PNG/{f}" for f in ("MENU_.png", "INSTA - KIEŁBASY.jpg", "INSTA - SOSY.jpg")],
+    "lizard-moving": [f"{ARCHIVE}/LIZARD MOVING/Visit Card/Mockup.png", f"{ARCHIVE}/LIZARD MOVING/IPHONE CASE/Lizard Moving Case Mockup.png",
+                      (f"{ARCHIVE}/LIZARD MOVING/PDF/LIZARD MOVING COMPLETE TO PRINT.pdf", 3), (f"{ARCHIVE}/LIZARD MOVING/PDF/lizard moving LOGO PACK.pdf", 4),
+                      (f"{ARCHIVE}/LIZARD MOVING/PDF/LIZARD MOVING COMPLETE TO PRINT.pdf", 1)],
+    "magic-patron": [f"{ARCHIVE}/Magic Patrone/Typografia/{f}" for f in ("Sticker Mockup.png", "Mockup.png")],
+    "slovianka": ["SLOVIANKA.jpg"] + [f"{ARCHIVE}/SLOVIANKA/{f}" for f in ("NEXT GEN LOGO.png", "85x55_business_card_mockup_01.png", "LOGO V3.png", "NEXT GEN 2.png")],
+    "kreem": [(f"{ARCHIVE}/KREEM/Oferta KREEM PATISSIERE.pdf", n) for n in (1, 2, 3, 6, 13, 14)],
+    "perfumeria-outlet": [f"{ARCHIVE}/PARFUMES/ASSETS/LOGO/BRANDING/{f}" for f in ("LOGO.png", "LOGO PNG.png", "BOT.png", "OPINIE.png")]
+                         + [f"{ARCHIVE}/PARFUMES/ASSETS/IMAGE ADS/15.02.2026/K1.jpg"],
 }
 ABOUT = {"pointer": "Указатель.png"}
 # The WordPress sites' slideshow: for each site, Bogdan's mockups of it (#STYLEICON/WEB/assets, "m") and pages of
@@ -229,9 +261,9 @@ def wp_demos():
         size += os.path.getsize(film)
     return size
 
-def tile(i, p):  # a path, or (path, box) for a closer crop
-    src, box = p if isinstance(p, tuple) else (p, None)
-    return to_webp(src, out("tiles", f"{i:02d}.webp"), cover=(840, 540), q=74, box=box)
+def tile(i, p):  # a path or a (PDF, page), or (either, box) for a closer crop
+    src, box = p if isinstance(p, tuple) and isinstance(p[1], tuple) else (p, None)
+    return to_webp(raster(src), out("tiles", f"{i:02d}.webp"), cover=(840, 540), q=74, box=box)
 
 # The music player's playlist (2026-09-30), from Bogdan's Music library: first fifteen tracks in his order, then
 # the rest of his LUCKI BEATS album mixed, the short HYPE beats spread out between the full tracks (a fixed seed,
@@ -311,7 +343,6 @@ def music():
 # through on hover; writes video/<slug>.mp4, .webp, -frames.webp and src/videos.json (slug, title, credit, size,
 # seconds). Titles in English, without the file's version marks.
 FILMS = os.path.join(HOME, "Desktop", "Видео")
-ARCHIVE = os.path.join(HOME, "Desktop", "Проэкты", "АРХИВ")  # the past clients' folders
 REELS = "VIDEO PORTFOLIO/BARBERSHOP/INSTAGRAM : TIK TOK "  # the folder's name ends in a space
 VIDEOS = [  # slug, source, title, credit
     ("who-am-i", os.path.join(KB, "WHO AM I? - 4K.mov"), "Who Am I?", "AI film"),
@@ -470,12 +501,13 @@ def logo_films():
 # ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is, ("holo", art,
 # foil): the same with holographic foil, silver and its colours running as it turns, ("gloss", art, varnish): its spot
 # varnish's layer, glossy where it is, ("emboss", mark, colour, share): plain paper with the mark's shape (share of the
-# side's width) blind-embossed, its height in a bump map (no mark: the paper alone), or ("unnamed", side, box): a side
-# with a private person's name on it (a graduate's, on Black Point's diploma) taken off. A deck (Da Vinci's five Tarot
-# cards, HYPE's badges, a set of stickers, banners or posters): its fronts (the last on top), one back for all. A sheet
-# folded across its middle (Black Point's voucher): ("fold", outside, inside) for its front, no back. A side laid out
-# across a thing that stands upright is turned a quarter anticlockwise (the Tarot cards' titles read along their long
-# side), one laid out upright for a thing that lies across a quarter clockwise (Soul Nation's voucher's word).
+# side's width) blind-embossed, its height in a bump map (no mark: the paper alone), ("unnamed", side, box): a side with
+# a private person's name on it (a graduate's, on Black Point's diploma) taken off, or ("round", side): a round sticker
+# (Magic Patron's), its circle cut out of its page, on a disc. A deck (Da Vinci's five Tarot cards, HYPE's badges, a
+# set of stickers, banners or posters): its fronts (the last on top), one back for all. A sheet folded across its
+# middle (Black Point's voucher): ("fold", outside, inside) for its front, no back. A side laid out across a thing that
+# stands upright is turned a quarter anticlockwise (the Tarot cards' titles read along their long side), one laid out
+# upright for a thing that lies across a quarter clockwise (Soul Nation's voucher's word).
 DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
 BPW = "BLACK POINT/Графика/Wizytówka/"
 PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm)]
@@ -513,6 +545,18 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
     # (no card of Alibia's in the archive: its logo blind-embossed on grey paper, as his own mockup shows it)
     "alibia": [("card", ("emboss", "Alibia/WEB/Alibia Shadow Logo.png", (96, 96, 98), 0.34), ("emboss", None, (96, 96, 98), 0), (85, 55), 0),
                ("stickers", [("Alibia/STICKERS.pdf", n) for n in (19, 15, 10, 9, 8, 5, 4, 1)], None, (80, 80), 0)],  # (eight of its twenty)
+    # (2026-10-01, his archive's other clients: CHANG's trailer wrap (a side, 3 by 2.3 m), its two menu boards and its
+    # sticker (2.4 by 1.4 m), what its PDFs have round them cut off (33 pt, the sticker's 100 mm); Currywurst Po
+    # Polsku's stickers for its food boxes; Lizard Moving's card; Magic Patron's thank-you insert and its round sticker;
+    # Perfumeria Outlet's order insert, in its two versions)
+    "chang": [("wrap", ("CHANG/PDF/Przyczepa 3 Poprawki (Zestaw Graficzny).pdf", 1), None, (3000, 2300), 11.64),
+              ("menus", [("CHANG/PDF/CHANG MENU V2.pdf", n) for n in (2, 1)], None, (400, 800), 11.64),
+              ("sticker", ("CHANG/AI/Наклейка.ai", 1), None, (2400, 1400), 100)],
+    "currywurst": [("stickers", [(f"CURRYWURST/NAKLEJKA/{n}.pdf", 1) for n in ("NAKLEJKA GOOGLE", "NAKLEJKA CW + Dodatki", "NAKLEJKA CURRYWURST")], None, (110, 80), 0)],
+    "lizard-moving": [("card", ("LIZARD MOVING/Visit Card/Lizzard Moving Buisiness Card Edit 3.pdf", 1), ("LIZARD MOVING/Visit Card/Lizzard Moving Buisiness Card Edit 3.pdf", 2), (90, 50), 11.64)],
+    "magic-patron": [("insert", ("Magic Patrone/Typografia/A5 Druk Poprawki.pdf", 1), ("Magic Patrone/Typografia/A5 Druk Poprawki.pdf", 2), (148, 210), 0),
+                     ("sticker", ("round", ("Magic Patrone/Typografia/Sticker.pdf", 1)), None, (100, 100), 0)],
+    "perfumeria-outlet": [("inserts", [f"PARFUMES/ASSETS/IMAGE ADS/17.03.2026/{n}.png" for n in ("DRUK", "DRUK2")], None, (297, 210), 0)],
     "da-vinci": [("deck", [(f"Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC {n}.pdf", 1) for n in range(1, 6)], ("Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC 1.pdf", 2), (50, 90), 0),
                  ("card", ("foil", DVR + "Awers.png", DVR + "Awers Hotstamping.png"), ("foil", DVR + "Rewers.png", DVR + "Rewers Hotstamping.png"), (90, 50), 3),
                  ("flyer", ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 1), ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 2), (105, 148), 0),
@@ -580,6 +624,12 @@ def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its
         return art, Image.merge("RGB", (foil, foil.point(lambda a: 191 - round(a / 255 * 150)), foil))
     if isinstance(spec, tuple) and spec[0] == "unnamed":
         return unnamed(side(spec[1], mm)[0], spec[2]), None
+    if isinstance(spec, tuple) and spec[0] == "round":  # a round sticker: its circle, cut out of its white page
+        im = side(spec[1], mm)[0]
+        im = im.crop(ImageChops.difference(im, Image.new("RGB", im.size, "white")).getbbox())
+        disc = Image.new("RGB", (max(im.size),) * 2, "white")
+        disc.paste(im, ((disc.width - im.width) // 2, (disc.height - im.height) // 2))
+        return disc, None
     if isinstance(spec, tuple) and spec[0] == "foil":
         art = Image.open(os.path.join(ARCHIVE, spec[1])).convert("RGBA")
         stamp = Image.open(os.path.join(ARCHIVE, spec[2])).convert("RGBA").getchannel("A")
@@ -734,6 +784,8 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
                 sheet["metal"] = True  # (its gloss maps carry the foil's metal)
             if "holo" in foils:
                 sheet["holo"] = True  # (and their red the holographic film)
+            if "round" in foils:
+                sheet["round"] = True  # (a disc, its picture the circle in it)
             for face, spec in faces + [("back", back)]:
                 if spec is None:
                     continue
@@ -773,7 +825,7 @@ def graphics(only=None):  # only: the projects to make again; the rest keep thei
             continue
         sizes[slug] = []
         for i, f in enumerate(files):
-            src = os.path.join(CASES, f[1:]) if f.startswith("~") else os.path.join(WP_ASSETS, f)
+            src = raster(f) if isinstance(f, tuple) else os.path.join(CASES, f[1:]) if f.startswith("~") else os.path.join(WP_ASSETS, f)
             dst = out("graphics", slug, f"{i}.webp")
             total += to_webp(src, dst, width=1600, q=78)
             with Image.open(dst) as im:
@@ -789,6 +841,10 @@ if __name__ == "__main__":
         sys.exit()
     if sys.argv[1:] == ["scenes"]:
         print(f"scenes' pictures: {scenes()/1e3:.0f}KB")
+        sys.exit()
+    if sys.argv[1:2] == ["tiles"]:  # tiles [index...]: all the covers, or those alone
+        only = {int(a) for a in sys.argv[2:]} or None
+        print(f"tiles: {sum(tile(i, p) for i, p in enumerate(TILES) if only is None or i in only)/1e6:.1f}MB")
         sys.exit()
     if sys.argv[1:] == ["logos"]:
         print(f"logo films: {logo_films()/1e6:.1f}MB")

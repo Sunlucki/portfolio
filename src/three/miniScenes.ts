@@ -785,18 +785,18 @@ async function poucher(): Promise<Live> {
   };
 }
 
-// The printed things (src/prints.json, scripts/prepare-media.py prints): each a sheet of its real proportions, its
-// edge a little thicker than paper so it reads, both its sides printed on it, a hot-stamped side glossy where it is
-// stamped, a holographic foil (Black Point's card's logo) running through colours as it turns; lit like a product shot
-// (a room's reflections and a key light), floating over its soft shadow. A thing printed on one side only sways a
-// little and never shows its blank back. Picked, the next thing comes in turning, swapped while edge-on, so the swap
-// can't be seen, and comes round to its front. A card folded in two (Black Point's voucher) is two leaves hinged along
-// its top, shut, then its cover opening up over the hinge to show its inside (and shut again; a tap opens or shuts
-// it). A deck (Da Vinci's Tarot cards, HYPE's badges, a set of stickers, banners or posters) lies stacked face up, and
-// shuffles when tapped (and by itself every few seconds): it splits in two halves, which riffle back together card by
-// card in a new order, so a new card comes up on top. A folder (DC Consulting's) is folded from its own die line: its
-// pocket and glue flap turned in on the back cover, its front cover on the spine, closed, then opening to show its
-// inside (and on, and back; a tap opens or closes it).
+// The printed things (src/prints.json, scripts/prepare-media.py prints): each a sheet of its real proportions (a round
+// sticker a disc), its edge a little thicker than paper so it reads, both its sides printed on it, a hot-stamped side
+// glossy where it is stamped, a holographic foil (Black Point's card's logo) running through colours as it turns; lit
+// like a product shot (a room's reflections and a key light), floating over its soft shadow. A thing printed on one
+// side only sways a little and never shows its blank back. Picked, the next thing comes in turning, swapped while
+// edge-on, so the swap can't be seen, and comes round to its front. A card folded in two (Black Point's voucher) is two
+// leaves hinged along its top, shut, then its cover opening up over the hinge to show its inside (and shut again; a tap
+// opens or shuts it). A deck (Da Vinci's Tarot cards, HYPE's badges, a set of stickers, banners or posters) lies
+// stacked face up, and shuffles when tapped (and by itself every few seconds): it splits in two halves, which riffle
+// back together card by card in a new order, so a new card comes up on top. A folder (DC Consulting's) is folded from
+// its own die line: its pocket and glue flap turned in on the back cover, its front cover on the spine, closed, then
+// opening to show its inside (and on, and back; a tap opens or closes it).
 type Sheet = {
   kind: string;
   w: number;
@@ -810,6 +810,7 @@ type Sheet = {
   backBump?: string;
   metal?: boolean; // (its gloss maps' blue is metal: gold foil)
   holo?: boolean; // (and their red holographic: the foil's colours)
+  round?: boolean; // (a round sticker: a disc, its picture the circle in it)
   inner?: string[]; // a folded card's inside: the cover's, the back's
   // a folder's
   page?: number[];
@@ -887,6 +888,8 @@ async function sheets(name: SceneName): Promise<Live> {
 
   const edge = new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 0.9 });
   const box = new THREE.BoxGeometry(1, 1, 1);
+  // (a round sticker's: its edge, its front facing us, its back; turned so its caps' pictures stand upright)
+  const disc = new THREE.CylinderGeometry(0.5, 0.5, 1, 96).rotateX(Math.PI / 2).rotateZ(Math.PI / 2);
   // (a blank side: the paper; a gloss map's green is the roughness, and on a thing with metal its blue the metal; on a
   // holographic one its red the foil's thin film, the colours)
   const thickness = film();
@@ -1035,14 +1038,9 @@ async function sheets(name: SceneName): Promise<Live> {
           : thing.inner
             ? card(i)
             : side.fronts.map((map) => {
-                const mesh = new THREE.Mesh(box, [
-                  edge,
-                  edge,
-                  edge,
-                  edge,
-                  paper(map, side.frontGloss, side.metal, side.frontBump, side.holo),
-                  paper(side.back, side.backGloss, side.metal, side.backBump, side.holo),
-                ]);
+                const front = paper(map, side.frontGloss, side.metal, side.frontBump, side.holo);
+                const back = paper(side.back, side.backGloss, side.metal, side.backBump, side.holo);
+                const mesh = thing.round ? new THREE.Mesh(disc, [edge, front, back]) : new THREE.Mesh(box, [edge, edge, edge, edge, front, back]);
                 mesh.scale.set(size.w, size.h, size.t);
                 return mesh;
               });

@@ -4,10 +4,11 @@ import { fill, t } from '../i18n';
 import { COVER_OF, GRAPHICS, TILES } from '../content';
 import { GraphicsProject, type Opening } from './GraphicsProject';
 
-// Rows dealt like cards so neighbouring covers differ: four, and eight on phones (a row shows only its first two
-// covers there, so more rows show more of the work).
+// Rows dealt like cards so neighbouring covers differ: six, and eight on phones (a row shows only its first covers
+// whole, so more rows show more of the work; six since 2026-10-01, when the covers grew to 32 and a row's last ones
+// never came into view on a 1440 px screen).
 const dealt = (count: number) => Array.from({ length: count }, (_, row) => TILES.map((tile, i) => ({ ...tile, i })).filter(({ i }) => i % count === row));
-const ROWS = { wide: dealt(4), phone: dealt(8) };
+const ROWS = { wide: dealt(6), phone: dealt(8) };
 const PHONE = '(max-width: 767px)';
 const SPEED = 0.15; // pixels of slide per pixel of scroll
 // The first and last rows fade into the page at the top and bottom, so they sit in it like a backdrop: shaded in

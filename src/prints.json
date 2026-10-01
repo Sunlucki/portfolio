@@ -703,6 +703,77 @@
    ]
   }
  ],
+ "chang": [
+  {
+   "kind": "wrap",
+   "w": 3000,
+   "h": 2300,
+   "front": "/scenes/print/chang-0-front.webp"
+  },
+  {
+   "kind": "menus",
+   "w": 400,
+   "h": 800,
+   "fronts": [
+    "/scenes/print/chang-1-front0.webp",
+    "/scenes/print/chang-1-front1.webp"
+   ]
+  },
+  {
+   "kind": "sticker",
+   "w": 2400,
+   "h": 1400,
+   "front": "/scenes/print/chang-2-front.webp"
+  }
+ ],
+ "currywurst": [
+  {
+   "kind": "stickers",
+   "w": 110,
+   "h": 80,
+   "fronts": [
+    "/scenes/print/currywurst-0-front0.webp",
+    "/scenes/print/currywurst-0-front1.webp",
+    "/scenes/print/currywurst-0-front2.webp"
+   ]
+  }
+ ],
+ "lizard-moving": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/lizard-moving-0-front.webp",
+   "back": "/scenes/print/lizard-moving-0-back.webp"
+  }
+ ],
+ "magic-patron": [
+  {
+   "kind": "insert",
+   "w": 148,
+   "h": 210,
+   "front": "/scenes/print/magic-patron-0-front.webp",
+   "back": "/scenes/print/magic-patron-0-back.webp"
+  },
+  {
+   "kind": "sticker",
+   "w": 100,
+   "h": 100,
+   "round": true,
+   "front": "/scenes/print/magic-patron-1-front.webp"
+  }
+ ],
+ "perfumeria-outlet": [
+  {
+   "kind": "inserts",
+   "w": 297,
+   "h": 210,
+   "fronts": [
+    "/scenes/print/perfumeria-outlet-0-front0.webp",
+    "/scenes/print/perfumeria-outlet-0-front1.webp"
+   ]
+  }
+ ],
  "da-vinci": [
   {
    "kind": "deck",
