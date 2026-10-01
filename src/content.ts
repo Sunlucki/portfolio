@@ -300,7 +300,7 @@ export const PROJECTS: Project[] = [
 // Marquee: project covers from the STYLEICON archive (scripts/prepare-media.py), their words in t.graphics.tiles.
 // `?v` busts the 30-day cache. Branding, print and social media only: the sites are in the WordPress card (Bogdan,
 // 2026-09-30).
-export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=7`, alt }));
+export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=8`, alt }));
 
 // The covers' projects (2026-10-01): each with all its pictures (public/graphics/<slug>/N.webp, sized in graphics.json by
 // scripts/prepare-media.py) and when it was, from the dates of its PSDs on his desktop (Проэкты/АРХИВ); a cover opens

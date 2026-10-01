@@ -341,8 +341,26 @@ const HOP = 0.4;
 const hop = (k: number) => ({ y: Math.sin(k * Math.PI) * 0.35, scale: 1 + Math.sin(k * Math.PI) * 0.15, tilt: Math.sin(k * Math.PI * 2) * 0.18 });
 
 // The Elixir bottle (LowPolyBottle3D.tsx): amber body, its label (one of five, every five seconds), a violet accent;
-// over a galaxy that fades out from its middle and turns slowly, two layers of motes in the flavour's colour.
+// over a galaxy that fades out from its middle and turns slowly, two layers of motes in the flavour's colour, and the
+// flavour's fruits round it (FRUITS below).
 const ELIXIRS = ['#a855f7', '#fc5000', '#ef4444', '#ff8a4c', '#38bdf8']; // Blueberry Cookies, Lemon Haze, Strawberry OG, Zen, Zkittlez OG
+
+// Each flavour's fruits, Mind Logistic's own (FlavourParticles.tsx on its site, public/scenes/fruit-*.webp): nine round
+// the bottle and behind it, bobbing; on a change of flavour the old ones fall in to the bottle and the new ones fly out
+// of it. Zen has none there either. Laid out the same way every time for a flavour (seeded by its name).
+const FRUITS: [string, number][] = [['blueberry', 3], ['lemon', 3], ['strawberry', 4], ['', 0], ['zkittlez', 5]];
+const FRUIT = { count: 9, fly: 0.7, fade: 0.45 };
+const seeded = (seed: string) => {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+  return () => {
+    h += 0x6d2b79f5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+};
 
 async function elixir(): Promise<Live> {
   const labels = ELIXIRS.map((_, i) => picture(`/scenes/elixir-${i}.webp`, true));
@@ -429,6 +447,57 @@ async function elixir(): Promise<Live> {
   const pivot = new THREE.Group().add(bottle);
   scene.add(pivot);
 
+  // the fruits: a set for a flavour, made when it first shows
+  type Fruit = { sprite: THREE.Sprite; x: number; y: number; size: number; turn: number; delay: number; drift: number; period: number };
+  const fruitSets = new Map<number, { group: THREE.Group; fruits: Fruit[] } | null>();
+  const fruitsOf = (flavour: number) => {
+    if (!fruitSets.has(flavour)) {
+      const [name, pictures] = FRUITS[flavour];
+      if (!pictures) fruitSets.set(flavour, null);
+      else {
+        const rand = seeded(name);
+        const group = new THREE.Group();
+        const fruits = Array.from({ length: FRUIT.count }, (_, i): Fruit => {
+          // round the bottle by angle, the ring's radius jittered, bigger ones nearer
+          const angle = ((i + rand() * 0.6) / FRUIT.count) * Math.PI * 2;
+          const radius = 2.3 + rand() * 1.4;
+          const size = 0.55 + rand() * 0.75;
+          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: picture(`/scenes/fruit-${name}-${(i % pictures) + 1}.webp`), transparent: true, depthWrite: false, opacity: 0 }));
+          sprite.position.z = -1.5 + ((size - 0.55) / 0.75) * 0.9;
+          group.add(sprite);
+          return { sprite, x: Math.cos(angle) * radius, y: Math.sin(angle) * radius * 0.85, size, turn: rand() * Math.PI * 2, delay: rand() * 0.25, drift: 0.05 + rand() * 0.08, period: 4 + rand() * 5 };
+        });
+        scene.add(group);
+        fruitSets.set(flavour, { group, fruits });
+      }
+    }
+    return fruitSets.get(flavour)!;
+  };
+  const fruitIn = { flavour: 0, at: -10 }; // the first ones already out (as on the cover's still)
+  let fruitOut: { flavour: number; at: number } | null = null;
+  fruitsOf(0);
+  const placeFruits = (flavour: number, at: number, coming: boolean) => {
+    const set = fruitsOf(flavour);
+    if (!set) return true;
+    let done = true;
+    for (const f of set.fruits) {
+      const k = Math.min(1, Math.max(0, (time - at - f.delay) / FRUIT.fly));
+      const e = 1 - (1 - k) ** 4;
+      const out = coming ? e : 1 - e; // (how far out from the bottle)
+      const image = f.sprite.material.map?.image as { width: number; height: number } | undefined;
+      const aspect = image ? image.width / image.height : 1;
+      const scale = f.size * (0.2 + 0.8 * out);
+      f.sprite.scale.set(scale * aspect, scale, 1);
+      f.sprite.position.x = f.x * out;
+      f.sprite.position.y = f.y * out + Math.sin(((time + f.delay * 7) / f.period) * Math.PI * 2) * f.drift;
+      f.sprite.material.rotation = f.turn * (coming ? e : 1);
+      f.sprite.material.opacity = coming ? Math.min(1, Math.max(0, (time - at - f.delay) / FRUIT.fade)) * (image ? 1 : 0) : 1 - k;
+      if (k < 1) done = false;
+    }
+    set.group.visible = coming || !done;
+    return done;
+  };
+
   let time = 0;
   let shown = 0; // the label on
   let wanted = 0;
@@ -465,12 +534,16 @@ async function elixir(): Promise<Live> {
           label.map = labels[shown];
           label.needsUpdate = true;
           tint.set(ELIXIRS[shown]);
+          fruitOut = { ...fruitIn };
+          Object.assign(fruitIn, { flavour: shown, at: time });
           swapped = true;
         }
         if (k >= 1) changing = null;
       }
       pivot.position.y = Math.sin(time * 1.5) * 0.12 + y;
       pivot.scale.setScalar(scale);
+      placeFruits(fruitIn.flavour, fruitIn.at, true);
+      if (fruitOut && placeFruits(fruitOut.flavour, fruitOut.at, false)) fruitOut = null;
       const turn = turnOf<Turn>('elixir').update(dt);
       pivot.rotation.set(turn.x, turn.y, tilt);
     },
@@ -709,6 +782,7 @@ type Sheet = {
   back?: string;
   frontGloss?: string;
   backGloss?: string;
+  metal?: boolean; // (its gloss maps' blue is metal: gold foil)
   // a folder's
   page?: number[];
   outside?: string;
@@ -739,6 +813,7 @@ async function sheets(name: SceneName): Promise<Live> {
     back: thing.back ?? thing.inside ? picture((thing.back ?? thing.inside)!) : null,
     frontGloss: thing.frontGloss ?? thing.outsideGloss ? picture((thing.frontGloss ?? thing.outsideGloss)!) : null,
     backGloss: thing.backGloss ? picture(thing.backGloss) : null,
+    metal: !!thing.metal,
   }));
   for (const side of sides) for (const gloss of [side.frontGloss, side.backGloss]) if (gloss) gloss.colorSpace = THREE.NoColorSpace; // (data, not colour)
   const ready = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss].every((texture) => !texture || texture.image);
@@ -765,8 +840,9 @@ async function sheets(name: SceneName): Promise<Live> {
 
   const edge = new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 0.9 });
   const box = new THREE.BoxGeometry(1, 1, 1);
-  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null) =>
-    new THREE.MeshStandardMaterial({ map, color: map ? 0xffffff : 0xf4f2ec, roughnessMap: gloss, roughness: gloss ? 1 : 0.62 }); // (a blank side: the paper)
+  // (a blank side: the paper; a gloss map's green is the roughness, and on a thing with metal its blue the metal)
+  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null, metal = false) =>
+    new THREE.MeshStandardMaterial({ map, color: map ? 0xffffff : 0xf4f2ec, roughnessMap: gloss, roughness: gloss ? 1 : 0.62, ...(metal && gloss ? { metalnessMap: gloss, metalness: 1 } : {}) });
   const pivot = new THREE.Group();
   scene.add(pivot);
   // each thing's sheets: one, or a deck's cards, or a folder (built as the thing first shows)
@@ -841,7 +917,7 @@ async function sheets(name: SceneName): Promise<Live> {
         thing.kind === 'folder'
           ? fold(thing, i)
           : side.fronts.map((map) => {
-              const mesh = new THREE.Mesh(box, [edge, edge, edge, edge, paper(map, side.frontGloss), paper(side.back, side.backGloss)]);
+              const mesh = new THREE.Mesh(box, [edge, edge, edge, edge, paper(map, side.frontGloss, side.metal), paper(side.back, side.backGloss, side.metal)]);
               mesh.scale.set(size.w, size.h, size.t);
               return mesh;
             });

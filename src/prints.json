@@ -47,15 +47,11 @@
    "kind": "card",
    "w": 90,
    "h": 50,
+   "metal": true,
    "front": "/scenes/print/ihor-0-front.webp",
-   "back": "/scenes/print/ihor-0-back.webp"
-  },
-  {
-   "kind": "card",
-   "w": 90,
-   "h": 50,
-   "front": "/scenes/print/ihor-1-front.webp",
-   "back": "/scenes/print/ihor-1-back.webp"
+   "frontGloss": "/scenes/print/ihor-0-front-gloss.webp",
+   "back": "/scenes/print/ihor-0-back.webp",
+   "backGloss": "/scenes/print/ihor-0-back-gloss.webp"
   }
  ],
  "dc-consulting": [

@@ -20,7 +20,7 @@ Outputs into ../public:
                                                           films alone: python3 scripts/prepare-media.py videos <slug>...)
 Re-run safe: overwrites outputs.
 """
-import os, sys, subprocess, tempfile, glob, re, json, random, unicodedata
+import os, sys, subprocess, tempfile, glob, re, json, random, shutil, unicodedata
 from PIL import Image, ImageChops, ImageFilter, ImageStat, features
 
 HOME = os.path.expanduser("~")
@@ -429,6 +429,9 @@ def scenes():
     for i, name in enumerate(POUCHERS):
         for part, width in (("TOP", 512), ("SIDE", 1024), ("BOTTOM", 512)):
             size += to_webp(os.path.join(MLSITE, "POUCHER", name, f"{name} {part}.jpg"), out("scenes", f"poucher-{i}-{part.lower()}.webp"), width=width, q=80)
+    for path in sorted(glob.glob(os.path.join(MLSITE, "flavour-particles", "*.webp"))):  # the fruits round the bottle, as they are
+        shutil.copyfile(path, out("scenes", "fruit-" + os.path.basename(path)))
+        size += os.path.getsize(path)
     return size
 
 # The Graphics projects' printed things in 3D (2026-10-01, src/three/miniScenes.ts): each side as printed, from its file in
@@ -436,7 +439,8 @@ def scenes():
 # long side; a side hot-stamped (Da Vinci's roses card: glossy black over the roses) also gets its gloss map (its green,
 # the roughness three.js reads: the paper's 0.75, the stamp's 0.08, glossy as lacquer). Sizes in millimetres and what each thing is go to
 # src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a file, (file, page), (file,
-# (left, top, right, bottom) as fractions), or ("foil", art, stamp): the stamp's shapes in glossy black over the art. A
+# (left, top, right, bottom) as fractions), ("foil", art, stamp): the stamp's shapes in glossy black over the art, or
+# ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is. A
 # deck (Da Vinci's five Tarot cards): its fronts, one back for all. A side laid out across a thing that stands upright
 # is turned a quarter anticlockwise (the Tarot cards' titles read along their long side).
 DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
@@ -446,8 +450,8 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
     "yana-lashes": [("card", ("Yana Lashes/PDF/Busines Card.pdf", 1), ("Yana Lashes/PDF/Busines Card.pdf", 2), (90, 50), 2)],
     "zero-sladu": [("card", ("ZERO ŚLADU/WIZYTÓWKA/ZERO ŚLADU WIZYTÓWKA.pdf", 1), ("ZERO ŚLADU/WIZYTÓWKA/ZERO ŚLADU WIZYTÓWKA.pdf", 2), (90, 50), 0)],
     "time-relax-body": [("card", ("TIme Relax Body/biznes_karta_85x54mm.pdf", 1), ("TIme Relax Body/biznes_karta_85x54mm.pdf", 2), (54, 85), 2)],
-    "ihor": [("card", ("IGOR MUSIC/Igor Poperechny.pdf", 1), ("IGOR MUSIC/Igor Poperechny.pdf", 2), (90, 50), 2),
-             ("card", ("IGOR MUSIC/Igor Poperechny.pdf", 3), ("IGOR MUSIC/Igor Poperechny.pdf", 4), (90, 50), 2)],
+    "ihor": [("card", ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 1), ("IGOR MUSIC/Igor Poperechny.pdf", 3)),
+              ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 2), ("IGOR MUSIC/Igor Poperechny.pdf", 4)), (90, 50), 2)],
     "dc-consulting": [("voucher", "DC CONSULTING/VOUCHER/JPG/AWERS.jpg", "DC CONSULTING/VOUCHER/JPG/REWERS.jpg", (210, 148), 0)],
     "da-vinci": [("deck", [(f"Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC {n}.pdf", 1) for n in range(1, 6)], ("Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC 1.pdf", 2), (50, 90), 0),
                  ("card", ("foil", DVR + "Awers.png", DVR + "Awers Hotstamping.png"), ("foil", DVR + "Rewers.png", DVR + "Rewers Hotstamping.png"), (90, 50), 3),
@@ -456,6 +460,11 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
 }
 
 def side(spec):  # a side of a printed thing, as a picture, and its gloss map if it is hot-stamped
+    if isinstance(spec, tuple) and spec[0] == "gold":  # gold foil: the art as printed, its foil layer dark on white
+        art, foil = side(spec[1])[0], side(spec[2])[0].convert("L").point(lambda v: 255 - v)
+        # (green the roughness: the paper's 0.75 to the foil's 0.2; blue the metalness: the foil's)
+        gloss = Image.merge("RGB", (Image.new("L", art.size, 0), foil.point(lambda a: 191 - round(a / 255 * 140)), foil))
+        return art, gloss
     if isinstance(spec, tuple) and spec[0] == "foil":
         art = Image.open(os.path.join(ARCHIVE, spec[1])).convert("RGBA")
         stamp = Image.open(os.path.join(ARCHIVE, spec[2])).convert("RGBA").getchannel("A")
@@ -562,15 +571,25 @@ def folder():
     return {"kind": "folder", "w": round(w * 0.35278, 1), "h": round(h * 0.35278, 1), "page": [w, h], **sides,
             "folds": {"glue": round(glue - 33, 2), "spine": round(spine - 33, 2), "pocket": round(pocket - 33, 2)}, "panels": panels}
 
-def prints():
+def prints(only=None):  # only: the projects to make again; the rest keep their sides, and their entries in prints.json
+    path = os.path.join(KB, "portfolio", "src", "prints.json")
+    sheets = {}
+    if only is not None:
+        with open(path) as fh:
+            sheets = json.load(fh)
     for old in glob.glob(out("scenes", "print", "*.webp")):
-        os.remove(old)
-    size, sheets = 0, {}
+        if only is None or os.path.basename(old).startswith(tuple(f"{slug}-" for slug in only)):
+            os.remove(old)
+    size = 0
     for slug, things in PRINTS.items():
+        if only is not None and slug not in only:
+            continue
         sheets[slug] = []
         for i, (kind, front, back, (w, h), bleed) in enumerate(things):
             sheet = {"kind": kind, "w": w, "h": h}
             faces = [(f"front{n}", spec) for n, spec in enumerate(front)] if isinstance(front, list) else [("front", front)]
+            if any(isinstance(spec, tuple) and spec[0] == "gold" for _, spec in faces + [("back", back)]):
+                sheet["metal"] = True  # (its gloss maps carry the foil's metal)
             for face, spec in faces + [("back", back)]:
                 if spec is None:
                     continue
@@ -590,9 +609,10 @@ def prints():
             if isinstance(front, list):  # (a deck's fronts, in order)
                 sheet["fronts"] = [sheet.pop(f"front{n}") for n in range(len(front))]
             sheets[slug].append(sheet)
-    sheets["dc-consulting"].insert(0, folder())
-    with open(os.path.join(KB, "portfolio", "src", "prints.json"), "w") as fh:
-        json.dump(sheets, fh, ensure_ascii=False, indent=1)
+    if only is None or "dc-consulting" in only:
+        sheets["dc-consulting"].insert(0, folder())
+    with open(path, "w") as fh:
+        json.dump({slug: sheets[slug] for slug in PRINTS}, fh, ensure_ascii=False, indent=1)
     return size
 
 def graphics(only=None):  # only: the projects to make again; the rest keep their pictures, and their sizes from graphics.json
@@ -624,8 +644,8 @@ if __name__ == "__main__":
     if sys.argv[1:] == ["scenes"]:
         print(f"scenes' pictures: {scenes()/1e3:.0f}KB")
         sys.exit()
-    if sys.argv[1:] == ["prints"]:
-        print(f"printed things' sides: {prints()/1e3:.0f}KB")
+    if sys.argv[1:2] == ["prints"]:  # prints [project...]: all the printed things, or those projects' alone
+        print(f"printed things' sides: {prints(set(sys.argv[2:]) or None)/1e3:.0f}KB")
         sys.exit()
     if sys.argv[1:2] == ["videos"]:  # videos <slug>...: those films again, the others kept as they are
         print(f"videos: {', '.join(sys.argv[2:])} {videos(set(sys.argv[2:]))/1e6:.1f}MB")
