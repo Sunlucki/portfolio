@@ -127,10 +127,10 @@ ELIXIRS = ["BLUBERRY COOKIES", "LEMON HAZE", "STRAWBERRY OG", "ZEN", "ZKITTLEZ O
 POUCHERS = ["BLUEBERRY", "SWEET RASPBERRY", "BUBBLE GUM", "CITRUS"]  # the 3D can's flavours
 SCENES = os.path.join(KB, "sources", "scenes")  # stills of the 3D covers, the covers' pictures till they draw
 TILES = [  # on the section's rings, eight a ring, in this order (the first ring the first eight)
-    # Mind Logistic first (2026-10-01): its logo (his pick, in place of its sticker on a laptop), the Elixir bottle's and
-    # the Poucher can's 3D scenes (stills of them, under the live scene), the gummies' pouch (its front)
+    # Mind Logistic first (2026-10-01): its logo (his pick, in place of its sticker on a laptop), the Elixir bottle's, the
+    # Poucher can's and the gummies' pouch's 3D scenes (stills of them, under the live scene)
     f"{ML}/LOGO:BRANDING/BRANDING SHOWREEL/Image/SHOWREEL.jpg",
-    f"{SCENES}/elixir.png", f"{SCENES}/poucher.png", (f"{ML}/ŻELKI ELIXIR/OKLADKA.png", (0, 0, 0.5, 1)),
+    f"{SCENES}/elixir.png", f"{SCENES}/poucher.png", f"{SCENES}/gummies.png",
     f"{COVERS}/2025/05/HYPE.jpg", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
     f"{COVERS}/2025/05/TouchMockup.jpg", f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", (f"{WP_ASSETS}/Black Point - T-shirt AM.jpg", (0.25, 0.28, 0.75, 0.81)),
     # (2026-10-01, his archive's other clients on the second ring: CHANG's wrapped trailer, Lizard Moving's cards,
@@ -476,6 +476,14 @@ def scenes():
     for path in sorted(glob.glob(os.path.join(MLSITE, "flavour-particles", "*.webp"))):  # the fruits round the bottle, as they are
         shutil.copyfile(path, out("scenes", "fruit-" + os.path.basename(path)))
         size += os.path.getsize(path)
+    # the gummies' Cherry Cola pouch (2026-10-01): its print for its model (ŻELKI ELIXIR/OKLADKA.png, its front and back
+    # halves; scripts/prepare-scenes.mjs), and round it two cherries and a cola gummy, cut out of that print with Apple
+    # Vision (scripts/cutout.swift, kept in the knowledge base's sources/scenes)
+    im = Image.open(os.path.join(ML, "ŻELKI ELIXIR", "OKLADKA.png")).convert("RGB")
+    im.resize((2560, round(im.height * 2560 / im.width)), Image.LANCZOS).save(out("scenes", "gummies.webp"), "WEBP", quality=82, method=6)
+    size += os.path.getsize(out("scenes", "gummies.webp"))
+    for n in (1, 2, 3):
+        size += to_webp(os.path.join(SCENES, f"cherry-cola-fruit-{n}.png"), out("scenes", f"fruit-cherry-{n}.webp"), width=256, q=82)
     return size
 
 # Two Graphics projects open on their logo's animation (2026-10-01), looping and muted, as a 3D project opens on its

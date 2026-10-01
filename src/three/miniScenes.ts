@@ -11,7 +11,7 @@ import printsJson from '../prints.json';
  * others). The models and pictures: scripts/prepare-scenes.mjs, prepare-media.py scenes. And the printed things of the
  * other projects (business cards, flyers, a voucher, a guide: `print:<project>`, below), to be turned over and looked at.
  */
-export type SceneName = 'elixir' | 'poucher' | `print:${string}`;
+export type SceneName = 'elixir' | 'poucher' | 'gummies' | `print:${string}`;
 type View = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; name: SceneName; top: boolean; shown: boolean; drawn: boolean; onReady?: () => void };
 type Live = {
   scene: THREE.Scene;
@@ -54,7 +54,7 @@ export function show(canvas: HTMLCanvasElement, name: SceneName, { top = false, 
   watch?.observe(canvas);
   if (!live.has(name)) {
     live.set(name, null);
-    (name === 'elixir' ? elixir() : name === 'poucher' ? poucher() : sheets(name)).then((scene) => {
+    (name === 'elixir' ? elixir() : name === 'poucher' ? poucher() : name === 'gummies' ? gummies() : sheets(name)).then((scene) => {
       live.set(name, scene);
       wake();
     }, () => {}); // (the cover keeps its still)
@@ -365,6 +365,101 @@ const hop = (k: number) => ({ y: Math.sin(k * Math.PI) * 0.35, scale: 1 + Math.s
 // flavour's fruits round it (FRUITS below).
 const ELIXIRS = ['#a855f7', '#fc5000', '#ef4444', '#ff8a4c', '#38bdf8']; // Blueberry Cookies, Lemon Haze, Strawberry OG, Zen, Zkittlez OG
 
+// The galaxy behind the Elixir bottle and the gummies' pouch, solid in its middle and gone well before the plane's
+// edge, turning slowly; two layers of motes in front of it, near ones bigger and quicker, in a colour that can change
+function cosmos(scene: THREE.Scene, galaxyImage: HTMLImageElement, color: string) {
+  const size = 1024;
+  const canvas = Object.assign(document.createElement('canvas'), { width: size, height: size });
+  const g = canvas.getContext('2d')!;
+  const cover = Math.max(size / galaxyImage.width, size / galaxyImage.height);
+  g.drawImage(galaxyImage, (size - galaxyImage.width * cover) / 2, (size - galaxyImage.height * cover) / 2, galaxyImage.width * cover, galaxyImage.height * cover);
+  const fade = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  for (const [at, a] of [[0, 1], [0.18, 0.95], [0.34, 0.6], [0.46, 0.22], [0.55, 0]]) fade.addColorStop(at, `rgba(0,0,0,${a})`);
+  g.globalCompositeOperation = 'destination-in';
+  g.fillStyle = fade;
+  g.fillRect(0, 0, size, size);
+  const galaxyTexture = new THREE.CanvasTexture(canvas);
+  galaxyTexture.colorSpace = THREE.SRGBColorSpace;
+  const galaxy = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshBasicMaterial({ map: galaxyTexture, transparent: true, depthWrite: false }));
+  galaxy.position.set(0, 0, -6.5);
+  scene.add(galaxy);
+
+  // the motes: a soft round sprite
+  const dot = Object.assign(document.createElement('canvas'), { width: 64, height: 64 });
+  const d = dot.getContext('2d')!;
+  const glow = d.createRadialGradient(32, 32, 0, 32, 32, 32);
+  for (const [at, a] of [[0, 1], [0.35, 0.75], [0.7, 0.25], [1, 0]]) glow.addColorStop(at, `rgba(255,255,255,${a})`);
+  d.fillStyle = glow;
+  d.fillRect(0, 0, 64, 64);
+  const sprite = new THREE.CanvasTexture(dot);
+  const motes = (count: number, spread: number, near: number, deep: number, size: number, opacity: number) => {
+    const positions = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) positions.set([(Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread, near - Math.random() * deep], i * 3);
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const material = new THREE.PointsMaterial({ size, map: sprite, color, transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
+    const group = new THREE.Group().add(new THREE.Points(geometry, material));
+    scene.add(group);
+    return { group, material };
+  };
+  const near = motes(160, 8.5, -0.6, 1.2, 0.3, 0.9);
+  const far = motes(130, 10, -2, 3.5, 0.16, 0.75);
+  return {
+    step(time: number) {
+      galaxy.rotation.z = time * 0.04;
+      far.group.rotation.z = time * 0.1;
+      far.group.rotation.y = Math.cos(time * 0.15) * 0.12;
+      near.group.rotation.z = time * 0.22;
+      near.group.rotation.y = Math.sin(time * 0.3) * 0.2;
+    },
+    tint(color: THREE.Color) {
+      near.material.color.copy(color);
+      far.material.color.copy(color);
+    },
+  };
+}
+
+// Fruits round a bottle or a pouch (public/scenes/fruit-<name>-<n>.webp): nine round it and behind it, bobbing, at
+// `spread` times the bottle's ring; coming, they fly out of it, going, they fall in. Laid out the same way every time for
+// a name (seeded by it).
+type Fruit = { sprite: THREE.Sprite; x: number; y: number; size: number; turn: number; delay: number; drift: number; period: number };
+function fruitSet(scene: THREE.Scene, name: string, pictures: number, spread = 1) {
+  const rand = seeded(name);
+  const group = new THREE.Group();
+  const fruits = Array.from({ length: FRUIT.count }, (_, i): Fruit => {
+    // round the middle by angle, the ring's radius jittered, bigger ones nearer
+    const angle = ((i + rand() * 0.6) / FRUIT.count) * Math.PI * 2;
+    const radius = (2.3 + rand() * 1.4) * spread;
+    const size = 0.55 + rand() * 0.75;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: picture(`/scenes/fruit-${name}-${(i % pictures) + 1}.webp`), transparent: true, depthWrite: false, opacity: 0 }));
+    sprite.position.z = -1.5 + ((size - 0.55) / 0.75) * 0.9;
+    group.add(sprite);
+    return { sprite, x: Math.cos(angle) * radius, y: Math.sin(angle) * radius * 0.85, size, turn: rand() * Math.PI * 2, delay: rand() * 0.25, drift: 0.05 + rand() * 0.08, period: 4 + rand() * 5 };
+  });
+  scene.add(group);
+  return { group, fruits };
+}
+// where a set's fruits are at `time`, coming out since `at` or going in since it; whether they have all got there
+function placeFruits(set: ReturnType<typeof fruitSet>, time: number, at: number, coming: boolean) {
+  let done = true;
+  for (const f of set.fruits) {
+    const k = Math.min(1, Math.max(0, (time - at - f.delay) / FRUIT.fly));
+    const e = 1 - (1 - k) ** 4;
+    const out = coming ? e : 1 - e; // (how far out from the middle)
+    const image = f.sprite.material.map?.image as { width: number; height: number } | undefined;
+    const aspect = image ? image.width / image.height : 1;
+    const scale = f.size * (0.2 + 0.8 * out);
+    f.sprite.scale.set(scale * aspect, scale, 1);
+    f.sprite.position.x = f.x * out;
+    f.sprite.position.y = f.y * out + Math.sin(((time + f.delay * 7) / f.period) * Math.PI * 2) * f.drift;
+    f.sprite.material.rotation = f.turn * (coming ? e : 1);
+    f.sprite.material.opacity = coming ? Math.min(1, Math.max(0, (time - at - f.delay) / FRUIT.fade)) * (image ? 1 : 0) : 1 - k;
+    if (k < 1) done = false;
+  }
+  set.group.visible = coming || !done;
+  return done;
+}
+
 // Each flavour's fruits, Mind Logistic's own (FlavourParticles.tsx on its site, public/scenes/fruit-*.webp): nine round
 // the bottle and behind it, bobbing; on a change of flavour the old ones fall in to the bottle and the new ones fly out
 // of it. Zen has none there either. Laid out the same way every time for a flavour (seeded by its name).
@@ -406,43 +501,7 @@ async function elixir(): Promise<Live> {
     scene.add(light);
   }
 
-  // the galaxy, solid in the middle and gone well before the plane's edge
-  const size = 1024;
-  const canvas = Object.assign(document.createElement('canvas'), { width: size, height: size });
-  const g = canvas.getContext('2d')!;
-  const cover = Math.max(size / galaxyImage.width, size / galaxyImage.height);
-  g.drawImage(galaxyImage, (size - galaxyImage.width * cover) / 2, (size - galaxyImage.height * cover) / 2, galaxyImage.width * cover, galaxyImage.height * cover);
-  const fade = g.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-  for (const [at, a] of [[0, 1], [0.18, 0.95], [0.34, 0.6], [0.46, 0.22], [0.55, 0]]) fade.addColorStop(at, `rgba(0,0,0,${a})`);
-  g.globalCompositeOperation = 'destination-in';
-  g.fillStyle = fade;
-  g.fillRect(0, 0, size, size);
-  const galaxyTexture = new THREE.CanvasTexture(canvas);
-  galaxyTexture.colorSpace = THREE.SRGBColorSpace;
-  const galaxy = new THREE.Mesh(new THREE.PlaneGeometry(14, 14), new THREE.MeshBasicMaterial({ map: galaxyTexture, transparent: true, depthWrite: false }));
-  galaxy.position.set(0, 0, -6.5);
-  scene.add(galaxy);
-
-  // the motes: a soft round sprite, near ones bigger and quicker
-  const dot = Object.assign(document.createElement('canvas'), { width: 64, height: 64 });
-  const d = dot.getContext('2d')!;
-  const glow = d.createRadialGradient(32, 32, 0, 32, 32, 32);
-  for (const [at, a] of [[0, 1], [0.35, 0.75], [0.7, 0.25], [1, 0]]) glow.addColorStop(at, `rgba(255,255,255,${a})`);
-  d.fillStyle = glow;
-  d.fillRect(0, 0, 64, 64);
-  const sprite = new THREE.CanvasTexture(dot);
-  const motes = (count: number, spread: number, near: number, deep: number, size: number, opacity: number) => {
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count; i++) positions.set([(Math.random() - 0.5) * spread, (Math.random() - 0.5) * spread, near - Math.random() * deep], i * 3);
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const material = new THREE.PointsMaterial({ size, map: sprite, color: ELIXIRS[0], transparent: true, opacity, blending: THREE.AdditiveBlending, depthWrite: false });
-    const group = new THREE.Group().add(new THREE.Points(geometry, material));
-    scene.add(group);
-    return { group, material };
-  };
-  const near = motes(160, 8.5, -0.6, 1.2, 0.3, 0.9);
-  const far = motes(130, 10, -2, 3.5, 0.16, 0.75);
+  const sky = cosmos(scene, galaxyImage, ELIXIRS[0]);
   const tint = new THREE.Color(ELIXIRS[0]);
   const tinted = new THREE.Color(ELIXIRS[0]);
 
@@ -468,54 +527,20 @@ async function elixir(): Promise<Live> {
   scene.add(pivot);
 
   // the fruits: a set for a flavour, made when it first shows
-  type Fruit = { sprite: THREE.Sprite; x: number; y: number; size: number; turn: number; delay: number; drift: number; period: number };
-  const fruitSets = new Map<number, { group: THREE.Group; fruits: Fruit[] } | null>();
+  const fruitSets = new Map<number, ReturnType<typeof fruitSet> | null>();
   const fruitsOf = (flavour: number) => {
     if (!fruitSets.has(flavour)) {
       const [name, pictures] = FRUITS[flavour];
-      if (!pictures) fruitSets.set(flavour, null);
-      else {
-        const rand = seeded(name);
-        const group = new THREE.Group();
-        const fruits = Array.from({ length: FRUIT.count }, (_, i): Fruit => {
-          // round the bottle by angle, the ring's radius jittered, bigger ones nearer
-          const angle = ((i + rand() * 0.6) / FRUIT.count) * Math.PI * 2;
-          const radius = 2.3 + rand() * 1.4;
-          const size = 0.55 + rand() * 0.75;
-          const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: picture(`/scenes/fruit-${name}-${(i % pictures) + 1}.webp`), transparent: true, depthWrite: false, opacity: 0 }));
-          sprite.position.z = -1.5 + ((size - 0.55) / 0.75) * 0.9;
-          group.add(sprite);
-          return { sprite, x: Math.cos(angle) * radius, y: Math.sin(angle) * radius * 0.85, size, turn: rand() * Math.PI * 2, delay: rand() * 0.25, drift: 0.05 + rand() * 0.08, period: 4 + rand() * 5 };
-        });
-        scene.add(group);
-        fruitSets.set(flavour, { group, fruits });
-      }
+      fruitSets.set(flavour, pictures ? fruitSet(scene, name, pictures) : null);
     }
     return fruitSets.get(flavour)!;
   };
   const fruitIn = { flavour: 0, at: -10 }; // the first ones already out (as on the cover's still)
   let fruitOut: { flavour: number; at: number } | null = null;
   fruitsOf(0);
-  const placeFruits = (flavour: number, at: number, coming: boolean) => {
+  const place = (flavour: number, at: number, coming: boolean) => {
     const set = fruitsOf(flavour);
-    if (!set) return true;
-    let done = true;
-    for (const f of set.fruits) {
-      const k = Math.min(1, Math.max(0, (time - at - f.delay) / FRUIT.fly));
-      const e = 1 - (1 - k) ** 4;
-      const out = coming ? e : 1 - e; // (how far out from the bottle)
-      const image = f.sprite.material.map?.image as { width: number; height: number } | undefined;
-      const aspect = image ? image.width / image.height : 1;
-      const scale = f.size * (0.2 + 0.8 * out);
-      f.sprite.scale.set(scale * aspect, scale, 1);
-      f.sprite.position.x = f.x * out;
-      f.sprite.position.y = f.y * out + Math.sin(((time + f.delay * 7) / f.period) * Math.PI * 2) * f.drift;
-      f.sprite.material.rotation = f.turn * (coming ? e : 1);
-      f.sprite.material.opacity = coming ? Math.min(1, Math.max(0, (time - at - f.delay) / FRUIT.fade)) * (image ? 1 : 0) : 1 - k;
-      if (k < 1) done = false;
-    }
-    set.group.visible = coming || !done;
-    return done;
+    return set ? placeFruits(set, time, at, coming) : true;
   };
 
   let time = 0;
@@ -533,14 +558,9 @@ async function elixir(): Promise<Live> {
       // a flavour every five seconds (only to one whose label has come)
       const due = Math.floor(time / 5) % ELIXIRS.length;
       if (due !== wanted && labels[due].image) wanted = due;
-      galaxy.rotation.z = time * 0.04;
-      far.group.rotation.z = time * 0.1;
-      far.group.rotation.y = Math.cos(time * 0.15) * 0.12;
-      near.group.rotation.z = time * 0.22;
-      near.group.rotation.y = Math.sin(time * 0.3) * 0.2;
+      sky.step(time);
       tinted.lerp(tint, 0.06);
-      near.material.color.copy(tinted);
-      far.material.color.copy(tinted);
+      sky.tint(tinted);
       if (changing === null && wanted !== shown) {
         changing = time;
         swapped = false;
@@ -562,10 +582,68 @@ async function elixir(): Promise<Live> {
       }
       pivot.position.y = Math.sin(time * 1.5) * 0.12 + y;
       pivot.scale.setScalar(scale);
-      placeFruits(fruitIn.flavour, fruitIn.at, true);
-      if (fruitOut && placeFruits(fruitOut.flavour, fruitOut.at, false)) fruitOut = null;
+      place(fruitIn.flavour, fruitIn.at, true);
+      if (fruitOut && place(fruitOut.flavour, fruitOut.at, false)) fruitOut = null;
       const turn = turnOf<Turn>('elixir').update(dt);
       pivot.rotation.set(turn.x, turn.y, tilt);
+    },
+  };
+}
+
+// The Elixir gummies' Cherry Cola pouch (2026-10-01, his model: scripts/prepare-scenes.mjs), as the Elixir bottle: its
+// print on it (front and back), glossy as the pouch's foil, turning and floating over the galaxy, motes in cherry red,
+// and round it two cherries and a cola gummy cut out of its print, out and bobbing.
+const CHERRY = '#ff2d55';
+async function gummies(): Promise<Live> {
+  const print = picture('/scenes/gummies.webp');
+  const galaxyImage = new Image();
+  galaxyImage.src = '/scenes/galaxy.webp';
+  const [parts] = await Promise.all([model('/scenes/gummies.bin'), print.ready, galaxyImage.decode()]);
+  print.anisotropy = 8;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+  camera.position.set(0, 0, 7);
+  scene.add(new THREE.AmbientLight(0xffffff, 1.4));
+  const main = new THREE.DirectionalLight(0xffffff, 2.5);
+  main.position.set(5, 8, 5);
+  scene.add(main);
+  for (const [color, power, reach, x, y, z] of [
+    [0xff2d55, 3.5, 20, -4, -2, 4],
+    [0x5e38f5, 4.0, 20, 4, 5, -3],
+    [0xffffff, 2.0, 15, 0, 6, 2],
+  ]) {
+    const light = new THREE.PointLight(color, power, reach);
+    light.position.set(x, y, z);
+    scene.add(light);
+  }
+  const sky = cosmos(scene, galaxyImage, CHERRY);
+
+  const foil = new THREE.MeshPhysicalMaterial({ map: print, roughness: 0.38, metalness: 0.05, clearcoat: 0.9, clearcoatRoughness: 0.18 });
+  const pouch = new THREE.Group();
+  for (const { geometry } of parts) pouch.add(new THREE.Mesh(geometry, foil));
+  const box = new THREE.Box3().setFromObject(pouch);
+  const extent = box.getSize(new THREE.Vector3());
+  pouch.position.sub(box.getCenter(new THREE.Vector3()));
+  const holder = new THREE.Group().add(pouch);
+  holder.scale.setScalar(4 / Math.max(extent.x, extent.y, extent.z));
+  const pivot = new THREE.Group().add(holder);
+  scene.add(pivot);
+  const fruits = fruitSet(scene, 'cherry', 3, 1.2);
+
+  let time = 0;
+  return {
+    scene,
+    camera,
+    clear: 0x070609,
+    toneMapping: THREE.NoToneMapping,
+    step(dt) {
+      time += dt;
+      sky.step(time);
+      placeFruits(fruits, time, -10, true); // (out from the first: as on the cover's still)
+      pivot.position.y = Math.sin(time * 1.5) * 0.12;
+      const turn = turnOf<Turn>('gummies').update(dt);
+      pivot.rotation.set(turn.x, turn.y, 0);
     },
   };
 }

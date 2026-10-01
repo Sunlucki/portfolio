@@ -1,5 +1,6 @@
 // The Graphics covers that are 3D scenes (src/three/miniScenes.ts): Mind Logistic's site's own Elixir bottle and
-// Poucher can (~/Developer/MIND LOGISTIC/src/landing-assets, Bogdan's), made small for this site. The bottle's
+// Poucher can (~/Developer/MIND LOGISTIC/src/landing-assets, Bogdan's), made small for this site, and the Elixir
+// gummies' Cherry Cola pouch (his model, below). The bottle's
 // meshes as the site makes them on load (welded, normals smoothed); the can's labels whole and its black body
 // (100,000 triangles, most of the 7.7 MB the model is as text) simplified by meshoptimizer, as far as it can go
 // without moving a vertex more than a thousandth of the part's size. Each becomes public/scenes/<name>.bin: the length of
@@ -17,6 +18,7 @@ import { MeshoptSimplifier } from 'three/examples/jsm/libs/meshopt_simplifier.mo
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const ASSETS = join(homedir(), 'Developer', 'MIND LOGISTIC', 'src', 'landing-assets');
+const KB = join(homedir(), 'Developer', 'Bodgan Nenadović');
 const OUT = 'public/scenes';
 const ERROR = 0.001; // of the model's size, the most a simplified vertex may move
 
@@ -123,5 +125,65 @@ for (const mesh of meshes('POUCHER/POUCHER V2.obj')) {
 }
 writeFileSync(join(OUT, 'poucher.bin'), pack(can, boxOf(can)));
 
-for (const [name, parts] of [['elixir', bottle], ['poucher', can]])
+// The gummies' Cherry Cola pouch (2026-10-01): his model, made in Spline (sources/scenes/cherry-cola.glb in the
+// knowledge base), a pillow pouch with no material nor UVs, the same mesh three times over: one of them, its faces
+// split into its front and back by which way they face, each given the pouch's print by a flat projection from the
+// front (ŻELKI ELIXIR/OKLADKA.png, scripts/prepare-media.py scenes: a sheet folded at the pouch's foot, its left half
+// the front and its right half the back, both lying on their side, their feet at the fold; the halves' long edges
+// trimmed a little, so the print keeps its proportions on the pouch's face), and stood up a quarter turn clockwise.
+const ART = [4252 / 2, 1890]; // (the print's halves, px)
+function glbMesh(file) {
+  const data = readFileSync(file);
+  const jsonLength = data.readUInt32LE(12);
+  const json = JSON.parse(data.subarray(20, 20 + jsonLength).toString());
+  const bin = 20 + jsonLength + 8;
+  const read = (i) => {
+    const accessor = json.accessors[i];
+    const view = json.bufferViews[accessor.bufferView];
+    const Type = { 5126: Float32Array, 5125: Uint32Array, 5123: Uint16Array }[accessor.componentType];
+    const count = accessor.count * { SCALAR: 1, VEC2: 2, VEC3: 3 }[accessor.type];
+    const from = bin + (view.byteOffset ?? 0) + (accessor.byteOffset ?? 0);
+    const bytes = data.subarray(from, from + count * Type.BYTES_PER_ELEMENT);
+    return new Type(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  };
+  const primitive = json.meshes[0].primitives[0];
+  return { position: read(primitive.attributes.POSITION), normal: read(primitive.attributes.NORMAL), index: Uint32Array.from(read(primitive.indices)) };
+}
+const raw = glbMesh(join(KB, 'sources', 'scenes', 'cherry-cola.glb'));
+const [lo, hi] = [[Infinity, Infinity], [-Infinity, -Infinity]];
+for (let i = 0; i < raw.position.length; i += 3)
+  for (let k = 0; k < 2; k++) [lo[k], hi[k]] = [Math.min(lo[k], raw.position[i + k]), Math.max(hi[k], raw.position[i + k])];
+const [width, height] = [hi[0] - lo[0], hi[1] - lo[1]];
+const trim = (1 - ART[0] / ART[1] / (width / height)) / 2; // (of the halves' height, at each long edge)
+const side = (front) => {
+  const map = new Map();
+  const position = [];
+  const normal = [];
+  const uv = [];
+  const index = [];
+  const p = raw.position;
+  for (let t = 0; t < raw.index.length; t += 3) {
+    const [a, b, c] = [raw.index[t], raw.index[t + 1], raw.index[t + 2]];
+    // (which way the face looks: its normal's z, from its corners)
+    const [ux, uy, vx, vy] = [p[b * 3] - p[a * 3], p[b * 3 + 1] - p[a * 3 + 1], p[c * 3] - p[a * 3], p[c * 3 + 1] - p[a * 3 + 1]];
+    if (ux * vy - uy * vx >= 0 !== front) continue;
+    for (const v of [a, b, c]) {
+      if (!map.has(v)) {
+        map.set(v, position.length / 3);
+        const [x, y, z] = [p[v * 3], p[v * 3 + 1], p[v * 3 + 2]];
+        const [nx, ny, nz] = [raw.normal[v * 3], raw.normal[v * 3 + 1], raw.normal[v * 3 + 2]];
+        position.push(y, -x, z); // (stood up: a quarter turn clockwise)
+        normal.push(ny, -nx, nz);
+        const across = (x - lo[0]) / width;
+        uv.push(front ? across / 2 : 0.5 + (1 - across) / 2, trim + (1 - 2 * trim) * ((y - lo[1]) / height));
+      }
+      index.push(map.get(v));
+    }
+  }
+  return { name: front ? 'front' : 'back', position: Float32Array.from(position), normal: Float32Array.from(normal), uv: Float32Array.from(uv), index: Uint32Array.from(index) };
+};
+const pouch = [side(true), side(false)];
+writeFileSync(join(OUT, 'gummies.bin'), pack(pouch, boxOf(pouch)));
+
+for (const [name, parts] of [['elixir', bottle], ['poucher', can], ['gummies', pouch]])
   console.log(name, parts.map((p) => `${p.name} ${p.position.length / 3}v ${p.index.length / 3}t`).join(', '));

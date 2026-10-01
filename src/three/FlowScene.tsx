@@ -112,13 +112,13 @@ const particleVertex = /* glsl */ `
     vec3 middle = (uPhoneA * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
     vec3 away = normalize(aRand.xyz - 0.5 + 1e-4);
     vec3 strewn = middle + away * vec3(1.8, 1.2, 1.0) * (3.0 + 5.0 * aRand.w);
-    // the vortex: a funnel up the middle of the screen, wider at its top, inside the Graphics section's rings; its
-    // particles rise as the page scrolls on and turn round its axis, faster nearer it, most of them in five spiral
-    // arms on its wall, the rest strewn inside
+    // the vortex: a tunnel up the middle of the screen, as wide at its foot as at its head (his call), inside the
+    // Graphics section's rings; its particles rise as the page scrolls on and turn round its axis, faster nearer it,
+    // most of them in five spiral arms on its wall, the rest strewn inside
     float up = fract(aRand.y + uCloud.z * (0.5 + 0.8 * aRand.w));
     bool onArm = aRand.x < 0.65;
     float across = onArm ? 0.6 + 0.4 * aRand.z : sqrt(aRand.z);
-    float radius = uCloud.x * (0.3 + 0.7 * up) * across;
+    float radius = uCloud.x * across;
     float angle = (onArm ? floor(fract(aRand.x * 7.13) * 5.0) * 1.25664 + (aRand.w - 0.5) * 0.55 : aRand.w * 6.28318) + up * 4.0 + uCloud.w * (1.0 + 1.5 * (1.0 - across));
     vec3 cloud = vec3(cos(angle) * radius, (up - 0.5) * uCloud.y, sin(angle) * radius);
     vec3 wind = vec3(aRand.xy * 4.0, uTime * 0.08);

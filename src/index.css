@@ -139,8 +139,8 @@ body {
   }
 }
 
-/* The headings over the particle scene (Apps, Graphics, Video, Music): the page's black under their words, fading out
-   round them, so the particles going behind the words come and go softly (his call) */
+/* The headings over the particle scene (Apps, Graphics, Video, Music): a faint veil of the page's black under their
+   words (a tenth, his call), fading out round them, so the particles going behind the words dim softly */
 .text-shade {
   position: relative;
   isolation: isolate;
@@ -151,5 +151,5 @@ body {
   inset: -35% -6%;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(closest-side, #0c0c0c 62%, rgb(12 12 12 / 0));
+  background: radial-gradient(closest-side, rgb(12 12 12 / 0.1) 62%, rgb(12 12 12 / 0));
 }

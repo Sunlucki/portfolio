@@ -352,7 +352,7 @@ export const GRAPHICS = Object.fromEntries(
 ) as Record<GraphicsSlug, { slug: GraphicsSlug; when: [string, string?]; pictures: { src: string; width: number; height: number }[] } & (typeof t.graphics.projects)[GraphicsSlug]>;
 // cover i (TILES): its project, and which of the project's pictures it shows (-1: its 3D scene, SCENE_OF)
 export const COVER_OF: [GraphicsSlug, number][] = [
-  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', 0], ['hype', 0], ['ihor', 0],
+  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', -1], ['hype', 0], ['ihor', 0],
   ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['chang', 0], ['lizard-moving', 0],
   ['adaya', 0], ['soul-nation', 0], ['currywurst', 0], ['perfumeria-outlet', 0], ['alibia', 1], ['yana-lashes', 0],
   ['strimat', 0], ['depilacja', 0], ['black-point', 2], ['kreem', 0], ['black-point', 7], ['magic-patron', 0],
@@ -365,6 +365,7 @@ export const COVER_OF: [GraphicsSlug, number][] = [
 export const SCENE_OF: Partial<Record<GraphicsSlug, SceneName>> = {
   elixir: 'elixir',
   poucher: 'poucher',
+  'elixir-gummies': 'gummies', // (2026-10-01: his model of the pouch)
   ...Object.fromEntries(Object.keys(prints).map((slug) => [slug, `print:${slug}` as const])),
 };
 // Two projects open on their logo's animation (2026-10-01, src/logoFilms.json from scripts/prepare-media.py logos),
