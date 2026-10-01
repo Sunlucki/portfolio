@@ -3,9 +3,12 @@
   {
    "kind": "card",
    "w": 90,
-   "h": 50.6,
+   "h": 50,
+   "metal": true,
    "front": "/scenes/print/profi-dokument-0-front.webp",
-   "back": "/scenes/print/profi-dokument-0-back.webp"
+   "frontGloss": "/scenes/print/profi-dokument-0-front-gloss.webp",
+   "back": "/scenes/print/profi-dokument-0-back.webp",
+   "backGloss": "/scenes/print/profi-dokument-0-back-gloss.webp"
   },
   {
    "kind": "flyer",

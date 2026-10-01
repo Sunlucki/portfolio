@@ -519,19 +519,24 @@ def logo_films():
 # three.js reads: the paper's 0.75, the foil's 0.2; its blue the metal, where the foil is). Sizes in millimetres and
 # what each thing is go to src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a
 # file, (file, page), (file, (left, top, right, bottom) as fractions), ("foil", art, stamp): the stamp's shapes in
-# silver foil over the art, or ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal
-# where it is, ("holo", art, foil): the same with holographic foil, silver and its colours running as it turns,
-# ("gloss", art, varnish): its spot varnish's layer, glossy where it is, ("unnamed", side, box): a side with a private
-# person's name on it (a graduate's, on Black Point's diploma) taken off, or ("round", side): a round sticker (Magic
-# Patron's), its circle cut out of its page, on a disc. A deck (Da Vinci's five Tarot cards, HYPE's badges, a set of
-# stickers, banners or posters): its fronts (the last on top), one back for all. A sheet folded across its middle (Black
-# Point's voucher): ("fold", outside, inside) for its front, no back. A side laid out across a thing that stands upright
-# is turned a quarter anticlockwise (Time Relax Body's card, and Da Vinci's roses card, its files on their side), one
-# laid out upright for a thing that lies across a quarter clockwise (Soul Nation's voucher's word).
+# silver foil over the art, or ("gold", art, foil[, colour]): the art as printed and its gold foil's layer (dark on
+# white), metal where it is (and laid in that colour over the art, where the art shows the foil otherwise), ("holo",
+# art, foil): the same with holographic foil, silver and its colours running as it turns, ("gloss", art, varnish): its
+# spot varnish's layer, glossy where it is, ("unnamed", side, box): a side with a private person's name on it (a
+# graduate's, on Black Point's diploma) taken off, or ("round", side): a round sticker (Magic Patron's), its circle cut
+# out of its page, on a disc. A deck (Da Vinci's five Tarot cards, HYPE's badges, a set of stickers, banners or
+# posters): its fronts (the last on top), one back for all. A sheet folded across its middle (Black Point's voucher):
+# ("fold", outside, inside) for its front, no back. A side laid out across a thing that stands upright is turned a
+# quarter anticlockwise (Time Relax Body's card, and Da Vinci's roses card, its files on their side), one laid out
+# upright for a thing that lies across a quarter clockwise (Soul Nation's voucher's word).
 DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
 BPW = "BLACK POINT/Графика/Wizytówka/"
 PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm[, more: {"corner": its corners' radius, mm}])]
-    "profi-dokument": [("card", "Нотариальные услуги/Front.jpg", "Нотариальные услуги/Back.jpg", (90, 50.6), 0),
+    # (Profi Dokument's business card, as printed in 01.2025, gold-foiled: its PDF's pages 3 and 4 the foil layers of
+    # pages 1 and 2, its title on the back among them, so the foil is laid in gold over the art (white there). Its
+    # Front.jpg and Back.jpg are an early version of its flyer, not a card: left out, his word)
+    "profi-dokument": [("card", ("gold", ("Нотариальные услуги/ProfiDokument Wizytowki.pdf", 1), ("Нотариальные услуги/ProfiDokument Wizytowki.pdf", 3), (201, 164, 92)),
+                        ("gold", ("Нотариальные услуги/ProfiDokument Wizytowki.pdf", 2), ("Нотариальные услуги/ProfiDokument Wizytowki.pdf", 4), (201, 164, 92)), (90, 50), 3),
                        ("flyer", "Нотариальные услуги/Флаер/FRONT.png", "Нотариальные услуги/Флаер/BACK.png", (180, 90), 2),
                        ("sign", ("Нотариальные услуги/TablicaA4.pdf", 1), None, (300, 210), 0)],
     "yana-lashes": [("card", ("Yana Lashes/PDF/Busines Card.pdf", 1), ("Yana Lashes/PDF/Busines Card.pdf", 2), (90, 50), 2)],
@@ -619,6 +624,8 @@ def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its
         return art, gloss
     if isinstance(spec, tuple) and spec[0] == "gold":  # gold foil: the art as printed, its foil layer dark on white
         art, foil = side(spec[1])[0], side(spec[2])[0].convert("L").point(lambda v: 255 - v)
+        if len(spec) > 3:  # (the foil laid in its colour over the art, where the art shows it otherwise)
+            art = Image.composite(Image.new("RGB", art.size, spec[3]), art, foil)
         # (green the roughness: the paper's 0.75 to the foil's 0.2; blue the metalness: the foil's)
         gloss = Image.merge("RGB", (Image.new("L", art.size, 0), foil.point(lambda a: 191 - round(a / 255 * 140)), foil))
         return art, gloss
