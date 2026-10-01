@@ -299,6 +299,7 @@ export const MUSIC = {
   artist: 'SUNLUCKI',
   album: 'LUCKI BEATS',
   links: [
+    { label: 'Spotify', href: 'https://open.spotify.com/artist/6wlJavSlOcPJqE6o7qwYDW' },
     { label: 'Apple Music', href: 'https://music.apple.com/us/artist/sunlucki/1695520105' },
     { label: 'SoundCloud', href: 'https://soundcloud.com/sunlucki' },
   ],

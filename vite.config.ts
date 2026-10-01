@@ -45,6 +45,7 @@ function head(lang: Lang) {
       'https://www.behance.net/styleicon',
       'https://soundcloud.com/sunlucki',
       'https://music.apple.com/us/artist/sunlucki/1695520105',
+      'https://open.spotify.com/artist/6wlJavSlOcPJqE6o7qwYDW',
     ],
   }
   const graph = {
