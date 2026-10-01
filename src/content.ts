@@ -299,7 +299,7 @@ export const PROJECTS: Project[] = [
 // Marquee: project covers from the STYLEICON archive (scripts/prepare-media.py), their words in t.graphics.tiles.
 // `?v` busts the 30-day cache. Branding, print and social media only: the sites are in the WordPress card (Bogdan,
 // 2026-09-30).
-export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=6`, alt }));
+export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=7`, alt }));
 
 // The covers' projects (2026-10-01): each with all its pictures (public/graphics/<slug>/N.webp, sized in graphics.json by
 // scripts/prepare-media.py) and when it was, from the dates of its PSDs on his desktop (Проэкты/АРХИВ); a cover opens
@@ -347,8 +347,9 @@ export const COVER_OF: [GraphicsSlug, number][] = [
   ['stories-beauty', 0], ['black-point', 7], ['depilacja', 0], ['profi-dokument', 1], ['alibia', 1], ['time-relax-body', 0],
   ['na-serio-na-zarty', 0], ['ihor', 1],
 ];
-// The covers that are live 3D scenes (2026-10-01), Mind Logistic's site's own (src/three/miniScenes.ts): the cover
-// plays the scene over a still of it, and its project opens on the scene, all its pictures under it (-1 above).
+// The projects that open on a live 3D scene (2026-10-01), Mind Logistic's site's own (src/three/miniScenes.ts): the
+// cover is a still of it (no 3D in the rows, his call), the project opens on the scene, all its pictures under it
+// (-1 above).
 export const SCENE_OF: Partial<Record<GraphicsSlug, SceneName>> = { elixir: 'elixir', poucher: 'poucher' };
 
 // Music: Bogdan's playlist (2026-09-30): fifteen tracks in his order, then the rest of his LUCKI BEATS album mixed,

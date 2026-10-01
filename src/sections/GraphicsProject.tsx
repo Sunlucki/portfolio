@@ -26,8 +26,8 @@ export type Opening = { slug: GraphicsSlug; picture: number; cover: HTMLElement;
  * the screen's width (on wide screens, to the middle column) and from the cover's crop to the whole picture; the page
  * behind blurs, and under the picture come the project's name and when it was, who it was for, what was wrong and what
  * was done, then its other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into the cover.
- * A 3D cover (SCENE_OF) flies up as it was when tapped and goes on live up there, turned by dragging, all the
- * project's pictures under it.
+ * A 3D project's cover (SCENE_OF) is a still of its scene: it flies up and the scene goes on live from it up there,
+ * turned by dragging, all the project's pictures under it.
  */
 export function GraphicsProject({ opening, onClose }: { opening: Opening; onClose: () => void }) {
   const project = GRAPHICS[opening.slug];

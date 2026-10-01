@@ -3,10 +3,10 @@ import * as THREE from 'three';
 /**
  * The Graphics covers that are live 3D scenes: Mind Logistic's site's own (Bogdan's, ~/Developer/MIND LOGISTIC:
  * LowPolyBottle3D.tsx and Poucher3DViewer.tsx), its Elixir bottle turning through its five labels over a galaxy and
- * its Poucher can through its four in a lightning storm, ported as they are. One WebGL renderer, off the page, draws
- * them for every canvas that shows one (a cover's copies in the marquee, the open project's top): each scene once a
- * frame, copied into its canvases, and only while one is on screen; while a project is open, its scene alone (the
- * covers behind are blurred). The models and pictures: scripts/prepare-scenes.mjs, prepare-media.py scenes.
+ * its Poucher can through its four in a lightning storm, ported as they are. Their covers are stills of them (no 3D in
+ * the rows, Bogdan's call); a cover's project opens on its scene. One WebGL renderer, off the page, draws a scene once
+ * a frame into the canvases that show it, only while one is on screen (the open project's top first, if there are
+ * others). The models and pictures: scripts/prepare-scenes.mjs, prepare-media.py scenes.
  */
 export type SceneName = 'elixir' | 'poucher';
 type View = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; name: SceneName; top: boolean; shown: boolean; drawn: boolean; onReady?: () => void };
