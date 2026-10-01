@@ -30,8 +30,8 @@ export const summary =
   'I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. ' +
   'In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry ' +
   'accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 ' +
-  'marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet ' +
-  'platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents ' +
+  'marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, a workforce platform for ' +
+  'staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents ' +
   'with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before ' +
   'engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk ' +
   'and business value.';
@@ -40,7 +40,7 @@ export const numbers = [
   { value: '10+', label: 'production systems shipped in 2026, as the sole architect' },
   { value: '94%', label: 'of my 2026 commits co-authored with Claude' },
   { value: '84 of 127', label: 'audit findings confirmed by skeptic agents, then fixed' },
-  { value: '9 + 1', label: 'parallel coding agents and a QA agent: an 11K-line design system in ~14.5 h' },
+  { value: '10', label: 'agents in parallel (9 coding, 1 QA): an 11K-line design system in ~14.5 h' },
   { value: '700+', label: 'automated tests on the largest platform (339 REST endpoints)' },
   { value: '23', label: 'interface languages on one EU platform' },
 ];
@@ -115,7 +115,7 @@ export const fit = [
   },
   {
     ask: 'Leadership',
-    evidence: 'Pro bono tech lead of a foundation’s MVP (2026); leader of a creative and marketing team (2022–2025).',
+    evidence: 'Co-founder and Board Member of SIMBIA sp. z o.o. (2026); President of the Management Board of Black Point Group sp. z o.o. and leader of its creative and marketing team (2022–2025); pro bono tech lead of a foundation’s MVP (2026).',
   },
 ];
 
@@ -280,7 +280,7 @@ export const projects = [
 
 // (the PDF keeps four project cards; the others it names here)
 export const alsoInPdf =
-  'Also: iApply Workforce (shift tracking for staffing agencies: web and a native SwiftUI app), the spin.clinic design system (see Experience), CashFlow (iOS finance advisor with Claude), AiBizBox (document-AI SaaS), XyliMelts (D2C store with a 3D hero).';
+  'Also: iApply Workforce (shift tracking, web and a native SwiftUI app), the spin.clinic design system (see Experience), CashFlow (iOS and Claude), AiBizBox (document AI), XyliMelts (D2C, 3D).';
 
 export const alsoBuilt =
   'Also: CashFlow (iOS finance advisor: SwiftUI, Fastify, Claude with structured outputs), AiBizBox (document-AI SaaS with PII masking), XyliMelts (D2C store with a React Three Fiber hero and the most mature CI/CD), Novus Ignis (verifiable deliberation MVP).';
@@ -300,11 +300,11 @@ export const skills = [
   },
   {
     group: 'Delivery and operations',
-    items: ['CI/CD (GitHub Actions)', 'Automated testing (Vitest, XCTest)', 'Docker', 'Linux (nginx, PM2, systemd)', 'AWS: S3 (AWS SDK v3, presigned URLs), SES bounce and complaint webhooks over SNS, signature-verified', 'Backups and disaster recovery', 'Sentry'],
+    items: ['CI/CD (GitHub Actions)', 'Automated testing (Vitest, XCTest)', 'Docker', 'Linux (nginx, PM2, systemd)', 'AWS: S3, SES, SNS (SDK v3, presigned URLs, signature-verified webhooks)', 'Backups and disaster recovery', 'Sentry'],
   },
   {
     group: 'Domains',
-    items: ['CRM', 'B2B commerce', 'Payments (Stripe, PayU, Przelewy24)', 'E-invoicing (KSeF 2.0)', 'Accounting', 'HR tech', 'Fleet management (Uber API)'],
+    items: ['CRM', 'B2B commerce', 'Payments (Stripe, PayU, Przelewy24)', 'E-invoicing (KSeF 2.0)', 'Accounting', 'HR tech', 'Fleet management'],
   },
 ];
 

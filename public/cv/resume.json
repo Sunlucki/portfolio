@@ -6,7 +6,7 @@
     "image": "https://sunlucki.pl/cv/portrait.jpg",
     "email": "hello@sunlucki.pl",
     "url": "https://sunlucki.pl",
-    "summary": "I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, and workforce and fleet platforms with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.",
+    "summary": "I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, a workforce platform for staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.",
     "location": {
       "city": "Poznań",
       "countryCode": "PL"
@@ -157,7 +157,7 @@
         "Automated testing (Vitest, XCTest)",
         "Docker",
         "Linux (nginx, PM2, systemd)",
-        "AWS: S3 (AWS SDK v3, presigned URLs), SES bounce and complaint webhooks over SNS, signature-verified",
+        "AWS: S3, SES, SNS (SDK v3, presigned URLs, signature-verified webhooks)",
         "Backups and disaster recovery",
         "Sentry"
       ]
@@ -171,7 +171,7 @@
         "E-invoicing (KSeF 2.0)",
         "Accounting",
         "HR tech",
-        "Fleet management (Uber API)"
+        "Fleet management"
       ]
     }
   ],

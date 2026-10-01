@@ -239,7 +239,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .print-only { display: block; }
   /* one column and no letter-spacing: CV parsers read a PDF line by line, and spaced capitals come out as letters */
   body * { letter-spacing: 0 !important; }
-  .page-pad { padding: 9.5mm 12.5mm; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .page-pad { padding: 9mm 12.5mm; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
   .topnav, .noprint, .filters, .filter-note, .expand, .skip { display: none !important; }
   .wrap { max-width: none; padding: 0; }
   html.js .rv { opacity: 1 !important; transform: none !important; }
@@ -256,7 +256,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .contacts { margin-top: 7pt; gap: 4pt; }
   .btn { padding: 2.5pt 8pt; font-size: 7.6pt; border-width: 1px; text-transform: none; }
   .avatar { order: 0; width: 84pt; padding: 2.5pt; }
-  section { padding: 9pt 0 0; }
+  section { padding: 8pt 0 0; }
   h2.title { font-size: 14pt; margin-bottom: 4pt; break-after: avoid; }
   .tt { display: inline; color: var(--accent); -webkit-text-stroke: 0; outline: none; margin: 0; }
   .sub { margin: -2pt 0 5pt; font-size: 7.4pt; text-transform: none; break-after: avoid; }
@@ -264,7 +264,8 @@ html.js .rv.in { opacity: 1; transform: none; }
   .lead { font-size: 9.2pt; max-width: none; }
   .numbers { display: block; margin-top: 6pt; }
   .numbers li.card { display: block; background: none; border: 0; border-radius: 0; padding: 0; }
-  .numbers li + li { margin-top: 1.5pt; }
+  .numbers li + li { margin-top: 0; }
+  #sdlc .sub { display: none; }
   .numbers .value { display: inline; font-size: 10pt; color: var(--accent); }
   .numbers .label { display: inline; font-size: 8.5pt; color: var(--text); margin: 0 0 0 4pt; }
   .card { padding: 7pt 10pt; border-radius: 10pt; border-width: 1px; }
@@ -320,7 +321,8 @@ html.js .rv.in { opacity: 1; transform: none; }
   .pair .card h3::after { content: ': '; }
   .pair .card p { display: inline; }
   footer { margin-top: 6pt; padding: 4pt 0 0; font-size: 7pt; }
-  footer p + p { margin-top: 2pt; }
+  footer p { display: inline; }
+  footer p + p::before { content: ' · '; }
   footer .consent { font-size: 6.6pt; }
 }
 </style>
