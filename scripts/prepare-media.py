@@ -7,12 +7,14 @@ Outputs into ../public:
                                                           (Apple Vision, scripts/cutout.swift) so the headline can sit behind the subject
   work/<name>.webp  (1600w)                             — project card images
   tiles/<name>.webp (840x540 cover)                     — marquee tiles (project covers)
+  graphics/<project>/N.webp (1600w)                     — all the pictures of the covers' projects (`graphics` alone:
+                                                          python3 scripts/prepare-media.py graphics), sized in src/graphics.json
   about/pointer.webp (560px, alpha)                     — 3D pointer icon (contact section)
   music/NNN.m4a                                         — the music player's playlist (AAC as mastered)
   video/<slug>.mp4, .webp, -frames.webp                 — the Video section's films, posters and hover strips
 Re-run safe: overwrites outputs.
 """
-import os, subprocess, tempfile, glob, re, json, random, unicodedata
+import os, sys, subprocess, tempfile, glob, re, json, random, unicodedata
 from PIL import Image, ImageChops, ImageFilter, ImageStat, features
 
 HOME = os.path.expanduser("~")
@@ -111,6 +113,31 @@ TILES = [
     f"{COVERS}/2025/05/Time-Relax-Body-1.jpg", f"{WP_ASSETS}/Na Serio Na Zarty.jpg",
     f"{WP_ASSETS}/Igor music BC1.jpg",
 ]
+# The covers' projects, each with all its pictures (the one a cover shows among them), for the project a cover opens:
+# from #STYLEICON/WEB/assets, and the old site's case pictures (STYLEICON REACT APP/extracted_projects).
+CASES = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICON REACT APP", "extracted_projects")
+GRAPHICS = {
+    "hype": ["HYPE.jpg"],
+    "ihor": ["Igor music poster.jpg", "Igor music BC1.jpg", "Igor music BC2.jpg"],
+    "dc-consulting": ["DC LOGO Moucup.jpg", "~dc-consulting/DC-Moucup-3-scaled.webp", "~dc-consulting/VOUCHER-MOCKUP-scaled.webp"],
+    "touch-coffee": ["TouchMockup.jpg"],
+    "da-vinci": ["Da Vinci.jpg", "Da Vinci - Business card NS.png", "Da Vinci - Flyer.jpg", "Da Vinci - Instructions.jpg"],
+    "black-point": ["Black Point.jpg", "Black Point - Branding.png", "Black Point - INSTA1.jpg", "Black Point - INSTA2.jpg", "Black Point - INSTA3.jpg",
+                    "Black Point - T-shirt AM.jpg", "Black Point - T-shirt IS.jpg", "Black Point - T-shirt JV.jpg", "Black Point - T-shirt LB.jpg",
+                    "Black Point - T-shirt RL.jpg", "Black Point - T-shirt SB.jpg", "Black Point - T-shirt VT.jpg", "Black Point - WEB.png",
+                    "Black Point - WEB2.jpg", "Black Point - WEB3.jpg"],
+    "adaya": ["ADAYA.jpg"],
+    "soul-nation": ["SOUL NATION.jpg"],
+    "strimat": ["Strimat.jpg"],
+    "profi-dokument": ["Profi Document.jpg", "PD Flayer.jpg", "PD Flayer2.jpg"],  # (PD: Profi Dokument)
+    "zero-sladu": ["Zero Śladu.jpg"],
+    "yana-lashes": ["Yana lashes.jpg"],
+    "stories-beauty": ["Stories Beautyc.jpg"],  # (Stories Beauty.png: the same picture)
+    "depilacja": ["Laser BC.jpg"],
+    "alibia": ["ALIBIA.jpg", "ALIBIA - LOGO.jpg", "ALIBIA - FLYER.jpg", "Alibia - Web 1.jpg", "ALIBIA WEB REEL.png"],
+    "time-relax-body": ["Time Relax Body.jpg"],
+    "na-serio-na-zarty": ["Na Serio Na Zarty.jpg"],
+}
 ABOUT = {"pointer": "Указатель.png"}
 # The WordPress sites' slideshow: for each site, Bogdan's mockups of it (#STYLEICON/WEB/assets, "m") and pages of
 # it (PORTFOLIO IMAGES, "p"), which scroll on a MacBook's screen in the slide. A page is kept to its top (2.4
@@ -345,7 +372,24 @@ def listening():
     im.save(dst, "WEBP", quality=86, method=6)
     return os.path.getsize(dst)
 
+def graphics():
+    sizes, total = {}, 0
+    for slug, files in GRAPHICS.items():
+        sizes[slug] = []
+        for i, f in enumerate(files):
+            src = os.path.join(CASES, f[1:]) if f.startswith("~") else os.path.join(WP_ASSETS, f)
+            dst = out("graphics", slug, f"{i}.webp")
+            total += to_webp(src, dst, width=1600, q=78)
+            with Image.open(dst) as im:
+                sizes[slug].append([im.width, im.height])
+    with open(os.path.join(KB, "portfolio", "src", "graphics.json"), "w") as fh:
+        json.dump(sizes, fh, separators=(",", ":"))
+    return total
+
 if __name__ == "__main__":
+    if sys.argv[1:] == ["graphics"]:
+        print(f"graphics: {sum(map(len, GRAPHICS.values()))} pictures {graphics()/1e6:.1f}MB")
+        sys.exit()
     assert ART and os.path.isdir(ART), "set ARTIMG to the extracted artifact screenshots dir"
     n = hero_frames()
     s = sum(to_webp(p, out("work", f"{k}.webp"), width=1600, q=78) for k, p in WORK.items())
@@ -356,6 +400,7 @@ if __name__ == "__main__":
     print(f"wordpress demo films: {len(WP_DEMOS)} {s/1e6:.1f}MB")
     s = sum(tile(i, p) for i, p in enumerate(TILES))
     print(f"tiles: {len(TILES)} images {s/1e6:.1f}MB")
+    print(f"graphics: {sum(map(len, GRAPHICS.values()))} pictures {graphics()/1e6:.1f}MB")
     s = sum(to_webp(os.path.join(ICONS, f), out("about", f"{k}.webp"), width=560, q=82) for k, f in ABOUT.items())
     print(f"about icons: {len(ABOUT)} {s/1e6:.2f}MB")
     s, n = music()

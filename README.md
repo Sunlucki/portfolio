@@ -110,6 +110,8 @@ The phone is not the section's own: one particle scene (`src/three/FlowScene.tsx
 
 Branding, print and social media, no websites: rows of covers that slide slowly in alternating directions as the page scrolls (`src/sections/MarqueeSection.tsx`, covers in `TILES` in `src/content.ts`, cut to 840 × 540 by `scripts/prepare-media.py`, some from a closer crop). Behind them drifts the cloud of particles the Mobile Apps iPhone broke into, on its way to the Video section. The covers are solid, so the particles pass behind them and never show through; the first and last rows fade into the page with a shade in its colour rather than a mask.
 
+A cover opens its project (`src/sections/GraphicsProject.tsx`): its picture flies from the cover up to the top of the screen (on wide screens, into the middle column), growing from the cover's crop into the whole picture, while the page behind blurs; under it come the project's name, what was made and when (the dates of its PSDs on Bogdan's desktop), who it was for, what was wrong and what was done, then the project's other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into its cover. The projects are in `GRAPHICS` in `src/content.ts` (which cover shows which picture of which project: `COVER_OF`), their words in `graphics.projects` in `src/i18n/`, their pictures in `public/graphics/<project>/` (`python3 scripts/prepare-media.py graphics`: from #STYLEICON/WEB/assets and the old styleicon.pl cases, sized in `src/graphics.json`).
+
 ## Video
 
 Under the title, the views of his videos on YouTube, TikTok and Instagram in one thin line (`VIDEO_VIEWS` in `src/content.ts`; YouTube's counted, the others as he gives them), each its icon and count, with the platform's name where there is room. Below, on tablets and desktops, Bogdan's films in a masonry grid (`src/sections/VideoSection.tsx`), each at its own shape, dealt to the shortest column so the order still reads across (three columns, two on tablets); the first ones in view are built out of the particles coming from the Mobile Apps section, and show once they are. A film shows its poster; hovered, it loads a strip of ten of its frames, one small image, and flips through them. Clicked, it plays on the full screen with its sound (the Fullscreen API), and the music player stops.
@@ -157,7 +159,7 @@ src/
   components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, ScatterText, SpeedNumber, SectionTitle, ScrollHint, SwipeEgg, CatEgg, buttons
   heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
   promo/                the products' promos in the project cards (Promo.tsx; saas/ and oner/ copied from SIMBIA)
-  sections/             Hero (+ heroVeil.ts), Manifesto, About, Numbers, Stack, Services, Projects, FlowSections (Apps, Marquee = Graphics, Video + VideoFeed, Music), Contact
+  sections/             Hero (+ heroVeil.ts), Manifesto, About, Numbers, Stack, Services, Projects, FlowSections (Apps, Marquee = Graphics + GraphicsProject, Video + VideoFeed, Music), Contact
   three/                PhoneScene, ManifestoScene (+ earth.ts, aboutStage.ts, KeepSize), FlowScene (+ flow.ts), noise.ts, MusicStage (+ musicFloor.ts), cursor3d
   vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
@@ -170,7 +172,7 @@ scripts/
   prepare-models.py     the manifesto's heart, brain and bulb with hands, baked from models into point sets
   prepare-bands.mjs     each track's spectrum for the music stage (needs ffmpeg)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
-public/                 generated media (hero/, work/, tiles/, about/, models/, egg/; music/ and video/ not in git)
+public/                 generated media (hero/, work/, tiles/, graphics/, about/, models/, egg/; music/ and video/ not in git)
 ```
 
 ## Develop

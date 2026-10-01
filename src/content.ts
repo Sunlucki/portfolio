@@ -2,6 +2,7 @@
 // ./i18n, in the visitor's language (English: i18n/en.ts).
 
 import { lang, t, type Lang } from './i18n';
+import graphicsSizes from './graphics.json';
 import musicTracks from './music.json';
 
 export const PERSON = {
@@ -291,6 +292,48 @@ export const PROJECTS: Project[] = [
 // `?v` busts the 30-day cache. Branding, print and social media only: the sites are in the WordPress card (Bogdan,
 // 2026-09-30).
 export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=5`, alt }));
+
+// The covers' projects (2026-10-01): each with all its pictures (public/graphics/<slug>/N.webp, sized in graphics.json by
+// scripts/prepare-media.py) and when it was, from the dates of its PSDs on his desktop (Проэкты/АРХИВ); a cover opens
+// its project, at the picture it shows.
+export type GraphicsSlug = keyof typeof graphicsSizes;
+const GRAPHICS_DATES: Record<GraphicsSlug, [string, string?]> = {
+  hype: ['2024-09'],
+  ihor: ['2024-02'],
+  'dc-consulting': ['2025-05', '2025-07'],
+  'touch-coffee': ['2024-11'],
+  'da-vinci': ['2025-04'],
+  'black-point': ['2021-12', '2024-11'],
+  adaya: ['2025-04'],
+  'soul-nation': ['2024-07', '2025-02'],
+  strimat: ['2023-12', '2025-05'],
+  'profi-dokument': ['2024-02', '2025-01'],
+  'zero-sladu': ['2025-04'],
+  'yana-lashes': ['2024-07'],
+  'stories-beauty': ['2025-04'],
+  depilacja: ['2024-05', '2024-10'],
+  alibia: ['2025-04', '2025-09'],
+  'time-relax-body': ['2024-05'],
+  'na-serio-na-zarty': ['2025-01'],
+};
+export const GRAPHICS = Object.fromEntries(
+  (Object.keys(graphicsSizes) as GraphicsSlug[]).map((slug) => [
+    slug,
+    {
+      slug,
+      when: GRAPHICS_DATES[slug],
+      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp`, width, height })),
+      ...t.graphics.projects[slug],
+    },
+  ]),
+) as Record<GraphicsSlug, { slug: GraphicsSlug; when: [string, string?]; pictures: { src: string; width: number; height: number }[] } & (typeof t.graphics.projects)[GraphicsSlug]>;
+// cover i (TILES): its project, and which of the project's pictures it shows
+export const COVER_OF: [GraphicsSlug, number][] = [
+  ['hype', 0], ['ihor', 0], ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['black-point', 2],
+  ['adaya', 0], ['soul-nation', 0], ['strimat', 0], ['profi-dokument', 0], ['zero-sladu', 0], ['yana-lashes', 0],
+  ['stories-beauty', 0], ['black-point', 7], ['depilacja', 0], ['profi-dokument', 1], ['alibia', 1], ['time-relax-body', 0],
+  ['na-serio-na-zarty', 0], ['ihor', 1],
+];
 
 // Music: Bogdan's playlist (2026-09-30): fifteen tracks in his order, then the rest of his LUCKI BEATS album mixed,
 // the titles in English and without "Beat" (his call). Track N plays /music/NNN.m4a, the AAC master from his Music

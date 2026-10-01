@@ -1,10 +1,11 @@
-import { Fragment, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
-import { t } from '../i18n';
-import { TILES } from '../content';
+import { fill, t } from '../i18n';
+import { COVER_OF, GRAPHICS, TILES } from '../content';
+import { GraphicsProject, type Opening } from './GraphicsProject';
 
 // Four rows, dealt like cards so neighbouring covers differ.
-const ROWS = [0, 1, 2, 3].map((row) => TILES.filter((_, i) => i % 4 === row));
+const ROWS = [0, 1, 2, 3].map((row) => TILES.map((tile, i) => ({ ...tile, i })).filter(({ i }) => i % 4 === row));
 const SPEED = 0.15; // pixels of slide per pixel of scroll
 // The first and last rows fade into the page at the top and bottom, so they sit in it like a backdrop: shaded in
 // the page's colour, not see-through (the particles pass behind the covers, and must not show through them).
@@ -12,10 +13,11 @@ const SHADE = ['linear-gradient(to bottom, rgb(12 12 12 / 0.85), rgb(12 12 12 / 
 const TILE = 'h-[120px] w-[187px] shrink-0 rounded-2xl sm:h-[160px] sm:w-[249px] md:h-[190px] md:w-[296px]';
 
 // Graphics: branding, print and social media covers in rows that slide slowly in alternating directions as the
-// page scrolls.
+// page scrolls. A cover opens its project (GraphicsProject).
 export function MarqueeSection() {
   const sectionRef = useRef<HTMLElement>(null);
   const rowRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [opening, setOpening] = useState<Opening | null>(null);
 
   useEffect(() => {
     let raf = 0;
@@ -56,21 +58,29 @@ export function MarqueeSection() {
             className="flex w-max gap-3"
             style={{ willChange: 'transform' }}
           >
-            {[...tiles, ...tiles, ...tiles].map((t, k) => {
-              const cover = <img src={t.src} alt={k < tiles.length ? t.alt : ''} aria-hidden={k >= tiles.length || undefined} loading="lazy" decoding="async" width={296} height={190} className={`${TILE} object-cover`} />;
+            {[...tiles, ...tiles, ...tiles].map((tile, k) => {
               const edge = i === 0 ? SHADE[0] : i === ROWS.length - 1 ? SHADE[1] : null;
-              return edge ? (
-                <div key={k} className={`relative ${TILE}`}>
-                  {cover}
-                  <div aria-hidden className="absolute inset-0 rounded-2xl" style={{ background: edge }} />
-                </div>
-              ) : (
-                <Fragment key={k}>{cover}</Fragment>
+              const [slug, picture] = COVER_OF[tile.i];
+              const copy = k >= tiles.length; // (the row's other two copies, for the slide)
+              return (
+                <button
+                  key={k}
+                  type="button"
+                  aria-label={fill(t.graphics.open, { name: GRAPHICS[slug].name })}
+                  aria-hidden={copy || undefined}
+                  tabIndex={copy ? -1 : undefined}
+                  onClick={(e) => setOpening({ slug, picture, cover: e.currentTarget, src: tile.src })}
+                  className={`relative block overflow-hidden ${TILE}`}
+                >
+                  <img src={tile.src} alt={copy ? '' : tile.alt} loading="lazy" decoding="async" width={296} height={190} className={`${TILE} object-cover`} />
+                  {edge && <span aria-hidden className="absolute inset-0 rounded-2xl" style={{ background: edge }} />}
+                </button>
               );
             })}
           </div>
         ))}
       </div>
+      {opening && <GraphicsProject opening={opening} onClose={() => setOpening(null)} />}
     </section>
   );
 }
