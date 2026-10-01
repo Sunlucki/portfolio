@@ -238,7 +238,7 @@ const pl: Copy = {
     turn: 'Przeciągnij, aby obrócić',
     unfold: 'Stuknij, aby otworzyć', // (a folder)
     shuffle: 'Stuknij, aby potasować', // (a deck)
-    things: { logo: 'Logo', folder: 'Teczka', deck: 'Talia tarota', card: 'Wizytówka', flyer: 'Ulotka', voucher: 'Voucher', guide: 'Instrukcja pielęgnacji' },
+    things: { logo: 'Logo', folder: 'Teczka', deck: 'Talia tarota', card: 'Wizytówka', flyer: 'Ulotka', voucher: 'Voucher', guide: 'Instrukcja pielęgnacji', sticker: 'Naklejka' },
     projects: {
       hype: { name: 'HYPE', kind: 'Plakaty wydarzeń', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Plakat muzyczny i wizytówki', client: '', problem: '', solution: '' },

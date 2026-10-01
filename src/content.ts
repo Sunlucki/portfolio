@@ -363,7 +363,7 @@ export const LOGO_FILM_OF = logoFilms as Partial<Record<GraphicsSlug, { src: str
 // The projects whose printed things are in 3D (2026-10-01, src/prints.json from the print files in his archive):
 // they open on them, to be turned over and looked at, one thing after another by the chips under them.
 export const PRINT_KINDS = Object.fromEntries(Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => thing.kind)])) as Partial<
-  Record<GraphicsSlug, ('deck' | 'folder' | 'card' | 'flyer' | 'voucher' | 'guide')[]>
+  Record<GraphicsSlug, ('deck' | 'folder' | 'card' | 'flyer' | 'voucher' | 'guide' | 'sticker')[]>
 >;
 
 // Music: Bogdan's playlist (2026-09-30): fifteen tracks in his order, then the rest of his LUCKI BEATS album mixed,

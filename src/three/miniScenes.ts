@@ -782,6 +782,8 @@ type Sheet = {
   back?: string;
   frontGloss?: string;
   backGloss?: string;
+  frontBump?: string; // (blind embossing: the paper's height)
+  backBump?: string;
   metal?: boolean; // (its gloss maps' blue is metal: gold foil)
   // a folder's
   page?: number[];
@@ -793,6 +795,7 @@ type Sheet = {
 };
 const PRINTS = printsJson as Record<string, Sheet[]>;
 const SHUFFLE = { split: 0.35, gap: 0.08, deal: 0.32 }; // seconds: the halves part, each card's turn after the last, its way in
+const EMBOSS = 8; // how high a blind-embossed mark stands (its bump map's scale)
 
 // a soft round spot, white at its middle (a shadow when drawn dark, a glow when light)
 function spot(alpha: number) {
@@ -813,11 +816,14 @@ async function sheets(name: SceneName): Promise<Live> {
     back: thing.back ?? thing.inside ? picture((thing.back ?? thing.inside)!) : null,
     frontGloss: thing.frontGloss ?? thing.outsideGloss ? picture((thing.frontGloss ?? thing.outsideGloss)!) : null,
     backGloss: thing.backGloss ? picture(thing.backGloss) : null,
+    frontBump: thing.frontBump ? picture(thing.frontBump) : null,
+    backBump: thing.backBump ? picture(thing.backBump) : null,
     metal: !!thing.metal,
   }));
-  for (const side of sides) for (const gloss of [side.frontGloss, side.backGloss]) if (gloss) gloss.colorSpace = THREE.NoColorSpace; // (data, not colour)
-  const ready = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss].every((texture) => !texture || texture.image);
-  await Promise.all([...sides[0].fronts, sides[0].back, sides[0].frontGloss, sides[0].backGloss].map((texture) => texture?.ready));
+  for (const side of sides) for (const data of [side.frontGloss, side.backGloss, side.frontBump, side.backBump]) if (data) data.colorSpace = THREE.NoColorSpace; // (data, not colour)
+  const maps = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss, sides[i].frontBump, sides[i].backBump];
+  const ready = (i: number) => maps(i).every((texture) => !texture || texture.image);
+  await Promise.all(maps(0).map((texture) => texture?.ready));
 
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
@@ -841,8 +847,15 @@ async function sheets(name: SceneName): Promise<Live> {
   const edge = new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 0.9 });
   const box = new THREE.BoxGeometry(1, 1, 1);
   // (a blank side: the paper; a gloss map's green is the roughness, and on a thing with metal its blue the metal)
-  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null, metal = false) =>
-    new THREE.MeshStandardMaterial({ map, color: map ? 0xffffff : 0xf4f2ec, roughnessMap: gloss, roughness: gloss ? 1 : 0.62, ...(metal && gloss ? { metalnessMap: gloss, metalness: 1 } : {}) });
+  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null, metal = false, bump: THREE.Texture | null = null) =>
+    new THREE.MeshStandardMaterial({
+      map,
+      color: map ? 0xffffff : 0xf4f2ec,
+      roughnessMap: gloss,
+      roughness: gloss ? 1 : 0.62,
+      ...(metal && gloss ? { metalnessMap: gloss, metalness: 1 } : {}),
+      ...(bump ? { bumpMap: bump, bumpScale: EMBOSS } : {}),
+    });
   const pivot = new THREE.Group();
   scene.add(pivot);
   // each thing's sheets: one, or a deck's cards, or a folder (built as the thing first shows)
@@ -917,7 +930,7 @@ async function sheets(name: SceneName): Promise<Live> {
         thing.kind === 'folder'
           ? fold(thing, i)
           : side.fronts.map((map) => {
-              const mesh = new THREE.Mesh(box, [edge, edge, edge, edge, paper(map, side.frontGloss, side.metal), paper(side.back, side.backGloss, side.metal)]);
+              const mesh = new THREE.Mesh(box, [edge, edge, edge, edge, paper(map, side.frontGloss, side.metal, side.frontBump), paper(side.back, side.backGloss, side.metal, side.backBump)]);
               mesh.scale.set(size.w, size.h, size.t);
               return mesh;
             });

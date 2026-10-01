@@ -278,7 +278,7 @@ const fr: Copy = {
     turn: 'Faites glisser pour le tourner',
     unfold: 'Touchez pour l’ouvrir', // (a folder)
     shuffle: 'Touchez pour mélanger', // (a deck)
-    things: { logo: 'Logo', folder: 'Chemise', deck: 'Jeu de tarot', card: 'Carte de visite', flyer: 'Flyer', voucher: 'Bon cadeau', guide: 'Guide de soins' },
+    things: { logo: 'Logo', folder: 'Chemise', deck: 'Jeu de tarot', card: 'Carte de visite', flyer: 'Flyer', voucher: 'Bon cadeau', guide: 'Guide de soins', sticker: 'Autocollant' },
     projects: {
       hype: { name: 'HYPE', kind: 'Affiches d’événements', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Affiche musicale et cartes de visite', client: '', problem: '', solution: '' },

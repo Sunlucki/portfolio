@@ -518,6 +518,100 @@
    "back": "/scenes/print/dc-consulting-0-back.webp"
   }
  ],
+ "black-point": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/black-point-0-front.webp",
+   "back": "/scenes/print/black-point-0-back.webp",
+   "backGloss": "/scenes/print/black-point-0-back-gloss.webp"
+  },
+  {
+   "kind": "voucher",
+   "w": 297,
+   "h": 210,
+   "front": "/scenes/print/black-point-1-front.webp",
+   "back": "/scenes/print/black-point-1-back.webp"
+  },
+  {
+   "kind": "sticker",
+   "w": 100,
+   "h": 200,
+   "front": "/scenes/print/black-point-2-front.webp"
+  }
+ ],
+ "strimat": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/strimat-0-front.webp",
+   "back": "/scenes/print/strimat-0-back.webp"
+  }
+ ],
+ "depilacja": [
+  {
+   "kind": "flyer",
+   "w": 210,
+   "h": 297,
+   "front": "/scenes/print/depilacja-0-front.webp"
+  },
+  {
+   "kind": "voucher",
+   "w": 210,
+   "h": 100,
+   "front": "/scenes/print/depilacja-1-front.webp"
+  }
+ ],
+ "touch-coffee": [
+  {
+   "kind": "flyer",
+   "w": 210,
+   "h": 297,
+   "front": "/scenes/print/touch-coffee-0-front.webp",
+   "back": "/scenes/print/touch-coffee-0-back.webp"
+  }
+ ],
+ "na-serio-na-zarty": [
+  {
+   "kind": "flyer",
+   "w": 148,
+   "h": 210,
+   "front": "/scenes/print/na-serio-na-zarty-0-front.webp",
+   "back": "/scenes/print/na-serio-na-zarty-0-back.webp"
+  }
+ ],
+ "soul-nation": [
+  {
+   "kind": "voucher",
+   "w": 100,
+   "h": 171,
+   "front": "/scenes/print/soul-nation-0-front.webp"
+  }
+ ],
+ "mind-logistic": [
+  {
+   "kind": "flyer",
+   "w": 148,
+   "h": 210,
+   "front": "/scenes/print/mind-logistic-0-front.webp",
+   "back": "/scenes/print/mind-logistic-0-back.webp"
+  }
+ ],
+ "alibia": [
+  {
+   "kind": "card",
+   "w": 85,
+   "h": 55,
+   "front": "/scenes/print/alibia-0-front.webp",
+   "frontGloss": "/scenes/print/alibia-0-front-gloss.webp",
+   "frontBump": "/scenes/print/alibia-0-front-bump.webp",
+   "back": "/scenes/print/alibia-0-back.webp",
+   "backGloss": "/scenes/print/alibia-0-back-gloss.webp",
+   "backBump": "/scenes/print/alibia-0-back-bump.webp"
+  }
+ ],
  "da-vinci": [
   {
    "kind": "deck",

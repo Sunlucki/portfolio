@@ -466,10 +466,13 @@ def logo_films():
 # the roughness three.js reads: the paper's 0.75, the stamp's 0.08, glossy as lacquer). Sizes in millimetres and what each thing is go to
 # src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a file, (file, page), (file,
 # (left, top, right, bottom) as fractions), ("foil", art, stamp): the stamp's shapes in glossy black over the art, or
-# ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is. A
+# ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is, ("gloss", art,
+# varnish): its spot varnish's layer, glossy where it is, or ("emboss", mark, colour, share): plain paper with the
+# mark's shape (share of the side's width) blind-embossed, its height in a bump map (no mark: the paper alone). A
 # deck (Da Vinci's five Tarot cards): its fronts, one back for all. A side laid out across a thing that stands upright
 # is turned a quarter anticlockwise (the Tarot cards' titles read along their long side).
 DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
+BPW = "BLACK POINT/Графика/Wizytówka/"
 PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm)]
     "profi-dokument": [("card", "Нотариальные услуги/Front.jpg", "Нотариальные услуги/Back.jpg", (90, 50.6), 0),
                        ("flyer", "Нотариальные услуги/Флаер/FRONT.png", "Нотариальные услуги/Флаер/BACK.png", (180, 90), 2)],
@@ -479,13 +482,45 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
     "ihor": [("card", ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 1), ("IGOR MUSIC/Igor Poperechny.pdf", 3)),
               ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 2), ("IGOR MUSIC/Igor Poperechny.pdf", 4)), (90, 50), 2)],
     "dc-consulting": [("voucher", "DC CONSULTING/VOUCHER/JPG/AWERS.jpg", "DC CONSULTING/VOUCHER/JPG/REWERS.jpg", (210, 148), 0)],
+    # (2026-10-01, more of his print: each project's cards, flyers, vouchers and stickers in the archive)
+    "black-point": [("card", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 1), ("gloss", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 2), (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 3)), (90, 50), 2),
+                    ("voucher", (BPW + "VOUCHER.pdf", 1), (BPW + "VOUCHER.pdf", 2), (297, 210), 2),
+                    ("sticker", BPW + "STICK.png", None, (100, 200), 0)],
+    "strimat": [("card", "STRIMAT/Визитка/PNG/AWERS.png", "STRIMAT/Визитка/PNG/REWERS.png", (90, 50), 0)],
+    "depilacja": [("flyer", "Depilacja/Флаер/Flyer.png", None, (210, 297), 3),
+                  ("voucher", "Depilacja/BON PODARUNKOWY.png", None, (210, 100), 5)],
+    "touch-coffee": [("flyer", ("Touch Coffe/Baner + Ulotka V2.pdf", 3), ("Touch Coffe/Baner + Ulotka V2.pdf", 4), (210, 297), 0)],
+    "na-serio-na-zarty": [("flyer", ("Na Serio Na Zarty/naserio FLAYER.pdf", 1), ("Na Serio Na Zarty/naserio FLAYER.pdf", 2), (148, 210), 1)],
+    "soul-nation": [("voucher", "SOUL NATION/VOUCHER.psd", None, (100, 171), 0)],
+    "mind-logistic": [("flyer", (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA.pdf"), 1), (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA REVERS.pdf"), 1), (148, 210), 0)],
+    # (no card of Alibia's in the archive: its logo blind-embossed on grey paper, as his own mockup shows it)
+    "alibia": [("card", ("emboss", "Alibia/WEB/Alibia Shadow Logo.png", (96, 96, 98), 0.34), ("emboss", None, (96, 96, 98), 0), (85, 55), 0)],
     "da-vinci": [("deck", [(f"Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC {n}.pdf", 1) for n in range(1, 6)], ("Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC 1.pdf", 2), (50, 90), 0),
                  ("card", ("foil", DVR + "Awers.png", DVR + "Awers Hotstamping.png"), ("foil", DVR + "Rewers.png", DVR + "Rewers Hotstamping.png"), (90, 50), 3),
                  ("flyer", ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 1), ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 2), (105, 148), 0),
                  ("guide", ("Da Vinci Tatoo/PDF/Инструкция/DA-VINCI - ИНСТРУКЦИЯ.pdf", 1), ("Da Vinci Tatoo/PDF/Инструкция/DA-VINCI - ИНСТРУКЦИЯ.pdf", 2), (210, 148), 0)],
 }
 
-def side(spec):  # a side of a printed thing, as a picture, and its gloss map if it is hot-stamped
+def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its gloss (and bump) maps if it has them
+    if isinstance(spec, tuple) and spec[0] == "emboss":  # blind embossing: plain paper, the mark's shape as its height
+        _, mark, color, share = spec
+        w, h = round(mm[0] / 25.4 * 300), round(mm[1] / 25.4 * 300)
+        grain = Image.effect_noise((w, h), 5).filter(ImageFilter.GaussianBlur(0.7))  # (the paper's grain, fine: noise round 128, taken off again)
+        paper = Image.merge("RGB", [ImageChops.add(Image.new("L", (w, h), c), grain, 1.0, -128) for c in color])
+        height = Image.new("L", (w, h), 0)
+        if mark:
+            shape = Image.open(os.path.join(ARCHIVE, mark)).convert("RGBA").getchannel("A").point(lambda a: 255 if a > 200 else 0)
+            shape = shape.crop(shape.getbbox())
+            size = round(w * share)
+            shape = shape.resize((size, round(shape.height * size / shape.width)), Image.LANCZOS)
+            height.paste(shape, ((w - shape.width) // 2, (h - shape.height) // 2))
+            height = height.filter(ImageFilter.GaussianBlur(w / 400))  # (its edges rounded, as a die presses them)
+        gloss = Image.merge("RGB", (Image.new("L", (w, h), 0), Image.new("L", (w, h), 217), Image.new("L", (w, h), 0)))  # (uncoated: 0.85)
+        return paper, gloss, Image.merge("RGB", (height, height, height))
+    if isinstance(spec, tuple) and spec[0] == "gloss":  # spot varnish: the art as printed, its varnish layer dark on white
+        art, coat = side(spec[1])[0], side(spec[2])[0].convert("L").point(lambda v: 255 - v)
+        gloss = Image.merge("RGB", (Image.new("L", art.size, 0), coat.point(lambda a: 191 - round(a / 255 * 171)), Image.new("L", art.size, 0)))
+        return art, gloss
     if isinstance(spec, tuple) and spec[0] == "gold":  # gold foil: the art as printed, its foil layer dark on white
         art, foil = side(spec[1])[0], side(spec[2])[0].convert("L").point(lambda v: 255 - v)
         # (green the roughness: the paper's 0.75 to the foil's 0.2; blue the metalness: the foil's)
@@ -619,7 +654,7 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
             for face, spec in faces + [("back", back)]:
                 if spec is None:
                     continue
-                for k, im in enumerate(side(spec)):
+                for k, im in enumerate(side(spec, (w, h))):
                     if im is None:
                         continue
                     if w < h and im.width > im.height:  # (upright, from a layout across)
@@ -628,10 +663,10 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
                         bx, by = round(im.width * bleed / (w + 2 * bleed)), round(im.height * bleed / (h + 2 * bleed))
                         im = im.crop((bx, by, im.width - bx, im.height - by))
                     im.thumbnail((1600, 1600), Image.LANCZOS)
-                    name = f"{slug}-{i}-{face}{'-gloss' if k else ''}.webp"
+                    name = f"{slug}-{i}-{face}{['', '-gloss', '-bump'][k]}.webp"
                     im.save(out("scenes", "print", name), "WEBP", quality=85, method=6)
                     size += os.path.getsize(out("scenes", "print", name))
-                    sheet[face + ("Gloss" if k else "")] = f"/scenes/print/{name}"
+                    sheet[face + ["", "Gloss", "Bump"][k]] = f"/scenes/print/{name}"
             if isinstance(front, list):  # (a deck's fronts, in order)
                 sheet["fronts"] = [sheet.pop(f"front{n}") for n in range(len(front))]
             sheets[slug].append(sheet)

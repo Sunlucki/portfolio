@@ -236,7 +236,7 @@ const de: Copy = {
     turn: 'Zum Drehen ziehen',
     unfold: 'Zum Öffnen tippen', // (a folder)
     shuffle: 'Zum Mischen tippen', // (a deck)
-    things: { logo: 'Logo', folder: 'Mappe', deck: 'Tarot-Deck', card: 'Visitenkarte', flyer: 'Flyer', voucher: 'Gutschein', guide: 'Pflegeanleitung' },
+    things: { logo: 'Logo', folder: 'Mappe', deck: 'Tarot-Deck', card: 'Visitenkarte', flyer: 'Flyer', voucher: 'Gutschein', guide: 'Pflegeanleitung', sticker: 'Aufkleber' },
     projects: {
       hype: { name: 'HYPE', kind: 'Event-Poster', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Musikposter und Visitenkarten', client: '', problem: '', solution: '' },
