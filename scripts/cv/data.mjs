@@ -300,7 +300,7 @@ export const skills = [
   },
   {
     group: 'Delivery and operations',
-    items: ['CI/CD (GitHub Actions)', 'Automated testing (Vitest, XCTest)', 'Docker', 'Linux (nginx, PM2, systemd)', 'AWS (S3, SES, SNS integrations)', 'Backups and disaster recovery', 'Sentry'],
+    items: ['CI/CD (GitHub Actions)', 'Automated testing (Vitest, XCTest)', 'Docker', 'Linux (nginx, PM2, systemd)', 'AWS: S3 (AWS SDK v3, presigned URLs), SES bounce and complaint webhooks over SNS, signature-verified', 'Backups and disaster recovery', 'Sentry'],
   },
   {
     group: 'Domains',

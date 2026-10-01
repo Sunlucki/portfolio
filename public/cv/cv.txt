@@ -63,13 +63,13 @@ Designed, built and operate 10+ production systems for Polish and EU businesses,
 
 ### Design System Engineer (contract), spin.clinic
 
-Sep 2026 – Sep 2026
+Sep 2026 (1 month)
 
 Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.
 
 ### Tech Lead (pro bono), Fundacja Novus Ignis
 
-Sep 2026 – Sep 2026
+Sep 2026 (1 month)
 
 Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.
 
@@ -159,7 +159,7 @@ Also: CashFlow (iOS finance advisor: SwiftUI, Fastify, Claude with structured ou
 - **AI and SDLC:** AI-assisted SDLC, Agentic coding, Multi-agent orchestration, Claude Code, OpenAI Codex, MCP, LLM integration, Structured outputs, Prompt caching, Document AI / OCR, LLM pipelines, Prompt engineering
 - **Architecture:** Solution architecture, System design, Domain modules, State machines, Event-driven design (LISTEN/NOTIFY, SSE, queues), Integration architecture (OAuth2, signed webhooks, idempotency), Security architecture, ADRs
 - **Engineering:** TypeScript, Node.js (Fastify, Express), React, Next.js, PostgreSQL, Prisma, Drizzle, Redis / BullMQ, REST / OpenAPI, Swift / SwiftUI
-- **Delivery and operations:** CI/CD (GitHub Actions), Automated testing (Vitest, XCTest), Docker, Linux (nginx, PM2, systemd), AWS (S3, SES, SNS integrations), Backups and disaster recovery, Sentry
+- **Delivery and operations:** CI/CD (GitHub Actions), Automated testing (Vitest, XCTest), Docker, Linux (nginx, PM2, systemd), AWS: S3 (AWS SDK v3, presigned URLs), SES bounce and complaint webhooks over SNS, signature-verified, Backups and disaster recovery, Sentry
 - **Domains:** CRM, B2B commerce, Payments (Stripe, PayU, Przelewy24), E-invoicing (KSeF 2.0), Accounting, HR tech, Fleet management (Uber API)
 
 ## Education

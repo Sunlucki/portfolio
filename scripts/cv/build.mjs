@@ -27,8 +27,9 @@ const month = (ym) => {
   const [y, m] = ym.split('-');
   return m ? `${MONTHS[+m - 1]} ${y}` : y;
 };
-const when = ({ start, end }) => `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}`;
-const whenText = ({ start, end }) => `${month(start)} – ${end ? month(end) : 'present'}`;
+const when = ({ start, end }) =>
+  end === start ? `<time datetime="${start}">${month(start)}</time> (1 month)` : `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}`;
+const whenText = ({ start, end }) => (end === start ? `${month(start)} (1 month)` : `${month(start)} – ${end ? month(end) : 'present'}`);
 // newest first: the roles still going, then by when they ended, then by when they began
 const byRecency = (a, b) => (b.end ?? '9999').localeCompare(a.end ?? '9999') || b.start.localeCompare(a.start);
 const txt = (s) => esc(s).replace(/([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/gu, '<span class="nw">$1</span>');
@@ -261,9 +262,11 @@ html.js .rv.in { opacity: 1; transform: none; }
   .sub { margin: -2pt 0 5pt; font-size: 7.4pt; text-transform: none; break-after: avoid; }
   .sub + * { break-before: avoid; }
   .lead { font-size: 9.2pt; max-width: none; }
-  .numbers { grid-template-columns: repeat(6, 1fr); gap: 5pt; margin-top: 7pt; }
-  .numbers .value { font-size: 14pt; white-space: nowrap; }
-  .numbers .label { font-size: 6.9pt; margin-top: 2pt; line-height: 1.3; }
+  .numbers { display: block; margin-top: 6pt; }
+  .numbers li.card { display: block; background: none; border: 0; border-radius: 0; padding: 0; }
+  .numbers li + li { margin-top: 1.5pt; }
+  .numbers .value { display: inline; font-size: 10pt; color: var(--accent); }
+  .numbers .label { display: inline; font-size: 8.5pt; color: var(--text); margin: 0 0 0 4pt; }
   .card { padding: 7pt 10pt; border-radius: 10pt; border-width: 1px; }
   html.js .steps, .steps { display: block; }
   html.js .step, .step { display: block; break-inside: avoid; }
@@ -454,7 +457,7 @@ html.js .rv.in { opacity: 1; transform: none; }
 </section>
 
 <section id="education" class="rv">
-  <h2 class="title">${title('Education')}</h2>
+  <h2 class="title">${title('Education and languages')}</h2>
   <div class="pair">
     <div class="card">
       <h3>Education</h3>
