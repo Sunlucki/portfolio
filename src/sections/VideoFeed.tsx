@@ -159,7 +159,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
   const swipe = useRef({ y: 0, at: 0, moved: false, offset: 0, speed: 0, last: 0, lastAt: 0, anim: 0, busy: false });
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [started, setStarted] = useState(true); // YouTube: until it plays, a tap goes to its own button
+  const [started, setStarted] = useState(true); // YouTube: till it plays (a phone won't start it by itself: a tap on the feed does)
   const [moving, setMoving] = useState(false);
   const [time, setTime] = useState(0);
   const [length, setLength] = useState(films[0].seconds);
@@ -315,7 +315,7 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
     if (!s.at) return;
     s.at = 0;
     if (!s.moved) {
-      if (!(e.target as HTMLElement).closest('[data-control]') && started) toggle();
+      if (!(e.target as HTMLElement).closest('[data-control]')) toggle();
       return;
     }
     const dy = e.clientY - s.y;
@@ -395,12 +395,13 @@ export const VideoFeed = forwardRef<FeedHandle, { films: FeedFilm[]; open: boole
             onTimeUpdate={(e) => setTime(e.currentTarget.currentTime)}
             onLoadedMetadata={(e) => setLength(e.currentTarget.duration || film.seconds)}
           />
-          {/* (YouTube's player the picture's size, so its own title and logo sit on the picture, not on the feed's) */}
+          {/* (YouTube's player the picture's size, so its own title and logo sit on the picture, not on the feed's; never in
+              the finger's way: a swipe over it must turn the film, or close the feed past the last one, and a tap starts it) */}
           {film.youtube && (
             <div
               ref={holder}
               className="absolute inset-x-0 top-1/2 max-h-full -translate-y-1/2 [&>iframe]:h-full [&>iframe]:w-full"
-              style={{ aspectRatio: `${film.width} / ${film.height}`, pointerEvents: started ? 'none' : 'auto' }}
+              style={{ aspectRatio: `${film.width} / ${film.height}`, pointerEvents: 'none' }}
             />
           )}
         </div>
