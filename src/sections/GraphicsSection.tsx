@@ -27,23 +27,27 @@ const RISE = 0.5; // screens the rings rise for a screen of scrolling (the secti
 const SPACE = 0.12; // screens between a ring's covers and the next ring's (his call: they were too far apart)
 const COVER = 540 / 840; // the covers' height to width
 const SWIPE = 24; // px: a swipe this long moves a ring on by a cover, however short of half a cover it is
-const UNDER = 84; // px: on a narrow screen, how far under the heading the first ring's front cover comes at first
 const WHEEL_END = 160; // ms without a sideways wheel event: the trackpad's swipe is over
 
 // the rings' size for a screen: their radius (a third of a wide screen, most of a phone's), the covers on them (an
 // eighth of the circle each, a little apart), how far apart they rise (a front cover's height on the screen and a
 // little), the perspective (the particles' camera's), where the arrows stand (midway between the screen's edge and the
-// ring's), on a screen taller than wide how far above the middle the first ring starts, so it comes up right under the
-// heading (his call: the gap there was too big), and how many screens of scrolling the section stays for
+// ring's), on a screen taller than wide how far above the middle the first ring starts, so its front covers come up as
+// far under the heading's letters as the next ring's are under them (his call), and how many screens of scrolling the
+// section stays for
 type Layout = { width: number; radius: number; card: number; height: number; gap: number; perspective: number; phone: boolean; arrow: number; lead: number; pin: number };
 function layoutFor(vw: number, vh: number): Layout {
   const phone = vw < 768;
   const radius = phone ? 0.64 * vw : Math.min(440, Math.max(220, 0.3 * vw));
   const card = 2 * radius * Math.tan(Math.PI / PER_RING) * 0.9;
   const perspective = PERSPECTIVE * vh;
-  const seen = (card * COVER * perspective) / (perspective - radius); // (a front cover's height on the screen)
+  const near = perspective / (perspective - radius); // (how much larger the front covers look, and further from the screen's middle)
+  const seen = card * COVER * near; // (a front cover's height on the screen)
   const gap = seen + SPACE * vh;
-  const lead = vh > vw ? Math.max(0, vh / 2 - seen / 2 - UNDER) : 0;
+  // (the heading's letters' foot above the stage: its margin, and the room under its letters, as Tech Text fits them
+  // to the middle 66% of its height, clamp(4rem, 14vw, 190px): SectionTitle)
+  const foot = (phone ? 8 : 16) + 0.17 * Math.min(190, Math.max(64, 0.14 * vw));
+  const lead = vh > vw ? Math.max(0, (vh / 2 + seen / 2 - gap * near + foot) / near) : 0;
   return {
     width: vw,
     radius,
@@ -54,7 +58,7 @@ function layoutFor(vw: number, vh: number): Layout {
     phone,
     arrow: Math.max(40, (vw / 2 - radius * 1.08) / 2),
     lead,
-    pin: ((RINGS.length - 1) * gap + lead) / (RISE * vh),
+    pin: ((RINGS.length - 1) * gap - lead) / (RISE * vh), // (started higher, the rings rise that much less)
   };
 }
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
