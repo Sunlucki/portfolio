@@ -245,6 +245,10 @@ const fr: Copy = {
   graphics: {
     title: 'Graphisme',
     tiles: [
+      'Sticker Mind Logistic sur un ordinateur portable',
+      'Bouteille Elixir Panoramixa en 3D',
+      'Boîte Poucher en 3D',
+      'Sachet de bonbons Elixir Cherry Cola',
       'Affiches de la série d’événements HYPE',
       'Affiche musicale pour Ihor Poperechny',
       'Logo DC Consulting',
@@ -289,6 +293,10 @@ const fr: Copy = {
       alibia: { name: 'Alibia', kind: 'Logo, flyer, campagne et boutique en ligne', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Réseaux sociaux d’un restaurant', client: '', problem: '', solution: '' },
+      'mind-logistic': { name: 'Mind Logistic', kind: 'Logo et identité visuelle', client: '', problem: '', solution: '' },
+      elixir: { name: 'Elixir Panoramixa', kind: 'Mind Logistic\u00a0: étiquettes de bouteilles, rendus et la bouteille en 3D', client: '', problem: '', solution: '' },
+      poucher: { name: 'Poucher', kind: 'Mind Logistic\u00a0: sachets de caféine, la boîte en 3D', client: '', problem: '', solution: '' },
+      'elixir-gummies': { name: 'Elixir Cherry Cola', kind: 'Mind Logistic\u00a0: sachet de bonbons gélifiés', client: '', problem: '', solution: '' },
     },
   },
   video: {

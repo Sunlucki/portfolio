@@ -8,9 +8,12 @@ Outputs into ../public:
   work/<name>.webp  (1600w)                             — project card images
   tiles/<name>.webp (840x540 cover)                     — marquee tiles (project covers)
   graphics/<project>/N.webp (1600w)                     — all the pictures of the covers' projects (`graphics` alone:
-                                                          python3 scripts/prepare-media.py graphics), sized in src/graphics.json
+                                                          python3 scripts/prepare-media.py graphics [project...]), sized in
+                                                          src/graphics.json
   about/pointer.webp (560px, alpha)                     — 3D pointer icon (contact section)
   music/NNN.m4a                                         — the music player's playlist (AAC as mastered)
+  scenes/*.webp                                         — the 3D covers' labels and backdrop (`scenes` alone; their models:
+                                                          scripts/prepare-scenes.mjs)
   video/<slug>.mp4, .webp, -frames.webp                 — the Video section's films, posters and hover strips (some
                                                           films alone: python3 scripts/prepare-media.py videos <slug>...)
 Re-run safe: overwrites outputs.
@@ -108,7 +111,15 @@ WP_ASSETS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB",
 COVERS_BACKUP = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB", "WORDPRESS", "BACKUP", "public_html",
                              "styleicon.pl", "wp-content", "uploads")
 ML = os.path.join(HOME, "Desktop", "Проэкты", "АКТИВНЫЕ", "MIND LOGIISTIC")  # Mind Logistic's folder (its name so spelt)
-TILES = [
+MLSITE = os.path.join(HOME, "Developer", "MIND LOGISTIC", "src", "landing-assets")  # and its site's (his code)
+ELIXIRS = ["BLUBERRY COOKIES", "LEMON HAZE", "STRAWBERRY OG", "ZEN", "ZKITTLEZ OG"]  # the 3D bottle's labels, the site's order
+POUCHERS = ["BLUEBERRY", "SWEET RASPBERRY", "BUBBLE GUM", "CITRUS"]  # the 3D can's flavours
+SCENES = os.path.join(KB, "sources", "scenes")  # stills of the 3D covers, the covers' pictures till they draw
+TILES = [  # dealt into four rows in turn, so the first four lead them (the rows move little: the first ones are seen most)
+    # Mind Logistic first (2026-10-01): its sticker on a laptop (his pick), the Elixir bottle's and the Poucher can's 3D
+    # scenes (stills of them, under the live scene), the gummies' pouch (its front)
+    (f"{ML}/TYPOHRAPHY/STICKER/MOCKUP/01.  Sticker Laptop Mockup.png", (0.18, 0.22, 0.82, 0.86)),
+    f"{SCENES}/elixir.png", f"{SCENES}/poucher.png", (f"{ML}/ŻELKI ELIXIR/OKLADKA.png", (0, 0, 0.5, 1)),
     f"{COVERS}/2025/05/HYPE.jpg", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
     f"{COVERS}/2025/05/TouchMockup.jpg", f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", (f"{WP_ASSETS}/Black Point - T-shirt AM.jpg", (0.25, 0.28, 0.75, 0.81)),
     f"{COVERS}/2025/05/Black-Point-INSTA1.jpg", f"{COVERS}/2025/05/ADAYA.jpg", f"{COVERS}/2025/05/SOUL-NATION.jpg",
@@ -119,7 +130,8 @@ TILES = [
     f"{WP_ASSETS}/Igor music BC1.jpg",
 ]
 # The covers' projects, each with all its pictures (the one a cover shows among them), for the project a cover opens:
-# from #STYLEICON/WEB/assets, and the old site's case pictures (STYLEICON REACT APP/extracted_projects).
+# from #STYLEICON/WEB/assets, the old site's case pictures (STYLEICON REACT APP/extracted_projects, "~"), or a
+# project's own folder (a full path).
 CASES = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICON REACT APP", "extracted_projects")
 GRAPHICS = {
     "hype": ["HYPE.jpg"],
@@ -142,6 +154,20 @@ GRAPHICS = {
     "alibia": ["ALIBIA.jpg", "ALIBIA - LOGO.jpg", "ALIBIA - FLYER.jpg", "Alibia - Web 1.jpg", "ALIBIA WEB REEL.png"],
     "time-relax-body": ["Time Relax Body.jpg"],
     "na-serio-na-zarty": ["Na Serio Na Zarty.jpg"],
+    # Mind Logistic (2026-10-01): its brand (stickers, the logo on things), the Elixir drinks' bottles (the 2025
+    # labels' renders, the 2026 labels flat, the posts and key visuals), the Poucher cans (renders and the four
+    # flavours' lids, from its site) and the Elixir gummies' pouch; the bottles and the cans open on their 3D scenes
+    "mind-logistic": [f"{ML}/TYPOHRAPHY/STICKER/MOCKUP/{n}.  Sticker Laptop Mockup.png" for n in ("01", "02")]
+                     + [f"{ML}/LOGO:BRANDING/BRANDING SHOWREEL/Image/{f}" for f in ("SHOWREEL.jpg", "T-Shirt-Mockup-Dusk-Series — копия.jpg",
+                        "Cap-Mockup-Dusk-Series.jpg", "Business-Card-Mockup-Dusk-Series.jpg", "Tote-Bag-Mockup-Dusk-Series — копия.jpg",
+                        "Binder-Box-Mockup-Dusk-Series.jpg", "ELIXIR.jpg")],
+    "elixir": [f"{ML}/ELIXIR BUTELKI/2025/PREV/{f}-3840x2160.png" for f in ("Elixir Expo@1", "PACKING PREV@1", "PACKING PREV@2", "PACKING PREV@3")]
+              + [f"{ML}/ELIXIR OPAKOWANIE/2026/PNG/{f}.png" for f in ("BLUBERRY COOKIES", "ZEN")]
+              + [f"{ML}/ELIXIR BUTELKI/2026 NEW/ML ISNAGRAM/{f} /1350.png" for f in ("BLUEBERRY COOKIES", "LEMON HAZE", "STRAWBERRY", "ZKITTLEZ")]
+              + [f"{ML}/ELIXIR BUTELKI/2026/ART/{f}.png" for f in ("BLUEBERRY", "LEMON HAZE", "STRAWBERRY", "ZEN", "ZKITTLEZ")],
+    "poucher": [f"{MLSITE}/POUCHER/CITRUS/Poucher-Citrus-{f}.png" for f in ("Pouch", "Open", "Produktowe")]
+               + [f"{MLSITE}/POUCHER/{f}/{f} TOP.jpg" for f in POUCHERS],
+    "elixir-gummies": [f"{ML}/ŻELKI ELIXIR/OKLADKA.png"],
 }
 ABOUT = {"pointer": "Указатель.png"}
 # The WordPress sites' slideshow: for each site, Bogdan's mockups of it (#STYLEICON/WEB/assets, "m") and pages of
@@ -391,9 +417,28 @@ def listening():
     im.save(dst, "WEBP", quality=86, method=6)
     return os.path.getsize(dst)
 
-def graphics():
+# The Graphics covers that are 3D scenes (src/three/miniScenes.ts, 2026-10-01), Mind Logistic's site's own: the
+# Elixir bottle's five labels (768 wide) and the galaxy behind it, the Poucher can's four flavours' lid, side and
+# bottom labels.
+def scenes():
+    size = to_webp(os.path.join(MLSITE, "Backgrounds", "galaxy.jpeg"), out("scenes", "galaxy.webp"), width=1024, q=72)
+    for i, name in enumerate(ELIXIRS):
+        size += to_webp(os.path.join(MLSITE, "ELIXIR", f"{name}.webp"), out("scenes", f"elixir-{i}.webp"), width=768, q=78)
+    for i, name in enumerate(POUCHERS):
+        for part, width in (("TOP", 512), ("SIDE", 1024), ("BOTTOM", 512)):
+            size += to_webp(os.path.join(MLSITE, "POUCHER", name, f"{name} {part}.jpg"), out("scenes", f"poucher-{i}-{part.lower()}.webp"), width=width, q=80)
+    return size
+
+def graphics(only=None):  # only: the projects to make again; the rest keep their pictures, and their sizes from graphics.json
+    known = {}
+    if only is not None:
+        with open(os.path.join(KB, "portfolio", "src", "graphics.json")) as fh:
+            known = json.load(fh)
     sizes, total = {}, 0
     for slug, files in GRAPHICS.items():
+        if slug in known and slug not in only:
+            sizes[slug] = known[slug]
+            continue
         sizes[slug] = []
         for i, f in enumerate(files):
             src = os.path.join(CASES, f[1:]) if f.startswith("~") else os.path.join(WP_ASSETS, f)
@@ -406,8 +451,12 @@ def graphics():
     return total
 
 if __name__ == "__main__":
-    if sys.argv[1:] == ["graphics"]:
-        print(f"graphics: {sum(map(len, GRAPHICS.values()))} pictures {graphics()/1e6:.1f}MB")
+    if sys.argv[1:2] == ["graphics"]:  # graphics [project...]: all the projects' pictures, or those projects' alone
+        only = set(sys.argv[2:]) or None
+        print(f"graphics: {sum(len(GRAPHICS[s]) for s in only or GRAPHICS)} pictures {graphics(only)/1e6:.1f}MB")
+        sys.exit()
+    if sys.argv[1:] == ["scenes"]:
+        print(f"scenes' pictures: {scenes()/1e3:.0f}KB")
         sys.exit()
     if sys.argv[1:2] == ["videos"]:  # videos <slug>...: those films again, the others kept as they are
         print(f"videos: {', '.join(sys.argv[2:])} {videos(set(sys.argv[2:]))/1e6:.1f}MB")
@@ -425,6 +474,7 @@ if __name__ == "__main__":
     s = sum(tile(i, p) for i, p in enumerate(TILES))
     print(f"tiles: {len(TILES)} images {s/1e6:.1f}MB")
     print(f"graphics: {sum(map(len, GRAPHICS.values()))} pictures {graphics()/1e6:.1f}MB")
+    print(f"scenes' pictures: {scenes()/1e3:.0f}KB")
     s = sum(to_webp(os.path.join(ICONS, f), out("about", f"{k}.webp"), width=560, q=82) for k, f in ABOUT.items())
     print(f"about icons: {len(ABOUT)} {s/1e6:.2f}MB")
     s, n = music()

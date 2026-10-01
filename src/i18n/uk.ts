@@ -214,6 +214,10 @@ const uk: Copy = {
   graphics: {
     title: 'Графіка',
     tiles: [
+      'Наліпка Mind Logistic на ноутбуці',
+      'Пляшка Elixir Panoramixa у 3D',
+      'Банка Poucher у 3D',
+      'Пакет мармеладу Elixir Cherry Cola',
       'Афіші серії заходів HYPE',
       'Музичний постер для Ihor Poperechny',
       'Логотип DC Consulting',
@@ -258,6 +262,10 @@ const uk: Copy = {
       alibia: { name: 'Alibia', kind: 'Логотип, флаєр, кампанія та інтернет-магазин', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Брендинг', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Соцмережі ресторану', client: '', problem: '', solution: '' },
+      'mind-logistic': { name: 'Mind Logistic', kind: 'Логотип і фірмовий стиль', client: '', problem: '', solution: '' },
+      elixir: { name: 'Elixir Panoramixa', kind: 'Mind Logistic: етикетки пляшок, рендери і пляшка у 3D', client: '', problem: '', solution: '' },
+      poucher: { name: 'Poucher', kind: 'Mind Logistic: кофеїнові подушечки, банка у 3D', client: '', problem: '', solution: '' },
+      'elixir-gummies': { name: 'Elixir Cherry Cola', kind: 'Mind Logistic: упаковка мармеладу', client: '', problem: '', solution: '' },
     },
   },
   video: {

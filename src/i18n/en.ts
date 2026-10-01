@@ -204,6 +204,10 @@ const en = {
   graphics: {
     title: 'Graphics',
     tiles: [
+      'Mind Logistic sticker on a laptop',
+      'Elixir Panoramixa bottle in 3D',
+      'Poucher can in 3D',
+      'Elixir Cherry Cola gummies pouch',
       'HYPE event series posters',
       'Music poster for Ihor Poperechny',
       'DC Consulting logo',
@@ -249,6 +253,10 @@ const en = {
       alibia: { name: 'Alibia', kind: 'Logo, flyer, campaign and online shop', client: 'Alibia, maker of the Elixir Panoramix drink.', problem: 'They wanted to sell more of their flagship drink online, but the brand was barely visible to young people.', solution: 'The HypeHop music show with a 30,000 zł prize (over 1,200 entries), green-screen videos, 3D product animations, social media and street polls; and an online shop on WooCommerce with BaseLinker, built in a week and a half, which raised online sales markedly.' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Restaurant social media', client: '', problem: '', solution: '' },
+      'mind-logistic': { name: 'Mind Logistic', kind: 'Logo and brand identity', client: '', problem: '', solution: '' },
+      elixir: { name: 'Elixir Panoramixa', kind: 'Mind Logistic: bottle labels, renders and the bottle in 3D', client: '', problem: '', solution: '' },
+      poucher: { name: 'Poucher', kind: 'Mind Logistic: caffeine pouches, the can in 3D', client: '', problem: '', solution: '' },
+      'elixir-gummies': { name: 'Elixir Cherry Cola', kind: 'Mind Logistic: gummies pouch', client: '', problem: '', solution: '' },
     },
   },
   video: {

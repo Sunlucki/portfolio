@@ -1,7 +1,8 @@
 import { X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { GRAPHICS, type GraphicsSlug } from '../content';
+import { SceneCanvas } from '../components/SceneCanvas';
+import { GRAPHICS, SCENE_OF, type GraphicsSlug } from '../content';
 import { LOCALE, t } from '../i18n';
 
 const OPEN_MS = 460;
@@ -18,20 +19,24 @@ const when = ([from, to]: [string, string?]) => {
 };
 type Box = { left: number; top: number; width: number; height: number; radius: number };
 
-export type Opening = { slug: GraphicsSlug; picture: number; cover: HTMLElement; src: string }; // (src: the cover's own picture)
+export type Opening = { slug: GraphicsSlug; picture: number; cover: HTMLElement; src: string }; // (src: the cover's own picture; picture -1: its 3D scene)
 
 /**
  * A cover's project (the Graphics section). Its picture flies from the cover up to the top of the screen, growing to
  * the screen's width (on wide screens, to the middle column) and from the cover's crop to the whole picture; the page
  * behind blurs, and under the picture come the project's name and when it was, who it was for, what was wrong and what
  * was done, then its other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into the cover.
+ * A 3D cover (SCENE_OF) flies up as it was when tapped and goes on live up there, turned by dragging, all the
+ * project's pictures under it.
  */
 export function GraphicsProject({ opening, onClose }: { opening: Opening; onClose: () => void }) {
   const project = GRAPHICS[opening.slug];
-  const hero = project.pictures[opening.picture];
+  const scene = opening.picture < 0 ? SCENE_OF[opening.slug] : undefined;
+  const hero = scene ? null : project.pictures[opening.picture];
   const rest = project.pictures.filter((_, i) => i !== opening.picture);
   const slot = useRef<HTMLDivElement>(null);
   const flyer = useRef<HTMLDivElement>(null);
+  const under = useRef<HTMLImageElement>(null);
   const full = useRef<HTMLImageElement>(null);
   const veil = useRef<HTMLDivElement>(null);
   const page = useRef<HTMLDivElement>(null);
@@ -101,6 +106,9 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
     if (leaving.current) return;
     leaving.current = true;
     page.current?.scrollTo({ top: 0, behavior: 'instant' });
+    // (the scene flies back as it is now)
+    const live = slot.current?.querySelector<HTMLCanvasElement>('canvas[data-drawn]');
+    if (live && under.current) under.current.src = live.toDataURL('image/jpeg', 0.92);
     const from = slotBox();
     if (!from || !flyer.current) return onClose();
     put(from);
@@ -119,7 +127,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
     [t.graphics.problem, project.problem],
     [t.graphics.solution, project.solution],
   ].filter(([, text]) => text);
-  const aspect = hero.width / hero.height;
+  const aspect = hero ? hero.width / hero.height : 840 / 540; // (a scene: the covers' shape)
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={project.name} className="fixed inset-0 z-[90]">
       <div ref={veil} className="absolute inset-0 opacity-0" style={{ background: 'rgb(6 8 14 / 0.62)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }} />
@@ -127,9 +135,14 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
         <div className="mx-auto w-full md:max-w-[min(1100px,88vw)] md:pt-16" onClick={(e) => e.target === e.currentTarget && close()}>
           {/* (as wide as the column, unless that makes it taller than most of the screen) */}
           <div ref={slot} className="mx-auto w-full overflow-hidden md:rounded-3xl" style={{ aspectRatio: aspect, maxWidth: `calc(72svh * ${aspect.toFixed(4)})` }}>
-            {landed && <img src={hero.src} alt={project.name} className="h-full w-full object-cover" ref={(el) => {
+            {landed &&
+              (hero ? (
+                <img src={hero.src} alt={project.name} className="h-full w-full object-cover" ref={(el) => {
                   if (el?.complete) settle();
-                }} onLoad={settle} />}
+                }} onLoad={settle} />
+              ) : (
+                scene && <SceneCanvas scene={scene} top onReady={settle} className="h-full w-full cursor-grab active:cursor-grabbing" />
+              ))}
           </div>
           <div className="px-5 pb-16 pt-7 sm:px-8 md:px-0 md:pt-10">
             <h2 className="text-3xl font-semibold uppercase tracking-wide text-white sm:text-4xl">{project.name}</h2>
@@ -156,8 +169,8 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
       </div>
       {/* the picture in flight (the cover's crop growing into the whole picture, nothing jumps) */}
       <div ref={flyer} aria-hidden className="pointer-events-none fixed left-0 top-0 overflow-hidden" style={{ visibility: 'hidden' }}>
-        <img src={opening.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
-        <img ref={full} src={hero.src} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: 0 }} />
+        <img ref={under} src={opening.src} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        {hero && <img ref={full} src={hero.src} alt="" className="absolute inset-0 h-full w-full object-cover" style={{ opacity: 0 }} />}
       </div>
       <button
         ref={closer}

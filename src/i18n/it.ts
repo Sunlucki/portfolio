@@ -206,6 +206,10 @@ const it: Copy = {
   graphics: {
     title: 'Grafica',
     tiles: [
+      'Adesivo Mind Logistic su un portatile',
+      'Bottiglia Elixir Panoramixa in 3D',
+      'Scatolina Poucher in 3D',
+      'Busta di caramelle gommose Elixir Cherry Cola',
       'Poster per la serie di eventi HYPE',
       'Poster musicale per Ihor Poperechny',
       'Logo di DC Consulting',
@@ -250,6 +254,10 @@ const it: Copy = {
       alibia: { name: 'Alibia', kind: 'Logo, volantino, campagna e negozio online', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Social di un ristorante', client: '', problem: '', solution: '' },
+      'mind-logistic': { name: 'Mind Logistic', kind: 'Logo e identità visiva', client: '', problem: '', solution: '' },
+      elixir: { name: 'Elixir Panoramixa', kind: 'Mind Logistic: etichette delle bottiglie, render e la bottiglia in 3D', client: '', problem: '', solution: '' },
+      poucher: { name: 'Poucher', kind: 'Mind Logistic: bustine alla caffeina, la scatolina in 3D', client: '', problem: '', solution: '' },
+      'elixir-gummies': { name: 'Elixir Cherry Cola', kind: 'Mind Logistic: busta di caramelle gommose', client: '', problem: '', solution: '' },
     },
   },
   video: {

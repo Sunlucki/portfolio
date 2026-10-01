@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
 import { fill, t } from '../i18n';
-import { COVER_OF, GRAPHICS, TILES } from '../content';
+import { SceneCanvas } from '../components/SceneCanvas';
+import { COVER_OF, GRAPHICS, SCENE_OF, TILES } from '../content';
 import { GraphicsProject, type Opening } from './GraphicsProject';
 
 // Four rows, dealt like cards so neighbouring covers differ.
@@ -61,6 +62,7 @@ export function MarqueeSection() {
             {[...tiles, ...tiles, ...tiles].map((tile, k) => {
               const edge = i === 0 ? SHADE[0] : i === ROWS.length - 1 ? SHADE[1] : null;
               const [slug, picture] = COVER_OF[tile.i];
+              const scene = picture < 0 ? SCENE_OF[slug] : undefined;
               const copy = k >= tiles.length; // (the row's other two copies, for the slide)
               return (
                 <button
@@ -69,10 +71,15 @@ export function MarqueeSection() {
                   aria-label={fill(t.graphics.open, { name: GRAPHICS[slug].name })}
                   aria-hidden={copy || undefined}
                   tabIndex={copy ? -1 : undefined}
-                  onClick={(e) => setOpening({ slug, picture, cover: e.currentTarget, src: tile.src })}
+                  onClick={(e) => {
+                    // (a 3D cover flies up as it is at that moment)
+                    const live = e.currentTarget.querySelector<HTMLCanvasElement>('canvas[data-drawn]');
+                    setOpening({ slug, picture, cover: e.currentTarget, src: live ? live.toDataURL('image/jpeg', 0.92) : tile.src });
+                  }}
                   className={`relative block overflow-hidden ${TILE}`}
                 >
                   <img src={tile.src} alt={copy ? '' : tile.alt} loading="lazy" decoding="async" width={296} height={190} className={`${TILE} object-cover`} />
+                  {scene && <SceneCanvas scene={scene} className="absolute inset-0 h-full w-full" />}
                   {edge && <span aria-hidden className="absolute inset-0 rounded-2xl" style={{ background: edge }} />}
                 </button>
               );

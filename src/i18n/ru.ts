@@ -205,6 +205,10 @@ const ru: Copy = {
   graphics: {
     title: 'Графика',
     tiles: [
+      'Стикер Mind Logistic на ноутбуке',
+      'Бутылка Elixir Panoramixa в 3D',
+      'Банка Poucher в 3D',
+      'Пакет мармелада Elixir Cherry Cola',
       'Постеры серии мероприятий HYPE',
       'Музыкальный постер для Ihor Poperechny',
       'Логотип DC Consulting',
@@ -249,6 +253,10 @@ const ru: Copy = {
       alibia: { name: 'Alibia', kind: 'Логотип, флаер, кампания и интернет-магазин', client: 'Alibia, производитель напитка Elixir Panoramix.', problem: 'Хотели больше продаж флагманского напитка онлайн, но бренд почти не знала молодая аудитория.', solution: 'Музыкальное шоу HypeHop с призом 30 000 zł (более 1200 заявок), видео на зелёном фоне, 3D-анимации продукта, соцсети и уличные опросы; и интернет-магазин на WooCommerce с BaseLinker за полторы недели, который заметно поднял онлайн-продажи.' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Брендинг', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Соцсети ресторана', client: '', problem: '', solution: '' },
+      'mind-logistic': { name: 'Mind Logistic', kind: 'Логотип и фирменный стиль', client: '', problem: '', solution: '' },
+      elixir: { name: 'Elixir Panoramixa', kind: 'Mind Logistic: этикетки бутылок, рендеры и бутылка в 3D', client: '', problem: '', solution: '' },
+      poucher: { name: 'Poucher', kind: 'Mind Logistic: кофеиновые подушечки, банка в 3D', client: '', problem: '', solution: '' },
+      'elixir-gummies': { name: 'Elixir Cherry Cola', kind: 'Mind Logistic: упаковка мармелада', client: '', problem: '', solution: '' },
     },
   },
   video: {

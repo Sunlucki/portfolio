@@ -112,7 +112,9 @@ The phone is not the section's own: one particle scene (`src/three/FlowScene.tsx
 
 Branding, print and social media, no websites: rows of covers that slide slowly in alternating directions as the page scrolls (`src/sections/MarqueeSection.tsx`, covers in `TILES` in `src/content.ts`, cut to 840 × 540 by `scripts/prepare-media.py`, some from a closer crop). Behind them drifts the cloud of particles the Mobile Apps iPhone broke into, on its way to the Video section. The covers are solid, so the particles pass behind them and never show through; the first and last rows fade into the page with a shade in its colour rather than a mask.
 
-A cover opens its project (`src/sections/GraphicsProject.tsx`): its picture flies from the cover up to the top of the screen (on wide screens, into the middle column), growing from the cover's crop into the whole picture, while the page behind blurs; under it come the project's name, what was made and when (the dates of its PSDs on Bogdan's desktop), who it was for, what was wrong and what was done, then the project's other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into its cover. The projects are in `GRAPHICS` in `src/content.ts` (which cover shows which picture of which project: `COVER_OF`), their words in `graphics.projects` in `src/i18n/`, their pictures in `public/graphics/<project>/` (`python3 scripts/prepare-media.py graphics`: from #STYLEICON/WEB/assets and the old styleicon.pl cases, sized in `src/graphics.json`).
+A cover opens its project (`src/sections/GraphicsProject.tsx`): its picture flies from the cover up to the top of the screen (on wide screens, into the middle column), growing from the cover's crop into the whole picture, while the page behind blurs; under it come the project's name, what was made and when (the dates of its PSDs on Bogdan's desktop), who it was for, what was wrong and what was done, then the project's other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into its cover. The projects are in `GRAPHICS` in `src/content.ts` (which cover shows which picture of which project: `COVER_OF`), their words in `graphics.projects` in `src/i18n/`, their pictures in `public/graphics/<project>/` (`python3 scripts/prepare-media.py graphics [project...]`: from #STYLEICON/WEB/assets, the old styleicon.pl cases and the projects' own folders, sized in `src/graphics.json`).
+
+The rows move little (a few hundred pixels over the whole section), so only their first covers are seen whole, on phones the first two: the newest lead them, Mind Logistic's four (its sticker on a laptop, the Elixir bottle, the Poucher can, the Elixir gummies' pouch). Two of them are live 3D scenes, Mind Logistic's site's own, ported from Bogdan's code there (`src/three/miniScenes.ts`, `SCENE_OF` in `src/content.ts`): the Elixir bottle turning through its five labels over a galaxy, motes in the flavour's colour, hopping as it changes; the Poucher can through its four flavours in a lightning storm in the flavour's hue, a bolt crawling over the labels burning the next one in. One WebGL renderer off the page draws each scene once a frame and copies it into every canvas that shows it, only while one is on screen (a still of it under, `public/tiles/01.webp` and `02.webp`, till it draws); its project opens on the scene, live and large (the snapshot of the cover flying up into it), turned by dragging sideways (the page still scrolls up and down through it), its pictures under it; while it is open, only it is drawn. The models are the site's, made small by `scripts/prepare-scenes.mjs` (the bottle 30 KB, the can 223 KB: its black body, 100,000 triangles, simplified by meshoptimizer to a fifth without moving a vertex more than a thousandth of its size; positions 16-bit, normals 8-bit), their labels by `python3 scripts/prepare-media.py scenes` (`public/scenes/`).
 
 ## Video
 
@@ -166,6 +168,7 @@ src/
   vendor/react-bits/    Micro Slats, Tech Text, Folder Float (unmodified but for one renamed parameter)
 scripts/
   prepare-media.py      builds hero frames (+ Vision cut-outs), card images, the WordPress slides and films, marquee tiles, icons and the music from local sources
+  prepare-scenes.mjs    the Graphics covers' 3D models (Mind Logistic's bottle and can), small, for src/three/miniScenes.ts
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
   estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
   prepare-about.py      phone scene assets (cut-out, poster, recoloured iPhone model)
@@ -174,7 +177,7 @@ scripts/
   prepare-models.py     the manifesto's heart, brain and bulb with hands, baked from models into point sets
   prepare-bands.mjs     each track's spectrum for the music stage (needs ffmpeg)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
-public/                 generated media (hero/, work/, tiles/, graphics/, about/, models/, egg/; music/ and video/ not in git)
+public/                 generated media (hero/, work/, tiles/, graphics/, scenes/, about/, models/, egg/; music/ and video/ not in git)
 ```
 
 ## Develop
