@@ -9,41 +9,52 @@ import { GraphicsProject, type Opening } from './GraphicsProject';
 // The covers on rings of eight, in order (the first ring the first eight), after louisraille.fr's work section (his
 // call, 2026-10-01): each ring a cylinder of cards turning round its axis, the vortex of particles inside them
 // (three/FlowScene.tsx). The section stays on the screen while the page scrolls on, the rings rising through it one
-// after another, each turning once round as it crosses the screen, so every cover comes to the front. A ring turns
-// by hand too: on screens dragged sideways or swiped sideways on a trackpad, or by the thin arrows at its sides; on
-// phones swiped left or right. Let go, it settles on a cover (a short swipe moves it on by one). Drawn twice with the
-// same turns: the rings' back halves (their covers seen from behind, darker) under the particles' canvas, their front
-// halves over it, so the vortex is inside them. Each cover is turned and pushed out on its own: a ring turned edge-on
-// as a whole could not be clicked (the browser finds nothing in a layer it sees edge-on). Pointed at, a cover grows
-// with a bounce and says what a click does (index.css); clicked, it opens its project (GraphicsProject).
+// after another, each turning once round as it crosses the screen, so every cover comes to the front. A ring turns by
+// hand too: dragged or swiped sideways (a finger on phones, the mouse, a trackpad's two fingers or a sideways wheel in
+// a window of any width), or by the thin arrows at its sides on screens. Let go, it settles on a cover (a short swipe
+// moves it on by one). Drawn twice with the same turns: the rings' back halves (their covers seen from behind, darker)
+// under the particles' canvas, their front halves over it, so the vortex is inside them. Each cover is turned and
+// pushed out on its own: a ring turned edge-on as a whole could not be clicked (the browser finds nothing in a layer it
+// sees edge-on). Pointed at, a cover grows with a bounce and says what a click does (index.css); clicked, it opens its
+// project (GraphicsProject).
 const PER_RING = 8;
 const STEP = 360 / PER_RING;
 const RINGS = Array.from({ length: Math.ceil(TILES.length / PER_RING) }, (_, r) =>
   TILES.map((tile, i) => ({ ...tile, i })).slice(r * PER_RING, (r + 1) * PER_RING),
 );
 const START = RINGS.map((_, i) => i * 67.5); // (the rings' turns apart, so their covers don't line up)
-const PIN = { wide: 4, phone: 3.5 }; // screens of scrolling the section stays for
+const RISE = 0.5; // screens the rings rise for a screen of scrolling (the section stays on the screen as long as that takes)
+const SPACE = 0.12; // screens between a ring's covers and the next ring's (his call: they were too far apart)
 const COVER = 540 / 840; // the covers' height to width
 const SWIPE = 24; // px: a swipe this long moves a ring on by a cover, however short of half a cover it is
+const UNDER = 84; // px: on a narrow screen, how far under the heading the first ring's front cover comes at first
 const WHEEL_END = 160; // ms without a sideways wheel event: the trackpad's swipe is over
 
 // the rings' size for a screen: their radius (a third of a wide screen, most of a phone's), the covers on them (an
-// eighth of the circle each, a little apart), how far apart they rise, the perspective (the particles' camera's), and
-// where the arrows stand (midway between the screen's edge and the ring's)
-type Layout = { width: number; radius: number; card: number; height: number; gap: number; perspective: number; phone: boolean; arrow: number };
+// eighth of the circle each, a little apart), how far apart they rise (a front cover's height on the screen and a
+// little), the perspective (the particles' camera's), where the arrows stand (midway between the screen's edge and the
+// ring's), on a screen taller than wide how far above the middle the first ring starts, so it comes up right under the
+// heading (his call: the gap there was too big), and how many screens of scrolling the section stays for
+type Layout = { width: number; radius: number; card: number; height: number; gap: number; perspective: number; phone: boolean; arrow: number; lead: number; pin: number };
 function layoutFor(vw: number, vh: number): Layout {
   const phone = vw < 768;
   const radius = phone ? 0.64 * vw : Math.min(440, Math.max(220, 0.3 * vw));
   const card = 2 * radius * Math.tan(Math.PI / PER_RING) * 0.9;
+  const perspective = PERSPECTIVE * vh;
+  const seen = (card * COVER * perspective) / (perspective - radius); // (a front cover's height on the screen)
+  const gap = seen + SPACE * vh;
+  const lead = vh > vw ? Math.max(0, vh / 2 - seen / 2 - UNDER) : 0;
   return {
     width: vw,
     radius,
     card,
     height: card * COVER,
-    gap: (phone ? 0.5 : 0.72) * vh,
-    perspective: PERSPECTIVE * vh,
+    gap,
+    perspective,
     phone,
     arrow: Math.max(40, (vw / 2 - radius * 1.08) / 2),
+    lead,
+    pin: ((RINGS.length - 1) * gap + lead) / (RISE * vh),
   };
 }
 const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
@@ -115,7 +126,7 @@ export function GraphicsSection() {
       const h = hand.current;
       const ease = 1 - Math.exp(-dt * 9);
       RINGS.forEach((cards, i) => {
-        const y = (i - (RINGS.length - 1) * progress) * layout.gap;
+        const y = (i - (RINGS.length - 1) * progress) * layout.gap - layout.lead * (1 - progress);
         h.at[i] = vh / 2 + y;
         const through = (vh + seen / 2 - (top + vh / 2 + y)) / (vh + seen); // (0 below the screen, 1 above it)
         const held = (drag.current?.sideways && drag.current.ring === i) || wheel.current?.ring === i;
@@ -212,10 +223,11 @@ export function GraphicsSection() {
     if (d.sideways) release(d.ring, d.from, e.clientX - d.x);
   };
 
-  // a trackpad's sideways swipe (screens): the ring under the pointer turns with it, and settles once it is over
+  // a trackpad's sideways swipe (or a sideways wheel), in a window of any width: the ring under the pointer turns with
+  // it, and settles once it is over
   useEffect(() => {
     const el = stage.current;
-    if (!el || layout.phone) return;
+    if (!el) return;
     const swipe = (e: WheelEvent) => {
       if (Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;
       e.preventDefault(); // (not the browser's back and forward)
@@ -325,7 +337,7 @@ export function GraphicsSection() {
       <div className="text-shade">
         <SectionTitle text={t.graphics.title} className="mb-2 px-4 sm:px-6 md:mb-4 md:px-10" />
       </div>
-      <div ref={track} style={{ height: `calc(${1 + (layout.phone ? PIN.phone : PIN.wide)} * 100svh)` }}>
+      <div ref={track} style={{ height: `calc(${(1 + layout.pin).toFixed(3)} * 100svh)` }}>
         {/* under the particles: the rings' back halves (the stage pulled up over them, not they under it: a negative
             margin at their foot would keep them stuck on the screen a screen longer than the stage) */}
         <div aria-hidden className="pointer-events-none sticky top-0 -z-20 h-svh overflow-hidden" style={{ perspective }}>
