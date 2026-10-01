@@ -7,7 +7,7 @@ import { ContactButton } from './Buttons';
 // let go at 3 runs on about two screens; reading, it runs on half of one or one)
 const FAST = 3;
 const SPAN = 120;
-const COAST_MS = 1500; // once the finger is off, the page coasting on still counts as its swipe's
+const COAST_MS = 1500; // after a finger's last touch event, the page coasting on still counts as its swipe's
 const WHEEL_MS = 250; // a wheel's or a trackpad's events go on through its coasting: the page's scroll counts this long after each
 // the pixel me: the game's frames (x20/pixel-office) and new poses drawn from them, in one strip; each frame's x, width
 // and height in it, then its anchor: the middle of the head, over the soles
@@ -82,43 +82,28 @@ export function SwipeEgg() {
 
   useEffect(() => {
     new Image().src = SHEET;
-    // the bubbles' pixel font: only the letters of their words
-    if (!document.querySelector('link[data-egg]')) {
-      const letters = [...new Set([...t.egg.slow, ...t.egg.together])].filter((c) => c.codePointAt(0)! < 0x10000).join('');
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = `https://fonts.googleapis.com/css2?family=Tiny5&text=${encodeURIComponent(letters)}&display=swap`;
-      link.dataset.egg = '';
-      document.head.append(link);
-    }
     let count = 0;
-    let touching = false;
-    let moved = false; // the finger went up or down the screen (a tap doesn't: the page gliding to a section after it isn't a swipe)
-    let from = 0; // where it came down
-    let coast = 0; // till when the page moving is still the swipe's or the wheel's
+    let coast = 0; // till when the page moving is the visitor's doing: a finger on it lately, or the wheel, a trackpad
     let marks: number[] = []; // when, and where the page was: the last SPAN, and the mark before it
-    const down = (e: TouchEvent) => {
+    const user = (until: number) => {
+      const now = performance.now();
+      if (now > coast) marks = []; // (a new go: nothing of the last one counts)
+      coast = Math.max(coast, now + until);
+    };
+    // Any touch event, not a finger's moves and lifting off: once the page scrolls under it, Safari on the iPhone may
+    // send no more of those, or a cancel. A tap is followed by no scroll, or by a link's (below).
+    const touched = (e: TouchEvent) => {
       // (in the video feed the finger moves the films, and the page glides on after the last one by itself)
-      touching = !(e.target instanceof Element && e.target.closest('.touch-none'));
-      moved = false;
-      from = e.touches[0]?.clientY ?? 0;
-      marks = [];
+      if (!(e.target instanceof Element && e.target.closest('.touch-none'))) user(COAST_MS);
     };
-    // (moved by the finger, not by the page: a quick flick is often over before the page tells it has moved)
-    const drag = (e: TouchEvent) => {
-      if (touching && Math.abs((e.touches[0]?.clientY ?? from) - from) > 12) moved = true;
-    };
-    const up = () => {
-      touching = false;
-      coast = moved ? performance.now() + COAST_MS : 0;
-    };
-    const wheel = () => {
-      coast = performance.now() + WHEEL_MS;
+    const wheel = () => user(WHEEL_MS);
+    // a link to a section: the page glides there by itself
+    const clicked = (e: Event) => {
+      if (e.target instanceof Element && e.target.closest('a[href^="#"]')) coast = 0;
     };
     const scrolled = () => {
       const now = performance.now();
-      if (!touching && now > coast) return;
-      if (busy.current || count > 3) return;
+      if (now > coast || busy.current || count > 3) return;
       marks.push(now, window.scrollY);
       // (keeping one mark before the last SPAN: on a busy page the scroll events come far apart)
       while (marks.length > 4 && now - marks[2] >= SPAN) marks.splice(0, 2);
@@ -131,18 +116,15 @@ export function SwipeEgg() {
       setStage(count++);
     };
     const passive = { passive: true };
-    window.addEventListener('touchstart', down, passive);
-    window.addEventListener('touchmove', drag, passive);
-    window.addEventListener('touchend', up, passive);
-    window.addEventListener('touchcancel', up, passive);
+    const TOUCH = ['touchstart', 'touchmove', 'touchend', 'touchcancel'] as const;
+    for (const type of TOUCH) window.addEventListener(type, touched, passive);
     window.addEventListener('wheel', wheel, passive);
+    window.addEventListener('click', clicked, true);
     window.addEventListener('scroll', scrolled, passive);
     return () => {
-      window.removeEventListener('touchstart', down);
-      window.removeEventListener('touchmove', drag);
-      window.removeEventListener('touchend', up);
-      window.removeEventListener('touchcancel', up);
+      for (const type of TOUCH) window.removeEventListener(type, touched);
       window.removeEventListener('wheel', wheel);
+      window.removeEventListener('click', clicked, true);
       window.removeEventListener('scroll', scrolled);
     };
   }, [hold]);
@@ -616,8 +598,8 @@ function Scene({ stage, onLeave, onDone }: { stage: number; onLeave: () => void;
       {text && (
         <div ref={bubble} role="status" className="absolute left-0 top-0 opacity-0" style={{ transformOrigin: peek ? '0 50%' : '50% 100%' }}>
           <div
-            className={`relative bg-white text-[#111014] ${peek ? 'px-2 py-1 text-5xl leading-none' : 'w-max max-w-[min(340px,calc(100vw-40px))] px-4 py-3 text-xl leading-[1.3]'}`}
-            style={{ fontFamily: 'Tiny5, var(--font), sans-serif', boxShadow: `0 -${DOT}px ${INK}, 0 ${DOT}px ${INK}, -${DOT}px 0 ${INK}, ${DOT}px 0 ${INK}` }}
+            className={`relative bg-white text-[#111014] ${peek ? 'px-2 py-1 text-5xl leading-none' : 'w-max max-w-[min(340px,calc(100vw-40px))] px-4 py-3 text-[17px] font-semibold leading-snug'}`}
+            style={{ boxShadow: `0 -${DOT}px ${INK}, 0 ${DOT}px ${INK}, -${DOT}px 0 ${INK}, ${DOT}px 0 ${INK}` }}
           >
             <span className="sr-only">{text}</span>
             <span aria-hidden>
