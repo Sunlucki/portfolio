@@ -238,9 +238,9 @@ const ru: Copy = {
     turn: 'Потяните, чтобы повернуть',
     unfold: 'Нажмите, чтобы открыть', // (a folder)
     shuffle: 'Нажмите, чтобы перетасовать', // (a deck)
-    things: { logo: 'Логотип', folder: 'Папка', deck: 'Колода Таро', card: 'Визитка', flyer: 'Флаер', voucher: 'Ваучер', guide: 'Памятка', sticker: 'Наклейка' },
+    things: { logo: 'Логотип', folder: 'Папка', deck: 'Колода Таро', card: 'Визитка', flyer: 'Флаер', voucher: 'Ваучер', guide: 'Памятка', sticker: 'Наклейка', badges: 'Бейджи', wristband: 'Браслет', banner: 'Баннер', banners: 'Баннеры', sign: 'Табличка', certificate: 'Диплом', stickers: 'Наклейки', posters: 'Постеры' },
     projects: {
-      hype: { name: 'HYPE', kind: 'Постеры ивентов', client: '', problem: '', solution: '' },
+      hype: { name: 'HYPE', kind: 'Постеры ивентов, бейджи и браслеты', client: '', problem: '', solution: '' },
       ihor: { name: 'Игорь Поперечный', kind: 'Музыкальный постер и визитки', client: '', problem: '', solution: '' },
       'dc-consulting': { name: 'DC Consulting', kind: 'Логотип, папка и ваучер', client: 'Нотариальная помощь иностранцам в Польше.', problem: 'Их материалы, например папка для документов, выглядели дёшево и не передавали качество услуг: бренду не хватало престижа.', solution: 'Премиальная папка и ваучер в их цветах, по мотивам люксовых домов вроде Louis Vuitton, с узором из их логотипа, чтобы поднять ценность услуги в глазах клиентов.' },
       'touch-coffee': { name: 'Touch Coffee', kind: 'Брендинг', client: '', problem: '', solution: '' },

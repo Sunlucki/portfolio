@@ -13,6 +13,12 @@
    "h": 90,
    "front": "/scenes/print/profi-dokument-1-front.webp",
    "back": "/scenes/print/profi-dokument-1-back.webp"
+  },
+  {
+   "kind": "sign",
+   "w": 300,
+   "h": 210,
+   "front": "/scenes/print/profi-dokument-2-front.webp"
   }
  ],
  "yana-lashes": [
@@ -52,6 +58,12 @@
    "frontGloss": "/scenes/print/ihor-0-front-gloss.webp",
    "back": "/scenes/print/ihor-0-back.webp",
    "backGloss": "/scenes/print/ihor-0-back-gloss.webp"
+  },
+  {
+   "kind": "banner",
+   "w": 700,
+   "h": 1200,
+   "front": "/scenes/print/ihor-1-front.webp"
   }
  ],
  "dc-consulting": [
@@ -518,6 +530,26 @@
    "back": "/scenes/print/dc-consulting-0-back.webp"
   }
  ],
+ "hype": [
+  {
+   "kind": "badges",
+   "w": 105,
+   "h": 148,
+   "back": "/scenes/print/hype-0-back.webp",
+   "fronts": [
+    "/scenes/print/hype-0-front0.webp",
+    "/scenes/print/hype-0-front1.webp",
+    "/scenes/print/hype-0-front2.webp",
+    "/scenes/print/hype-0-front3.webp"
+   ]
+  },
+  {
+   "kind": "wristband",
+   "w": 250,
+   "h": 19,
+   "front": "/scenes/print/hype-1-front.webp"
+  }
+ ],
  "black-point": [
   {
    "kind": "card",
@@ -539,6 +571,12 @@
    "w": 100,
    "h": 200,
    "front": "/scenes/print/black-point-2-front.webp"
+  },
+  {
+   "kind": "certificate",
+   "w": 508,
+   "h": 762,
+   "front": "/scenes/print/black-point-3-front.webp"
   }
  ],
  "strimat": [
@@ -571,6 +609,16 @@
    "h": 297,
    "front": "/scenes/print/touch-coffee-0-front.webp",
    "back": "/scenes/print/touch-coffee-0-back.webp"
+  },
+  {
+   "kind": "banners",
+   "w": 550,
+   "h": 700,
+   "fronts": [
+    "/scenes/print/touch-coffee-1-front0.webp",
+    "/scenes/print/touch-coffee-1-front1.webp",
+    "/scenes/print/touch-coffee-1-front2.webp"
+   ]
   }
  ],
  "na-serio-na-zarty": [
@@ -597,6 +645,28 @@
    "h": 210,
    "front": "/scenes/print/mind-logistic-0-front.webp",
    "back": "/scenes/print/mind-logistic-0-back.webp"
+  },
+  {
+   "kind": "stickers",
+   "w": 100,
+   "h": 100,
+   "fronts": [
+    "/scenes/print/mind-logistic-1-front0.webp",
+    "/scenes/print/mind-logistic-1-front1.webp",
+    "/scenes/print/mind-logistic-1-front2.webp",
+    "/scenes/print/mind-logistic-1-front3.webp",
+    "/scenes/print/mind-logistic-1-front4.webp"
+   ]
+  },
+  {
+   "kind": "posters",
+   "w": 297,
+   "h": 420,
+   "fronts": [
+    "/scenes/print/mind-logistic-2-front0.webp",
+    "/scenes/print/mind-logistic-2-front1.webp",
+    "/scenes/print/mind-logistic-2-front2.webp"
+   ]
   }
  ],
  "alibia": [
@@ -610,6 +680,21 @@
    "back": "/scenes/print/alibia-0-back.webp",
    "backGloss": "/scenes/print/alibia-0-back-gloss.webp",
    "backBump": "/scenes/print/alibia-0-back-bump.webp"
+  },
+  {
+   "kind": "stickers",
+   "w": 80,
+   "h": 80,
+   "fronts": [
+    "/scenes/print/alibia-1-front0.webp",
+    "/scenes/print/alibia-1-front1.webp",
+    "/scenes/print/alibia-1-front2.webp",
+    "/scenes/print/alibia-1-front3.webp",
+    "/scenes/print/alibia-1-front4.webp",
+    "/scenes/print/alibia-1-front5.webp",
+    "/scenes/print/alibia-1-front6.webp",
+    "/scenes/print/alibia-1-front7.webp"
+   ]
   }
  ],
  "da-vinci": [

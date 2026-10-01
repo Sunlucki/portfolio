@@ -768,11 +768,12 @@ async function poucher(): Promise<Live> {
 // The printed things (src/prints.json, scripts/prepare-media.py prints): each a sheet of its real proportions, its
 // edge a little thicker than paper so it reads, both its sides printed on it, a hot-stamped side glossy where it is
 // stamped; lit like a product shot (a room's reflections and a key light), floating over its soft shadow. Picked, the
-// next thing comes in turning over, swapped while edge-on, so the swap can't be seen. A deck (Da Vinci's Tarot cards)
-// lies stacked face up, and shuffles when tapped (and by itself every few seconds): it splits in two halves, which
-// riffle back together card by card in a new order, so a new card comes up on top. A folder (DC Consulting's) is
-// folded from its own die line: its pocket and glue flap turned in on the back cover, its front cover on the spine,
-// closed, then opening to show its inside (and on, and back; a tap opens or closes it).
+// next thing comes in turning over, swapped while edge-on, so the swap can't be seen. A deck (Da Vinci's Tarot cards,
+// HYPE's badges, a set of stickers, banners or posters) lies stacked face up, and shuffles when tapped (and by itself
+// every few seconds): it splits in two halves, which riffle back together card by card in a new order, so a new card
+// comes up on top. A folder (DC Consulting's) is folded from its own die line: its pocket and glue flap turned in on
+// the back cover, its front cover on the spine, closed, then opening to show its inside (and on, and back; a tap opens
+// or closes it).
 type Sheet = {
   kind: string;
   w: number;
@@ -922,9 +923,11 @@ async function sheets(name: SceneName): Promise<Live> {
   const show = (i: number) => {
     const thing = things[i];
     const side = sides[i];
-    // as big as the view takes, at its proportions; its thickness 0.4 mm on cards, 0.25 on bigger things, drawn thicker
+    // as big as the view takes, at its proportions; its thickness 0.4 mm on cards, 0.25 on bigger things, 3 on a sign
+    // (a board), drawn thicker
     const k = Math.min(7.8 / thing.w, 5 / thing.h);
-    size = { w: thing.w * k, h: thing.h * k, t: Math.max(0.04, (Math.max(thing.w, thing.h) <= 100 ? 0.4 : 0.25) * k * 1.6) };
+    const mm = thing.kind === 'sign' ? 3 : Math.max(thing.w, thing.h) <= 100 ? 0.4 : 0.25;
+    size = { w: thing.w * k, h: thing.h * k, t: Math.max(0.04, mm * k * 1.6) };
     if (!built[i])
       built[i] =
         thing.kind === 'folder'

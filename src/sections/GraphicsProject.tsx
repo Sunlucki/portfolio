@@ -2,7 +2,7 @@ import { Rotate3d, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SceneCanvas } from '../components/SceneCanvas';
-import { GRAPHICS, LOGO_FILM_OF, PRINT_KINDS, SCENE_OF, type GraphicsSlug } from '../content';
+import { GRAPHICS, LOGO_FILM_OF, PRINT_DECKS, PRINT_KINDS, SCENE_OF, type GraphicsSlug } from '../content';
 import { LOCALE, t } from '../i18n';
 
 const OPEN_MS = 460;
@@ -38,6 +38,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
   const hero = animated ? null : project.pictures[opening.picture];
   const rest = animated ? project.pictures : project.pictures.filter((_, i) => i !== opening.picture);
   const kinds = PRINT_KINDS[opening.slug] ?? [];
+  const decks = PRINT_DECKS[opening.slug] ?? [];
   const chips = [...(film ? (['logo'] as const) : []), ...kinds];
   const [chip, setChip] = useState(0);
   const filmOn = !!film && chip === 0;
@@ -184,7 +185,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
               {!filmOn && (
                 <span className="flex items-center gap-1.5 text-xs text-[#D7E2EA]/50">
                   <Rotate3d aria-hidden className="h-3.5 w-3.5" />
-                  {kinds[thing] === 'deck' ? `${t.graphics.shuffle} · ${t.graphics.turn}` : kinds[thing] === 'folder' ? `${t.graphics.unfold} · ${t.graphics.turn}` : t.graphics.turn}
+                  {decks[thing] ? `${t.graphics.shuffle} · ${t.graphics.turn}` : kinds[thing] === 'folder' ? `${t.graphics.unfold} · ${t.graphics.turn}` : t.graphics.turn}
                 </span>
               )}
             </div>

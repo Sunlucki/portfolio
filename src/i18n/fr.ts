@@ -278,9 +278,9 @@ const fr: Copy = {
     turn: 'Faites glisser pour le tourner',
     unfold: 'Touchez pour l’ouvrir', // (a folder)
     shuffle: 'Touchez pour mélanger', // (a deck)
-    things: { logo: 'Logo', folder: 'Chemise', deck: 'Jeu de tarot', card: 'Carte de visite', flyer: 'Flyer', voucher: 'Bon cadeau', guide: 'Guide de soins', sticker: 'Autocollant' },
+    things: { logo: 'Logo', folder: 'Chemise', deck: 'Jeu de tarot', card: 'Carte de visite', flyer: 'Flyer', voucher: 'Bon cadeau', guide: 'Guide de soins', sticker: 'Autocollant', badges: 'Badges', wristband: 'Bracelet', banner: 'Bannière', banners: 'Bannières', sign: 'Plaque', certificate: 'Diplôme', stickers: 'Autocollants', posters: 'Affiches' },
     projects: {
-      hype: { name: 'HYPE', kind: 'Affiches d’événements', client: '', problem: '', solution: '' },
+      hype: { name: 'HYPE', kind: 'Affiches d’événements, badges et bracelets', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Affiche musicale et cartes de visite', client: '', problem: '', solution: '' },
       'dc-consulting': { name: 'DC Consulting', kind: 'Logo, pochette et bon cadeau', client: '', problem: '', solution: '' },
       'touch-coffee': { name: 'Touch Coffee', kind: 'Branding', client: '', problem: '', solution: '' },

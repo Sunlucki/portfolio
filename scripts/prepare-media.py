@@ -20,7 +20,7 @@ Outputs into ../public:
                                                           films alone: python3 scripts/prepare-media.py videos <slug>...)
 Re-run safe: overwrites outputs.
 """
-import os, sys, subprocess, tempfile, glob, re, json, random, shutil, unicodedata
+import os, sys, math, subprocess, tempfile, glob, re, json, random, shutil, unicodedata
 from PIL import Image, ImageChops, ImageFilter, ImageStat, features
 
 HOME = os.path.expanduser("~")
@@ -461,45 +461,88 @@ def logo_films():
     return size
 
 # The Graphics projects' printed things in 3D (2026-10-01, src/three/miniScenes.ts): each side as printed, from its file in
-# the archive (a PDF's or an .ai's page at 300 dpi, a PSD's part, or its own export), the bleed trimmed, 1600 px on its
-# long side; a side hot-stamped (Da Vinci's roses card: glossy black over the roses) also gets its gloss map (its green,
-# the roughness three.js reads: the paper's 0.75, the stamp's 0.08, glossy as lacquer). Sizes in millimetres and what each thing is go to
-# src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a file, (file, page), (file,
+# the archive (a PDF's or an .ai's page at 300 dpi, a big one's at 4000 px on its long side, a PSD's part, or its own
+# export), the bleed trimmed, 1600 px on its long side (a deck's cards 1024: all its cards load together); a side
+# hot-stamped (Da Vinci's roses card: glossy black over the roses) also gets its gloss map (its green, the roughness
+# three.js reads: the paper's 0.75, the stamp's 0.08, glossy as lacquer). Sizes in millimetres and what each thing is go
+# to src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a file, (file, page), (file,
 # (left, top, right, bottom) as fractions), ("foil", art, stamp): the stamp's shapes in glossy black over the art, or
 # ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is, ("gloss", art,
-# varnish): its spot varnish's layer, glossy where it is, or ("emboss", mark, colour, share): plain paper with the
-# mark's shape (share of the side's width) blind-embossed, its height in a bump map (no mark: the paper alone). A
-# deck (Da Vinci's five Tarot cards): its fronts, one back for all. A side laid out across a thing that stands upright
-# is turned a quarter anticlockwise (the Tarot cards' titles read along their long side).
+# varnish): its spot varnish's layer, glossy where it is, ("emboss", mark, colour, share): plain paper with the mark's
+# shape (share of the side's width) blind-embossed, its height in a bump map (no mark: the paper alone), or ("unnamed",
+# side, box): a side with a private person's name on it (a graduate's, on Black Point's diploma) taken off. A deck (Da
+# Vinci's five Tarot cards, HYPE's badges, a set of stickers, banners or posters): its fronts (the last on top), one back
+# for all. A side laid out across a thing that stands upright is turned a quarter anticlockwise (the Tarot cards' titles
+# read along their long side).
 DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
 BPW = "BLACK POINT/Графика/Wizytówka/"
 PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm)]
     "profi-dokument": [("card", "Нотариальные услуги/Front.jpg", "Нотариальные услуги/Back.jpg", (90, 50.6), 0),
-                       ("flyer", "Нотариальные услуги/Флаер/FRONT.png", "Нотариальные услуги/Флаер/BACK.png", (180, 90), 2)],
+                       ("flyer", "Нотариальные услуги/Флаер/FRONT.png", "Нотариальные услуги/Флаер/BACK.png", (180, 90), 2),
+                       ("sign", ("Нотариальные услуги/TablicaA4.pdf", 1), None, (300, 210), 0)],
     "yana-lashes": [("card", ("Yana Lashes/PDF/Busines Card.pdf", 1), ("Yana Lashes/PDF/Busines Card.pdf", 2), (90, 50), 2)],
     "zero-sladu": [("card", ("ZERO ŚLADU/WIZYTÓWKA/ZERO ŚLADU WIZYTÓWKA.pdf", 1), ("ZERO ŚLADU/WIZYTÓWKA/ZERO ŚLADU WIZYTÓWKA.pdf", 2), (90, 50), 0)],
     "time-relax-body": [("card", ("TIme Relax Body/biznes_karta_85x54mm.pdf", 1), ("TIme Relax Body/biznes_karta_85x54mm.pdf", 2), (54, 85), 2)],
     "ihor": [("card", ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 1), ("IGOR MUSIC/Igor Poperechny.pdf", 3)),
-              ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 2), ("IGOR MUSIC/Igor Poperechny.pdf", 4)), (90, 50), 2)],
+              ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 2), ("IGOR MUSIC/Igor Poperechny.pdf", 4)), (90, 50), 2),
+             ("banner", ("IGOR MUSIC/Igor Poperechny BANER.pdf", 1), None, (700, 1200), 0)],
     "dc-consulting": [("voucher", "DC CONSULTING/VOUCHER/JPG/AWERS.jpg", "DC CONSULTING/VOUCHER/JPG/REWERS.jpg", (210, 148), 0)],
+    # (HYPE's event badges, A6's proportions, one back for all, and its wristband, 250 by 19 mm: the PDF's 33 pt round it
+    # cut off)
+    "hype": [("badges", [f"HYPE/BAGE/{n}.png" for n in ("FACE CONTROL", "STAFF", "ARTIST", "VIP")], "HYPE/BAGE/BACK.png", (105, 148), 0),
+             ("wristband", ("HYPE/Браслеты /OPASKA HYPE.pdf", 1), None, (250, 19), 11.64)],
     # (2026-10-01, more of his print: each project's cards, flyers, vouchers and stickers in the archive)
     "black-point": [("card", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 1), ("gloss", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 2), (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 3)), (90, 50), 2),
                     ("voucher", (BPW + "VOUCHER.pdf", 1), (BPW + "VOUCHER.pdf", 2), (297, 210), 2),
-                    ("sticker", BPW + "STICK.png", None, (100, 200), 0)],
+                    ("sticker", BPW + "STICK.png", None, (100, 200), 0),
+                    ("certificate", ("unnamed", "BLACK POINT/Графика/Dyplom.png", (1600, 6930, 4400, 7380)), None, (508, 762), 0)],
     "strimat": [("card", "STRIMAT/Визитка/PNG/AWERS.png", "STRIMAT/Визитка/PNG/REWERS.png", (90, 50), 0)],
     "depilacja": [("flyer", "Depilacja/Флаер/Flyer.png", None, (210, 297), 3),
                   ("voucher", "Depilacja/BON PODARUNKOWY.png", None, (210, 100), 5)],
-    "touch-coffee": [("flyer", ("Touch Coffe/Baner + Ulotka V2.pdf", 3), ("Touch Coffe/Baner + Ulotka V2.pdf", 4), (210, 297), 0)],
+    "touch-coffee": [("flyer", ("Touch Coffe/Baner + Ulotka V2.pdf", 3), ("Touch Coffe/Baner + Ulotka V2.pdf", 4), (210, 297), 0),
+                     ("banners", [("Touch Coffe/Baner + Ulotka V2.pdf", n) for n in (5, 2, 1)], None, (550, 700), 0)],
     "na-serio-na-zarty": [("flyer", ("Na Serio Na Zarty/naserio FLAYER.pdf", 1), ("Na Serio Na Zarty/naserio FLAYER.pdf", 2), (148, 210), 1)],
     "soul-nation": [("voucher", "SOUL NATION/VOUCHER.psd", None, (100, 171), 0)],
-    "mind-logistic": [("flyer", (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA.pdf"), 1), (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA REVERS.pdf"), 1), (148, 210), 0)],
+    "mind-logistic": [("flyer", (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA.pdf"), 1), (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA REVERS.pdf"), 1), (148, 210), 0),
+                      ("stickers", [os.path.join(ML, "TYPOHRAPHY", "STICKER", "PNG", "NEW PACK 3", f"MIND LIGISTIC STICKER-0{n}.png") for n in (5, 4, 3, 2, 1)], None, (100, 100), 0),
+                      ("posters", [os.path.join(ML, "TYPOHRAPHY", "MysteryboxA3", f"A3{n}.png") for n in (3, 2, 1)], None, (297, 420), 0)],
     # (no card of Alibia's in the archive: its logo blind-embossed on grey paper, as his own mockup shows it)
-    "alibia": [("card", ("emboss", "Alibia/WEB/Alibia Shadow Logo.png", (96, 96, 98), 0.34), ("emboss", None, (96, 96, 98), 0), (85, 55), 0)],
+    "alibia": [("card", ("emboss", "Alibia/WEB/Alibia Shadow Logo.png", (96, 96, 98), 0.34), ("emboss", None, (96, 96, 98), 0), (85, 55), 0),
+               ("stickers", [("Alibia/STICKERS.pdf", n) for n in (19, 15, 10, 9, 8, 5, 4, 1)], None, (80, 80), 0)],  # (eight of its twenty)
     "da-vinci": [("deck", [(f"Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC {n}.pdf", 1) for n in range(1, 6)], ("Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC 1.pdf", 2), (50, 90), 0),
                  ("card", ("foil", DVR + "Awers.png", DVR + "Awers Hotstamping.png"), ("foil", DVR + "Rewers.png", DVR + "Rewers Hotstamping.png"), (90, 50), 3),
                  ("flyer", ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 1), ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 2), (105, 148), 0),
                  ("guide", ("Da Vinci Tatoo/PDF/Инструкция/DA-VINCI - ИНСТРУКЦИЯ.pdf", 1), ("Da Vinci Tatoo/PDF/Инструкция/DA-VINCI - ИНСТРУКЦИЯ.pdf", 2), (210, 148), 0)],
 }
+
+def unnamed(im, box):  # the dark letters in box (left, top, right, bottom px) filled from the nearest pixels without them
+    # along the background's lines, their slant measured in each strip (the diploma's lines curve)
+    part = im.crop(box)
+    grey = part.convert("L")
+    hole = grey.point(lambda v: 255 if v < 110 else 0).filter(ImageFilter.MaxFilter(7))
+    top, bottom = hole.getbbox()[1], hole.getbbox()[3]
+    clear = Image.new("L", (part.width, top + part.height - bottom))  # (the lines over and under the letters)
+    clear.paste(grey.crop((0, 0, part.width, top)), (0, 0))
+    clear.paste(grey.crop((0, bottom, part.width, part.height)), (0, top))
+    shift = lambda deg, step: (round(step * math.cos(math.radians(deg))), -round(step * math.sin(math.radians(deg))))
+    out = part.copy()
+    for x in range(0, part.width, 280):
+        patch = clear.crop((x, 0, x + 280, clear.height))
+        miss = lambda deg: ImageStat.Stat(ImageChops.difference(patch, ImageChops.offset(patch, *(-v for v in shift(deg, 14)))).crop((20, 20, patch.width - 20, patch.height - 20))).mean[0]
+        deg = min(range(20, 90), key=miss)
+        left = Image.new("L", part.size, 0)
+        left.paste(hole.crop((x, 0, x + 280, part.height)), (x, 0))
+        for step in range(1, part.height):
+            for sign in (1, -1):
+                dx, dy = shift(deg, sign * step)
+                take = ImageChops.multiply(left, ImageChops.offset(ImageChops.invert(hole), -dx, -dy))
+                out.paste(ImageChops.offset(part, -dx, -dy), mask=take)
+                left = ImageChops.subtract(left, take)
+            if not left.getbbox():
+                break
+    im = im.copy()
+    im.paste(out, box[:2])
+    return im
 
 def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its gloss (and bump) maps if it has them
     if isinstance(spec, tuple) and spec[0] == "emboss":  # blind embossing: plain paper, the mark's shape as its height
@@ -526,6 +569,8 @@ def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its
         # (green the roughness: the paper's 0.75 to the foil's 0.2; blue the metalness: the foil's)
         gloss = Image.merge("RGB", (Image.new("L", art.size, 0), foil.point(lambda a: 191 - round(a / 255 * 140)), foil))
         return art, gloss
+    if isinstance(spec, tuple) and spec[0] == "unnamed":
+        return unnamed(side(spec[1], mm)[0], spec[2]), None
     if isinstance(spec, tuple) and spec[0] == "foil":
         art = Image.open(os.path.join(ARCHIVE, spec[1])).convert("RGBA")
         stamp = Image.open(os.path.join(ARCHIVE, spec[2])).convert("RGBA").getchannel("A")
@@ -538,7 +583,8 @@ def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its
     path = os.path.join(ARCHIVE, path)
     if path.endswith((".pdf", ".ai")):
         tmp = tempfile.mkdtemp()
-        subprocess.run(["pdftoppm", "-r", "300", "-f", str(part), "-l", str(part), "-singlefile", "-png", path, os.path.join(tmp, "page")], check=True)
+        dpi = min(300, round(4000 / (max(mm) / 25.4)))  # (a banner's page at 300 dpi would be 117 million pixels)
+        subprocess.run(["pdftoppm", "-r", str(dpi), "-f", str(part), "-l", str(part), "-singlefile", "-png", path, os.path.join(tmp, "page")], check=True)
         return Image.open(os.path.join(tmp, "page.png")).convert("RGB"), None
     im = Image.open(path)
     if im.mode == "RGBA":  # (on white, as printed)
@@ -662,7 +708,7 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
                     if bleed:  # the bleed, as a share of the side with it
                         bx, by = round(im.width * bleed / (w + 2 * bleed)), round(im.height * bleed / (h + 2 * bleed))
                         im = im.crop((bx, by, im.width - bx, im.height - by))
-                    im.thumbnail((1600, 1600), Image.LANCZOS)
+                    im.thumbnail((1024, 1024) if isinstance(front, list) else (1600, 1600), Image.LANCZOS)
                     name = f"{slug}-{i}-{face}{['', '-gloss', '-bump'][k]}.webp"
                     im.save(out("scenes", "print", name), "WEBP", quality=85, method=6)
                     size += os.path.getsize(out("scenes", "print", name))
