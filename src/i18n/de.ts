@@ -274,6 +274,13 @@ const de: Copy = {
     name: 'Ich heiße Bogdan und bin Full-Stack Engineer.',
     back: 'Okay, ich mache langsam',
   },
+  cat: {
+    ask: 'Hey, hast du meinen Kater gesehen?',
+    no: 'Nicht gesehen',
+    yes: 'Gesehen',
+    bye: 'Okay, bis bald!',
+    found: 'Das ist mein Kater, er heißt Messi.',
+  },
 };
 
 export default de;

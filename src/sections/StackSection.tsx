@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { CatEgg } from '../components/CatEgg';
 import { FadeIn } from '../components/FadeIn';
 import { SectionTitle } from '../components/SectionTitle';
 import FolderFloat, { type FolderFloatTrigger } from '../vendor/react-bits/FolderFloat';
@@ -55,6 +56,7 @@ export function StackSection() {
         {t.stack.intro} {hint}
       </FadeIn>
       {wide ? <Shelf trigger={trigger} /> : <Carousel trigger={trigger} />}
+      <CatEgg />
       <ul className="sr-only">
         {STACK.map((folder) => (
           <li key={folder.name}>

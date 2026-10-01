@@ -32,7 +32,7 @@ const FRAMES = {
 type Frame = keyof typeof FRAMES;
 const WALK: Frame[] = ['walk0', 'walk1', 'walk2', 'walk3'];
 const TALL = 104; // his height standing, art px
-const INK = '#111014'; // his outline, and the bubbles'
+export const INK = '#111014'; // his outline, and the bubbles'
 // the fireball's colours, from its heart out
 const FIRE = [
   [255, 250, 222],
@@ -148,9 +148,9 @@ const TAILS = {
   down: ['owwwwwwo', '.owwwwo.', '..owwo..', '...oo...'],
   left: ['...o', '..ow', '.oww', 'owww', '.oww', '..ow', '...o'],
 };
-const DOT = 3; // the bubbles' pixel, CSS px
+export const DOT = 3; // the bubbles' pixel, CSS px
 
-function Tail({ side }: { side: keyof typeof TAILS }) {
+export function Tail({ side }: { side: keyof typeof TAILS }) {
   const rows = TAILS[side];
   return (
     <svg

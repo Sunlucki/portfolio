@@ -86,6 +86,12 @@ Four R3F canvases live on the page: the manifesto, this one, the particle scene 
 
 Eight React Bits Folder Float folders (Frontend, WebGL & Motion, Backend, AI, iOS, DevOps & Security, Fintech & Commerce, Design & Media). A folder opens on hover — on touch screens on tap — and its tools spring out as notes that can be dragged around (matter-js). Wide screens get a 4 × 2 shelf with room above each row for the notes; narrow screens a swipeable row whose middle folder opens by itself. The lists live in `FOLDERS` in `src/content.ts` and only name tools the repositories (`../data/profile.json`) or this site itself actually show. The folders come in the order each language's market asks for them (`ORDER`): Polish leads with e-invoicing and payments (KSeF, JPK, PayU, Przelewy24, Allegro), German brings quality and security forward, Italian and French commerce and the visual side, Russian and Ukrainian AI and 3D after the core; the rest as in English.
 
+### The cat in the folders
+
+An Easter egg in the Stack, a nod to Schrödinger (`src/components/CatEgg.tsx`), on the visitor's own clicks only (taps on phones), once a visit. Close the first folder and once its notes are back in, Messi, the cat from the office game, peeks out of it, crouches and leaps into the second (on phones the row of folders then brings it to the middle, and it opens as if he'd knocked it). Close that one and the pixel me peeks out of it, looks about, then at you: have you seen my cat? Two answers in the bubble. Seen: OK, see you, and I go back in. Not seen: I dive into the folder, it shakes, and I come back up with him in my hands: here's my cat, his name is Messi. While I'm in it that folder doesn't open.
+
+Both are drawn on a canvas over the page, two CSS px to a pixel of theirs, what's below a folder's front edge unseen, so they come out of the folder and go back in; the folders are read every frame, so it holds as the page or the row moves. The strip is `public/egg/cat.png` (12 frames, 17 KB): the game's cat sitting and blinking and my standing frames, and new ones generated with GPT Image 2.5 (Higgsfield) from the game's art and converted its way, like the swipe egg's: the cat's jump (crouch, push off, flight, landing, at the game cat's scale), me looking at you, asking, searching with a hand at my brow, and holding him.
+
 ## The projects
 
 Sticky cards that stack as the page scrolls, each named by the system it is (the product or the client in the line above). Four of them play the product's promo live in one wide window, in place of the screenshots: SIMBIA's 2D films (Remotion compositions, 1920 × 1080 at 30 fps, every frame a pure function of its number), in `@remotion/player`, muted, looping, covering the window. Only the card on top plays; the others show a screenshot, and a promo goes on from where it left off when its card comes back on top. Over the film, a chapter for each scenario jumps there (the one playing is lit); below it, play/pause and the progress, which seeks. Remotion, the films and Inter load as the section comes near (`src/promo/Promo.tsx`, about 340 KB gzipped); three.js they share with the manifesto. The films play in English (`inputProps={{ lang: 'en' }}`).
@@ -148,7 +154,7 @@ src/
   content.ts            all project data, its words from i18n/
   i18n/                 the words in every language (en.ts the source), the language picked (index.ts), the list (langs.ts)
   heroMotion.json       per-frame camera zoom for the hero morph (generated)
-  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, ScatterText, SpeedNumber, SectionTitle, ScrollHint, SwipeEgg, buttons
+  components/           DepthImage (+ coverCrop), FadeIn, Magnet, AnimatedText, ScatterText, SpeedNumber, SectionTitle, ScrollHint, SwipeEgg, CatEgg, buttons
   heroPupil.json        the pupil's centre and radius in the hero's last frames (generated)
   promo/                the products' promos in the project cards (Promo.tsx; saas/ and oner/ copied from SIMBIA)
   sections/             Hero (+ heroVeil.ts), Manifesto, About, Numbers, Stack, Services, Projects, FlowSections (Apps, Marquee = Graphics, Video + VideoFeed, Music), Contact

@@ -316,6 +316,13 @@ const fr: Copy = {
     name: 'Je m’appelle Bogdan et je suis full-stack engineer.',
     back: 'D’accord, j’irai doucement',
   },
+  cat: {
+    ask: 'Hé, tu n’as pas vu mon chat\u00a0?',
+    no: 'Pas vu',
+    yes: 'Vu',
+    bye: 'D’accord, à bientôt\u00a0!',
+    found: 'Voici mon chat, il s’appelle Messi.',
+  },
 };
 
 export default fr;

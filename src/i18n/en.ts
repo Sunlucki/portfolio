@@ -277,6 +277,15 @@ const en = {
     name: 'My name is Bogdan and I’m a full-stack engineer.',
     back: 'OK, I’ll go slowly',
   },
+  // the Stack's egg (components/CatEgg.tsx): the pixel me, out of the second folder, asks after his cat; the two
+  // answers, then what I say to each
+  cat: {
+    ask: 'Hey, have you seen my cat?',
+    no: 'No, I haven’t',
+    yes: 'Yes, I have',
+    bye: 'OK, see you around!',
+    found: 'Here’s my cat, his name is Messi.',
+  },
 };
 
 export type Copy = typeof en;
