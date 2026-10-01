@@ -1,5 +1,5 @@
 // The CV's words and facts, once: scripts/cv/build.mjs renders them as the page (public/cv/index.html), its PDF,
-// Markdown (cv.md) and JSON Resume (resume.json). Facts mirror ../data/profile.json in the knowledge base: only what
+// Markdown (cv.txt) and JSON Resume (resume.json). Facts mirror ../data/profile.json in the knowledge base: only what
 // the code, the git history and the registries show. No em dashes in the copy.
 
 export const UPDATED = '2026-10-01';

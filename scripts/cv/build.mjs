@@ -1,5 +1,5 @@
 // The CV (scripts/cv/data.mjs) as the page public/cv/index.html, in the site's look, its PDF (printed from the page by
-// headless Chrome), Markdown (cv.md) and JSON Resume (resume.json): the same words in each, readable by people and by
+// headless Chrome), Markdown (cv.txt) and JSON Resume (resume.json): the same words in each, readable by people and by
 // the agents that score CVs. All the text is in the HTML (nothing needs JavaScript to be read); the PDF has a real text
 // layer, tagged, one column.
 //
@@ -70,7 +70,7 @@ const html = `<!doctype html>
 <meta name="author" content="${esc(person.name)}">
 <meta name="robots" content="noindex, follow">
 <link rel="canonical" href="${URL_CV}">
-<link rel="alternate" type="text/markdown" href="cv.md" title="This CV as Markdown">
+<link rel="alternate" type="text/plain" href="cv.txt" title="This CV as plain text (Markdown)">
 <link rel="alternate" type="application/json" href="resume.json" title="This CV as JSON Resume">
 <link rel="alternate" type="application/pdf" href="${esc(PDF)}" title="This CV as PDF">
 <meta name="theme-color" content="#0C0C0C">
@@ -471,7 +471,7 @@ html.js .rv.in { opacity: 1; transform: none; }
 </main>
 
 <footer class="wrap">
-  <p>Updated ${esc(new Date(`${cv.UPDATED}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))} · <a href="${URL_CV}">${esc(host(URL_CV))}</a> · this CV as <a href="cv.md">Markdown</a> and <a href="resume.json">JSON Resume</a></p>
+  <p>Updated ${esc(new Date(`${cv.UPDATED}T12:00:00Z`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }))} · <a href="${URL_CV}">${esc(host(URL_CV))}</a> · this CV as <a href="cv.txt">plain text</a> and <a href="resume.json">JSON Resume</a></p>
   <p class="consent">${esc(cv.consent)}</p>
 </footer>
 </div>
@@ -598,7 +598,7 @@ const resume = {
 
 mkdirSync(OUT, { recursive: true });
 writeFileSync(join(OUT, 'index.html'), html);
-writeFileSync(join(OUT, 'cv.md'), md);
+writeFileSync(join(OUT, 'cv.txt'), md); // (Markdown, served as plain text: the server has no type for .md)
 writeFileSync(join(OUT, 'resume.json'), `${JSON.stringify(resume, null, 2)}\n`);
 if (OUT !== PUBLIC) copyFileSync(join(PUBLIC, 'portrait.jpg'), join(OUT, 'portrait.jpg'));
 
@@ -644,4 +644,4 @@ try {
   await sleep(400);
   rmSync(profile, { recursive: true, force: true });
 }
-console.log(`CV → ${OUT}: index.html, cv.md, resume.json, ${PDF}`);
+console.log(`CV → ${OUT}: index.html, cv.txt, resume.json, ${PDF}`);
