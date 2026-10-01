@@ -237,6 +237,7 @@ const de: Copy = {
     unfold: 'Zum Öffnen tippen', // (a folder)
     shuffle: 'Zum Mischen tippen', // (a deck)
     things: { logo: 'Logo', folder: 'Mappe', deck: 'Tarot-Deck', card: 'Visitenkarte', flyer: 'Flyer', voucher: 'Gutschein', guide: 'Pflegeanleitung', sticker: 'Aufkleber', badges: 'Badges', wristband: 'Einlassband', banner: 'Banner', banners: 'Banner', sign: 'Firmenschild', certificate: 'Diplom', stickers: 'Aufkleber', posters: 'Poster' },
+    blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social Media' },
     projects: {
       hype: { name: 'HYPE', kind: 'Event-Poster, Badges und Einlassbänder', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Musikposter und Visitenkarten', client: '', problem: '', solution: '' },
@@ -250,8 +251,8 @@ const de: Copy = {
       'profi-dokument': { name: 'Profi Dokument', kind: 'Branding, Visitenkarten und Flyer', client: '', problem: '', solution: '' },
       'zero-sladu': { name: 'Zero Śladu', kind: 'Branding', client: '', problem: '', solution: '' },
       'yana-lashes': { name: 'Yana Lashes', kind: 'Visitenkarten', client: '', problem: '', solution: '' },
-      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', client: '', problem: '', solution: '' },
-      depilacja: { name: 'Depilacja', kind: 'Visitenkarten für Laser-Haarentfernung', client: '', problem: '', solution: '' },
+      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', with: 'Gemeinsam mit Anita Bakhrami', client: '', problem: '', solution: '' },
+      depilacja: { name: 'Depilacja', kind: 'Visitenkarten für Laser-Haarentfernung', with: 'Gemeinsam mit Anita Bakhrami', client: '', problem: '', solution: '' },
       alibia: { name: 'Alibia', kind: 'Logo, Flyer, Kampagne und Onlineshop', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Social Media eines Restaurants', client: '', problem: '', solution: '' },

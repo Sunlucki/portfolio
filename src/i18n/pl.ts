@@ -239,6 +239,7 @@ const pl: Copy = {
     unfold: 'Stuknij, aby otworzyć', // (a folder)
     shuffle: 'Stuknij, aby potasować', // (a deck)
     things: { logo: 'Logo', folder: 'Teczka', deck: 'Talia tarota', card: 'Wizytówka', flyer: 'Ulotka', voucher: 'Voucher', guide: 'Instrukcja pielęgnacji', sticker: 'Naklejka', badges: 'Identyfikatory', wristband: 'Opaska', banner: 'Baner', banners: 'Banery', sign: 'Tabliczka', certificate: 'Dyplom', stickers: 'Naklejki', posters: 'Plakaty' },
+    blocks: { logo: 'Logo', site: 'Strona', merch: 'Merch', social: 'Social media' },
     projects: {
       hype: { name: 'HYPE', kind: 'Plakaty wydarzeń, identyfikatory i opaski', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Plakat muzyczny i wizytówki', client: '', problem: '', solution: '' },
@@ -252,8 +253,8 @@ const pl: Copy = {
       'profi-dokument': { name: 'Profi Dokument', kind: 'Branding, wizytówki i ulotki', client: '', problem: '', solution: '' },
       'zero-sladu': { name: 'Zero Śladu', kind: 'Branding', client: '', problem: '', solution: '' },
       'yana-lashes': { name: 'Yana Lashes', kind: 'Wizytówki', client: '', problem: '', solution: '' },
-      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', client: '', problem: '', solution: '' },
-      depilacja: { name: 'Depilacja', kind: 'Wizytówki depilacji laserowej', client: '', problem: '', solution: '' },
+      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', with: 'Wspólnie z Anitą Bakhrami', client: '', problem: '', solution: '' },
+      depilacja: { name: 'Depilacja', kind: 'Wizytówki depilacji laserowej', with: 'Wspólnie z Anitą Bakhrami', client: '', problem: '', solution: '' },
       alibia: { name: 'Alibia', kind: 'Logo, ulotka, kampania i sklep internetowy', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Social media restauracji', client: '', problem: '', solution: '' },

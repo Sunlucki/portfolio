@@ -279,6 +279,7 @@ const fr: Copy = {
     unfold: 'Touchez pour l’ouvrir', // (a folder)
     shuffle: 'Touchez pour mélanger', // (a deck)
     things: { logo: 'Logo', folder: 'Chemise', deck: 'Jeu de tarot', card: 'Carte de visite', flyer: 'Flyer', voucher: 'Bon cadeau', guide: 'Guide de soins', sticker: 'Autocollant', badges: 'Badges', wristband: 'Bracelet', banner: 'Bannière', banners: 'Bannières', sign: 'Plaque', certificate: 'Diplôme', stickers: 'Autocollants', posters: 'Affiches' },
+    blocks: { logo: 'Logo', site: 'Site web', merch: 'Merch', social: 'Réseaux sociaux' },
     projects: {
       hype: { name: 'HYPE', kind: 'Affiches d’événements, badges et bracelets', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Affiche musicale et cartes de visite', client: '', problem: '', solution: '' },
@@ -292,8 +293,8 @@ const fr: Copy = {
       'profi-dokument': { name: 'Profi Dokument', kind: 'Branding, cartes de visite et flyers', client: '', problem: '', solution: '' },
       'zero-sladu': { name: 'Zero Śladu', kind: 'Branding', client: '', problem: '', solution: '' },
       'yana-lashes': { name: 'Yana Lashes', kind: 'Cartes de visite', client: '', problem: '', solution: '' },
-      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', client: '', problem: '', solution: '' },
-      depilacja: { name: 'Depilacja', kind: 'Cartes de visite d’épilation laser', client: '', problem: '', solution: '' },
+      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', with: 'Avec Anita Bakhrami', client: '', problem: '', solution: '' },
+      depilacja: { name: 'Depilacja', kind: 'Cartes de visite d’épilation laser', with: 'Avec Anita Bakhrami', client: '', problem: '', solution: '' },
       alibia: { name: 'Alibia', kind: 'Logo, flyer, campagne et boutique en ligne', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Réseaux sociaux d’un restaurant', client: '', problem: '', solution: '' },

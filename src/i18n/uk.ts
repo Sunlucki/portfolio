@@ -248,6 +248,7 @@ const uk: Copy = {
     unfold: 'Натисніть, щоб відкрити', // (a folder)
     shuffle: 'Натисніть, щоб перетасувати', // (a deck)
     things: { logo: 'Логотип', folder: 'Папка', deck: 'Колода Таро', card: 'Візитка', flyer: 'Флаєр', voucher: 'Ваучер', guide: 'Пам’ятка', sticker: 'Наліпка', badges: 'Бейджі', wristband: 'Браслет', banner: 'Банер', banners: 'Банери', sign: 'Табличка', certificate: 'Диплом', stickers: 'Наліпки', posters: 'Постери' },
+    blocks: { logo: 'Лого', site: 'Сайт', merch: 'Мерч', social: 'Соціальні мережі' },
     projects: {
       hype: { name: 'HYPE', kind: 'Постери івентів, бейджі та браслети', client: '', problem: '', solution: '' },
       ihor: { name: 'Ігор Поперечний', kind: 'Музичний постер і візитки', client: '', problem: '', solution: '' },
@@ -261,8 +262,8 @@ const uk: Copy = {
       'profi-dokument': { name: 'Profi Dokument', kind: 'Брендинг, візитки й флаєри', client: '', problem: '', solution: '' },
       'zero-sladu': { name: 'Zero Śladu', kind: 'Брендинг', client: '', problem: '', solution: '' },
       'yana-lashes': { name: 'Yana Lashes', kind: 'Візитки', client: '', problem: '', solution: '' },
-      'stories-beauty': { name: 'Stories Beauty', kind: 'Брендинг', client: '', problem: '', solution: '' },
-      depilacja: { name: 'Depilacja', kind: 'Візитки для лазерної епіляції', client: '', problem: '', solution: '' },
+      'stories-beauty': { name: 'Stories Beauty', kind: 'Брендинг', with: 'Спільно з Анітою Бахрамі', client: '', problem: '', solution: '' },
+      depilacja: { name: 'Depilacja', kind: 'Візитки для лазерної епіляції', with: 'Спільно з Анітою Бахрамі', client: '', problem: '', solution: '' },
       alibia: { name: 'Alibia', kind: 'Логотип, флаєр, кампанія та інтернет-магазин', client: '', problem: '', solution: '' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Брендинг', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Соцмережі ресторану', client: '', problem: '', solution: '' },

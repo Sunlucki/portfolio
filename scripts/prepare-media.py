@@ -467,13 +467,15 @@ def logo_films():
 # three.js reads: the paper's 0.75, the stamp's 0.08, glossy as lacquer). Sizes in millimetres and what each thing is go
 # to src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a file, (file, page), (file,
 # (left, top, right, bottom) as fractions), ("foil", art, stamp): the stamp's shapes in glossy black over the art, or
-# ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is, ("gloss", art,
-# varnish): its spot varnish's layer, glossy where it is, ("emboss", mark, colour, share): plain paper with the mark's
-# shape (share of the side's width) blind-embossed, its height in a bump map (no mark: the paper alone), or ("unnamed",
-# side, box): a side with a private person's name on it (a graduate's, on Black Point's diploma) taken off. A deck (Da
-# Vinci's five Tarot cards, HYPE's badges, a set of stickers, banners or posters): its fronts (the last on top), one back
-# for all. A side laid out across a thing that stands upright is turned a quarter anticlockwise (the Tarot cards' titles
-# read along their long side).
+# ("gold", art, foil): the art as printed and its gold foil's layer (dark on white), metal where it is, ("holo", art,
+# foil): the same with holographic foil, silver and its colours running as it turns, ("gloss", art, varnish): its spot
+# varnish's layer, glossy where it is, ("emboss", mark, colour, share): plain paper with the mark's shape (share of the
+# side's width) blind-embossed, its height in a bump map (no mark: the paper alone), or ("unnamed", side, box): a side
+# with a private person's name on it (a graduate's, on Black Point's diploma) taken off. A deck (Da Vinci's five Tarot
+# cards, HYPE's badges, a set of stickers, banners or posters): its fronts (the last on top), one back for all. A sheet
+# folded across its middle (Black Point's voucher): ("fold", outside, inside) for its front, no back. A side laid out
+# across a thing that stands upright is turned a quarter anticlockwise (the Tarot cards' titles read along their long
+# side), one laid out upright for a thing that lies across a quarter clockwise (Soul Nation's voucher's word).
 DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
 BPW = "BLACK POINT/Графика/Wizytówka/"
 PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm)]
@@ -492,8 +494,10 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
     "hype": [("badges", [f"HYPE/BAGE/{n}.png" for n in ("FACE CONTROL", "STAFF", "ARTIST", "VIP")], "HYPE/BAGE/BACK.png", (105, 148), 0),
              ("wristband", ("HYPE/Браслеты /OPASKA HYPE.pdf", 1), None, (250, 19), 11.64)],
     # (2026-10-01, more of his print: each project's cards, flyers, vouchers and stickers in the archive)
-    "black-point": [("card", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 1), ("gloss", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 2), (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 3)), (90, 50), 2),
-                    ("voucher", (BPW + "VOUCHER.pdf", 1), (BPW + "VOUCHER.pdf", 2), (297, 210), 2),
+    # (its card's back: the logo in holographic foil on a black panel; its voucher folded in two, an invitation written in
+    # white marker inside)
+    "black-point": [("card", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 1), ("holo", (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 2), (BPW + "BARBERSHOP WIZYTOWKA 2025.pdf", 3)), (90, 50), 2),
+                    ("voucher", ("fold", (BPW + "VOUCHER.pdf", 1), (BPW + "VOUCHER.pdf", 2)), None, (297, 210), 2),
                     ("sticker", BPW + "STICK.png", None, (100, 200), 0),
                     ("certificate", ("unnamed", "BLACK POINT/Графика/Dyplom.png", (1600, 6930, 4400, 7380)), None, (508, 762), 0)],
     "strimat": [("card", "STRIMAT/Визитка/PNG/AWERS.png", "STRIMAT/Визитка/PNG/REWERS.png", (90, 50), 0)],
@@ -502,7 +506,7 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
     "touch-coffee": [("flyer", ("Touch Coffe/Baner + Ulotka V2.pdf", 3), ("Touch Coffe/Baner + Ulotka V2.pdf", 4), (210, 297), 0),
                      ("banners", [("Touch Coffe/Baner + Ulotka V2.pdf", n) for n in (5, 2, 1)], None, (550, 700), 0)],
     "na-serio-na-zarty": [("flyer", ("Na Serio Na Zarty/naserio FLAYER.pdf", 1), ("Na Serio Na Zarty/naserio FLAYER.pdf", 2), (148, 210), 1)],
-    "soul-nation": [("voucher", "SOUL NATION/VOUCHER.psd", None, (100, 171), 0)],
+    "soul-nation": [("voucher", "SOUL NATION/VOUCHER.psd", None, (171, 100), 0)],
     "mind-logistic": [("flyer", (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA.pdf"), 1), (os.path.join(ML, "TYPOHRAPHY", "ELIXIR ULOTKA REVERS.pdf"), 1), (148, 210), 0),
                       ("stickers", [os.path.join(ML, "TYPOHRAPHY", "STICKER", "PNG", "NEW PACK 3", f"MIND LIGISTIC STICKER-0{n}.png") for n in (5, 4, 3, 2, 1)], None, (100, 100), 0),
                       ("posters", [os.path.join(ML, "TYPOHRAPHY", "MysteryboxA3", f"A3{n}.png") for n in (3, 2, 1)], None, (297, 420), 0)],
@@ -569,6 +573,11 @@ def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its
         # (green the roughness: the paper's 0.75 to the foil's 0.2; blue the metalness: the foil's)
         gloss = Image.merge("RGB", (Image.new("L", art.size, 0), foil.point(lambda a: 191 - round(a / 255 * 140)), foil))
         return art, gloss
+    if isinstance(spec, tuple) and spec[0] == "holo":  # holographic foil: the art as printed, silver where its foil layer
+        # (dark on white) is, the foil's gloss as gold's and its red where the film its colours come from is
+        art, foil = side(spec[1])[0], side(spec[2])[0].convert("L").point(lambda v: 255 - v)
+        art = Image.composite(Image.new("RGB", art.size, (206, 206, 212)), art, foil)
+        return art, Image.merge("RGB", (foil, foil.point(lambda a: 191 - round(a / 255 * 150)), foil))
     if isinstance(spec, tuple) and spec[0] == "unnamed":
         return unnamed(side(spec[1], mm)[0], spec[2]), None
     if isinstance(spec, tuple) and spec[0] == "foil":
@@ -678,6 +687,21 @@ def folder():
     return {"kind": "folder", "w": round(w * 0.35278, 1), "h": round(h * 0.35278, 1), "page": [w, h], **sides,
             "folds": {"glue": round(glue - 33, 2), "spine": round(spine - 33, 2), "pocket": round(pocket - 33, 2)}, "panels": panels}
 
+def folded(spec, mm, bleed):  # a sheet folded across its middle, from its outside's and inside's pages as printed (Black
+    # Point's voucher: laid out across, its words along its short side, so turned a quarter clockwise to read upright):
+    # its front cover (the outside's lower half), its back cover as the card turned round shows it (the upper half,
+    # upside down), and its inside's halves, the cover's (the upper one, over the hinge when it's open) and the back's
+    w, h = mm
+    pages = []
+    for page in spec[1:]:
+        im = side(page, mm)[0]
+        bx, by = round(im.width * bleed / (w + 2 * bleed)), round(im.height * bleed / (h + 2 * bleed))
+        pages.append(im.crop((bx, by, im.width - bx, im.height - by)).transpose(Image.Transpose.ROTATE_270))
+    outside, inside = pages
+    upper = lambda im: im.crop((0, 0, im.width, im.height // 2))
+    lower = lambda im: im.crop((0, im.height - im.height // 2, im.width, im.height))
+    return {"front": lower(outside), "back": upper(outside).transpose(Image.Transpose.ROTATE_180), "inner0": upper(inside), "inner1": lower(inside)}
+
 def prints(only=None):  # only: the projects to make again; the rest keep their sides, and their entries in prints.json
     path = os.path.join(KB, "portfolio", "src", "prints.json")
     sheets = {}
@@ -694,9 +718,22 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
         sheets[slug] = []
         for i, (kind, front, back, (w, h), bleed) in enumerate(things):
             sheet = {"kind": kind, "w": w, "h": h}
+            if isinstance(front, tuple) and front[0] == "fold":
+                sheet.update(w=h, h=w / 2)  # (shut, and turned upright)
+                for face, im in folded(front, (w, h), bleed).items():
+                    im.thumbnail((1600, 1600), Image.LANCZOS)
+                    im.save(out("scenes", "print", f"{slug}-{i}-{face}.webp"), "WEBP", quality=85, method=6)
+                    size += os.path.getsize(out("scenes", "print", f"{slug}-{i}-{face}.webp"))
+                    sheet[face] = f"/scenes/print/{slug}-{i}-{face}.webp"
+                sheet["inner"] = [sheet.pop("inner0"), sheet.pop("inner1")]
+                sheets[slug].append(sheet)
+                continue
             faces = [(f"front{n}", spec) for n, spec in enumerate(front)] if isinstance(front, list) else [("front", front)]
-            if any(isinstance(spec, tuple) and spec[0] == "gold" for _, spec in faces + [("back", back)]):
+            foils = [spec[0] for _, spec in faces + [("back", back)] if isinstance(spec, tuple)]
+            if "gold" in foils or "holo" in foils:
                 sheet["metal"] = True  # (its gloss maps carry the foil's metal)
+            if "holo" in foils:
+                sheet["holo"] = True  # (and their red the holographic film)
             for face, spec in faces + [("back", back)]:
                 if spec is None:
                     continue
@@ -705,6 +742,8 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
                         continue
                     if w < h and im.width > im.height:  # (upright, from a layout across)
                         im = im.transpose(Image.Transpose.ROTATE_90)
+                    elif w > h and im.width < im.height:  # (across, from a layout upright: Soul Nation's voucher)
+                        im = im.transpose(Image.Transpose.ROTATE_270)
                     if bleed:  # the bleed, as a share of the side with it
                         bx, by = round(im.width * bleed / (w + 2 * bleed)), round(im.height * bleed / (h + 2 * bleed))
                         im = im.crop((bx, by, im.width - bx, im.height - by))

@@ -1,8 +1,9 @@
 import { Rotate3d, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { PixelSwap } from '../components/PixelSwap';
 import { SceneCanvas } from '../components/SceneCanvas';
-import { GRAPHICS, LOGO_FILM_OF, PRINT_DECKS, PRINT_KINDS, SCENE_OF, type GraphicsSlug } from '../content';
+import { GRAPHICS, GRAPHICS_BLOCKS, LOGO_FILM_OF, PRINT_KINDS, PRINT_TAPS, SCENE_OF, type GraphicsSlug } from '../content';
 import { LOCALE, t } from '../i18n';
 
 const OPEN_MS = 460;
@@ -38,11 +39,12 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
   const hero = animated ? null : project.pictures[opening.picture];
   const rest = animated ? project.pictures : project.pictures.filter((_, i) => i !== opening.picture);
   const kinds = PRINT_KINDS[opening.slug] ?? [];
-  const decks = PRINT_DECKS[opening.slug] ?? [];
+  const taps = PRINT_TAPS[opening.slug] ?? [];
   const chips = [...(film ? (['logo'] as const) : []), ...kinds];
   const [chip, setChip] = useState(0);
   const filmOn = !!film && chip === 0;
   const thing = film ? chip - 1 : chip; // (the printed thing on, when one is)
+  const tap = taps[thing]; // (what a tap on it does, if anything)
   const slot = useRef<HTMLDivElement>(null);
   const flyer = useRef<HTMLDivElement>(null);
   const under = useRef<HTMLImageElement>(null);
@@ -147,6 +149,11 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
     [t.graphics.solution, project.solution],
   ].filter(([, text]) => text);
   const aspect = hero ? hero.width / hero.height : 840 / 540; // (a scene or a film: the covers' shape)
+  // its pictures under it: in blocks under their titles (GRAPHICS_BLOCKS), or all in one grid
+  const blocks = GRAPHICS_BLOCKS[opening.slug];
+  const picture = (p: { src: string; width: number; height: number }) => (
+    <img key={p.src} src={p.src} alt="" loading="lazy" decoding="async" width={p.width} height={p.height} className="h-auto w-full rounded-2xl bg-white/5" />
+  );
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={project.name} className="fixed inset-0 z-[90]">
       <div ref={veil} className="absolute inset-0 opacity-0" style={{ background: 'rgb(6 8 14 / 0.62)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }} />
@@ -185,14 +192,14 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
               {!filmOn && (
                 <span className="flex items-center gap-1.5 text-xs text-[#D7E2EA]/50">
                   <Rotate3d aria-hidden className="h-3.5 w-3.5" />
-                  {decks[thing] ? `${t.graphics.shuffle} · ${t.graphics.turn}` : kinds[thing] === 'folder' ? `${t.graphics.unfold} · ${t.graphics.turn}` : t.graphics.turn}
+                  {tap ? `${t.graphics[tap]} · ${t.graphics.turn}` : t.graphics.turn}
                 </span>
               )}
             </div>
           )}
           <div className="px-5 pb-16 pt-7 sm:px-8 md:px-0 md:pt-10">
             <h2 className="text-3xl font-semibold uppercase tracking-wide text-white sm:text-4xl">{project.name}</h2>
-            <p className="mt-2 text-sm uppercase tracking-[0.2em] text-[#D7E2EA]/55">{[project.kind, when(project.when)].filter(Boolean).join(' · ')}</p>
+            <p className="mt-2 text-sm uppercase tracking-[0.2em] text-[#D7E2EA]/55">{[project.kind, 'with' in project && project.with, when(project.when)].filter(Boolean).join(' · ')}</p>
             {parts.length > 0 && (
               <dl className="mt-8 grid gap-6 md:grid-cols-3 md:gap-10">
                 {parts.map(([label, text]) => (
@@ -203,13 +210,23 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
                 ))}
               </dl>
             )}
-            {rest.length > 0 && (
-              <div className="mt-10 grid gap-4 md:grid-cols-2">
-                {rest.map((p) => (
-                  <img key={p.src} src={p.src} alt="" loading="lazy" decoding="async" width={p.width} height={p.height} className="h-auto w-full rounded-2xl bg-white/5" />
-                ))}
-              </div>
-            )}
+            {blocks
+              ? blocks.map((block) => {
+                  const pictures = block.pictures.filter((i) => animated || i !== opening.picture).map((i) => project.pictures[i]);
+                  return (
+                    pictures.length > 0 && (
+                      <section key={block.what} className="mt-12">
+                        <h3 className="text-sm uppercase tracking-[0.25em] text-[#D7E2EA]/55">{t.graphics.blocks[block.what]}</h3>
+                        {block.swap ? (
+                          <PixelSwap pictures={pictures} label={t.graphics.blocks[block.what]} className="mt-4 w-full cursor-pointer rounded-2xl bg-white/5" />
+                        ) : (
+                          <div className={`mt-4 grid gap-4 ${pictures.length > 1 ? 'md:grid-cols-2' : ''}`}>{pictures.map(picture)}</div>
+                        )}
+                      </section>
+                    )
+                  );
+                })
+              : rest.length > 0 && <div className="mt-10 grid gap-4 md:grid-cols-2">{rest.map(picture)}</div>}
           </div>
         </div>
       </div>

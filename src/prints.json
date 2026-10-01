@@ -555,16 +555,22 @@
    "kind": "card",
    "w": 90,
    "h": 50,
+   "metal": true,
+   "holo": true,
    "front": "/scenes/print/black-point-0-front.webp",
    "back": "/scenes/print/black-point-0-back.webp",
    "backGloss": "/scenes/print/black-point-0-back-gloss.webp"
   },
   {
    "kind": "voucher",
-   "w": 297,
-   "h": 210,
+   "w": 210,
+   "h": 148.5,
    "front": "/scenes/print/black-point-1-front.webp",
-   "back": "/scenes/print/black-point-1-back.webp"
+   "back": "/scenes/print/black-point-1-back.webp",
+   "inner": [
+    "/scenes/print/black-point-1-inner0.webp",
+    "/scenes/print/black-point-1-inner1.webp"
+   ]
   },
   {
    "kind": "sticker",
@@ -633,8 +639,8 @@
  "soul-nation": [
   {
    "kind": "voucher",
-   "w": 100,
-   "h": 171,
+   "w": 171,
+   "h": 100,
    "front": "/scenes/print/soul-nation-0-front.webp"
   }
  ],

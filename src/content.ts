@@ -368,10 +368,21 @@ export const PRINT_KINDS = Object.fromEntries(Object.entries(prints).map(([slug,
     ('deck' | 'folder' | 'card' | 'flyer' | 'voucher' | 'guide' | 'sticker' | 'badges' | 'wristband' | 'banner' | 'banners' | 'sign' | 'certificate' | 'stickers' | 'posters')[]
   >
 >;
-// (which of them are decks, several fronts that shuffle when tapped)
-export const PRINT_DECKS = Object.fromEntries(Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => 'fronts' in thing)])) as Partial<
-  Record<GraphicsSlug, boolean[]>
->;
+// (what a tap does to each: a deck, several fronts, shuffles; a folder or a folded card opens or shuts)
+export const PRINT_TAPS = Object.fromEntries(
+  Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => ('fronts' in thing ? 'shuffle' : thing.kind === 'folder' || 'inner' in thing ? 'unfold' : null))]),
+) as Partial<Record<GraphicsSlug, ('shuffle' | 'unfold' | null)[]>>;
+// A project's pictures in blocks under their titles (2026-10-01, his call: Black Point's logo, site, merch and social
+// media; picture numbers as in graphics.json), the T-shirts one block that changes from one to the next
+// (src/components/PixelSwap.tsx)
+export const GRAPHICS_BLOCKS: Partial<Record<GraphicsSlug, { what: 'logo' | 'site' | 'merch' | 'social'; pictures: number[]; swap?: true }[]>> = {
+  'black-point': [
+    { what: 'logo', pictures: [1] },
+    { what: 'site', pictures: [0, 12, 13, 14] },
+    { what: 'merch', pictures: [5, 6, 7, 8, 9, 10, 11], swap: true },
+    { what: 'social', pictures: [2, 3, 4] },
+  ],
+};
 
 // Music: Bogdan's playlist (2026-09-30): fifteen tracks in his order, then the rest of his LUCKI BEATS album mixed,
 // the titles in English and without "Beat" (his call). Track N plays /music/NNN.m4a, the AAC master from his Music

@@ -239,6 +239,7 @@ const ru: Copy = {
     unfold: 'Нажмите, чтобы открыть', // (a folder)
     shuffle: 'Нажмите, чтобы перетасовать', // (a deck)
     things: { logo: 'Логотип', folder: 'Папка', deck: 'Колода Таро', card: 'Визитка', flyer: 'Флаер', voucher: 'Ваучер', guide: 'Памятка', sticker: 'Наклейка', badges: 'Бейджи', wristband: 'Браслет', banner: 'Баннер', banners: 'Баннеры', sign: 'Табличка', certificate: 'Диплом', stickers: 'Наклейки', posters: 'Постеры' },
+    blocks: { logo: 'Лого', site: 'Сайт', merch: 'Мерч', social: 'Социальные сети' },
     projects: {
       hype: { name: 'HYPE', kind: 'Постеры ивентов, бейджи и браслеты', client: '', problem: '', solution: '' },
       ihor: { name: 'Игорь Поперечный', kind: 'Музыкальный постер и визитки', client: '', problem: '', solution: '' },
@@ -252,8 +253,8 @@ const ru: Copy = {
       'profi-dokument': { name: 'Profi Dokument', kind: 'Брендинг, визитки и флаеры', client: '', problem: '', solution: '' },
       'zero-sladu': { name: 'Zero Śladu', kind: 'Брендинг', client: '', problem: '', solution: '' },
       'yana-lashes': { name: 'Yana Lashes', kind: 'Визитки', client: '', problem: '', solution: '' },
-      'stories-beauty': { name: 'Stories Beauty', kind: 'Брендинг', client: '', problem: '', solution: '' },
-      depilacja: { name: 'Depilacja', kind: 'Визитки для лазерной эпиляции', client: '', problem: '', solution: '' },
+      'stories-beauty': { name: 'Stories Beauty', kind: 'Брендинг', with: 'Совместно с Анитой Бахрами', client: '', problem: '', solution: '' },
+      depilacja: { name: 'Depilacja', kind: 'Визитки для лазерной эпиляции', with: 'Совместно с Анитой Бахрами', client: '', problem: '', solution: '' },
       alibia: { name: 'Alibia', kind: 'Логотип, флаер, кампания и интернет-магазин', client: 'Alibia, производитель напитка Elixir Panoramix.', problem: 'Хотели больше продаж флагманского напитка онлайн, но бренд почти не знала молодая аудитория.', solution: 'Музыкальное шоу HypeHop с призом 30 000 zł (более 1200 заявок), видео на зелёном фоне, 3D-анимации продукта, соцсети и уличные опросы; и интернет-магазин на WooCommerce с BaseLinker за полторы недели, который заметно поднял онлайн-продажи.' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Брендинг', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Соцсети ресторана', client: '', problem: '', solution: '' },

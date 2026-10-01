@@ -238,6 +238,7 @@ const en = {
     unfold: 'Tap to open it', // (a folder)
     shuffle: 'Tap to shuffle', // (a deck)
     things: { logo: 'Logo', folder: 'Folder', deck: 'Tarot deck', card: 'Business card', flyer: 'Flyer', voucher: 'Voucher', guide: 'Aftercare guide', sticker: 'Sticker', badges: 'Badges', wristband: 'Wristband', banner: 'Banner', banners: 'Banners', sign: 'Office sign', certificate: 'Diploma', stickers: 'Stickers', posters: 'Posters' }, // (its printed things' chips)
+    blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social media' }, // (a project's pictures' blocks' titles)
     // each cover's project (content.ts GRAPHICS): who it was for, what was wrong, what Bogdan did
     projects: {
       hype: { name: 'HYPE', kind: 'Event posters, badges and wristbands', client: '', problem: '', solution: '' },
@@ -252,8 +253,8 @@ const en = {
       'profi-dokument': { name: 'Profi Dokument', kind: 'Branding, business cards and flyers', client: '', problem: '', solution: '' },
       'zero-sladu': { name: 'Zero Śladu', kind: 'Branding', client: '', problem: '', solution: '' },
       'yana-lashes': { name: 'Yana Lashes', kind: 'Business cards', client: '', problem: '', solution: '' },
-      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', client: '', problem: '', solution: '' },
-      depilacja: { name: 'Depilacja', kind: 'Laser hair removal business cards', client: '', problem: '', solution: '' },
+      'stories-beauty': { name: 'Stories Beauty', kind: 'Branding', with: 'With Anita Bakhrami', client: '', problem: '', solution: '' },
+      depilacja: { name: 'Depilacja', kind: 'Laser hair removal business cards', with: 'With Anita Bakhrami', client: '', problem: '', solution: '' },
       alibia: { name: 'Alibia', kind: 'Logo, flyer, campaign and online shop', client: 'Alibia, maker of the Elixir Panoramix drink.', problem: 'They wanted to sell more of their flagship drink online, but the brand was barely visible to young people.', solution: 'The HypeHop music show with a 30,000 zł prize (over 1,200 entries), green-screen videos, 3D product animations, social media and street polls; and an online shop on WooCommerce with BaseLinker, built in a week and a half, which raised online sales markedly.' },
       'time-relax-body': { name: 'Time Relax Body', kind: 'Branding', client: '', problem: '', solution: '' },
       'na-serio-na-zarty': { name: 'Na Serio Na Żarty', kind: 'Restaurant social media', client: '', problem: '', solution: '' },
