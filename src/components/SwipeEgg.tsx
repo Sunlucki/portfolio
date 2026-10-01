@@ -3,9 +3,12 @@ import { createPortal } from 'react-dom';
 import { t } from '../i18n';
 import { ContactButton } from './Buttons';
 
-const FAST = 4; // px per ms, over SPAN: a swipe flinging the page this fast is rushing it
+// px per ms, over SPAN: a swipe (or the wheel, a trackpad) flinging the page this fast is rushing it (a phone's page
+// let go at 3 runs on about two screens; reading, it runs on half of one or one)
+const FAST = 3;
 const SPAN = 120;
 const COAST_MS = 1500; // once the finger is off, the page coasting on still counts as its swipe's
+const WHEEL_MS = 250; // a wheel's or a trackpad's events go on through its coasting: the page's scroll counts this long after each
 // the pixel me: the game's frames (x20/pixel-office) and new poses drawn from them, in one strip; each frame's x, width
 // and height in it, then its anchor: the middle of the head, over the soles
 const SHEET = '/egg/guy.png';
@@ -55,8 +58,8 @@ const jump = (go: () => void) => {
 };
 
 /**
- * An Easter egg for touch screens: rush down the page (fling it faster than FAST) and the pixel me from the game steps
- * in. The 1st and 2nd time the page stops and blurs, he walks in and asks, in a speech bubble, to go slowly; then the
+ * An Easter egg: rush down the page (fling it faster than FAST, with a finger, the wheel or a trackpad) and the pixel me
+ * from the game steps in. The 1st and 2nd time the page stops and blurs, he walks in and asks, in a speech bubble, to go slowly; then the
  * blur goes and the page is as it was. The 3rd he peeks in from the left, fuming. The 4th he throws a fireball that
  * smashes the screen, it glitches to black, and all that is left is who he is and the contact button.
  */
@@ -78,7 +81,6 @@ export function SwipeEgg() {
   }, []);
 
   useEffect(() => {
-    if (!window.matchMedia('(hover: none)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     new Image().src = SHEET;
     // the bubbles' pixel font: only the letters of their words
     if (!document.querySelector('link[data-egg]')) {
@@ -91,27 +93,37 @@ export function SwipeEgg() {
     }
     let count = 0;
     let touching = false;
-    let moved = false; // this touch moved the page (a tap, or a swipe in the video feed, doesn't)
-    let coast = 0;
-    let marks: number[] = []; // when, and where the page was: the last SPAN of the swipe
-    const down = () => {
-      touching = true;
+    let moved = false; // the finger went up or down the screen (a tap doesn't: the page gliding to a section after it isn't a swipe)
+    let from = 0; // where it came down
+    let coast = 0; // till when the page moving is still the swipe's or the wheel's
+    let marks: number[] = []; // when, and where the page was: the last SPAN, and the mark before it
+    const down = (e: TouchEvent) => {
+      // (in the video feed the finger moves the films, and the page glides on after the last one by itself)
+      touching = !(e.target instanceof Element && e.target.closest('.touch-none'));
       moved = false;
+      from = e.touches[0]?.clientY ?? 0;
       marks = [];
+    };
+    // (moved by the finger, not by the page: a quick flick is often over before the page tells it has moved)
+    const drag = (e: TouchEvent) => {
+      if (touching && Math.abs((e.touches[0]?.clientY ?? from) - from) > 12) moved = true;
     };
     const up = () => {
       touching = false;
       coast = moved ? performance.now() + COAST_MS : 0;
     };
+    const wheel = () => {
+      coast = performance.now() + WHEEL_MS;
+    };
     const scrolled = () => {
       const now = performance.now();
-      if (touching) moved = true;
-      else if (now > coast) return;
+      if (!touching && now > coast) return;
       if (busy.current || count > 3) return;
       marks.push(now, window.scrollY);
-      while (now - marks[0] > SPAN) marks.splice(0, 2);
+      // (keeping one mark before the last SPAN: on a busy page the scroll events come far apart)
+      while (marks.length > 4 && now - marks[2] >= SPAN) marks.splice(0, 2);
       const span = now - marks[0];
-      if (span < SPAN / 2 || Math.abs(window.scrollY - marks[1]) / span < FAST) return;
+      if (span < 30 || Math.abs(window.scrollY - marks[1]) / span < FAST) return;
       busy.current = true;
       coast = 0;
       marks = [];
@@ -120,13 +132,17 @@ export function SwipeEgg() {
     };
     const passive = { passive: true };
     window.addEventListener('touchstart', down, passive);
+    window.addEventListener('touchmove', drag, passive);
     window.addEventListener('touchend', up, passive);
     window.addEventListener('touchcancel', up, passive);
+    window.addEventListener('wheel', wheel, passive);
     window.addEventListener('scroll', scrolled, passive);
     return () => {
       window.removeEventListener('touchstart', down);
+      window.removeEventListener('touchmove', drag);
       window.removeEventListener('touchend', up);
       window.removeEventListener('touchcancel', up);
+      window.removeEventListener('wheel', wheel);
       window.removeEventListener('scroll', scrolled);
     };
   }, [hold]);
@@ -191,6 +207,7 @@ function Scene({ stage, onLeave, onDone }: { stage: number; onLeave: () => void;
 
   useEffect(() => {
     const start = performance.now();
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches; // (then no flash, no shaking)
     const el = canvas.current!;
     const ctx = el.getContext('2d')!;
     const sheet = new Image();
@@ -483,8 +500,8 @@ function Scene({ stage, onLeave, onDone }: { stage: number; onLeave: () => void;
       for (let i = sparks.length - 1; i >= 0; i--) if (sparks[i].age > sparks[i].life) sparks.splice(i, 1);
       if (ms >= HIT) {
         const since = ms - HIT;
-        if (flash.current) flash.current.style.opacity = String(Math.max(0, 0.85 - since / 260));
-        const shake = 16 * (1 - clamp01(since / 600));
+        if (flash.current && !still) flash.current.style.opacity = String(Math.max(0, 0.85 - since / 260));
+        const shake = still ? 0 : 16 * (1 - clamp01(since / 600));
         el.style.transform = shake > 0 ? `translate(${rand(-shake, shake).toFixed(1)}px, ${rand(-shake, shake).toFixed(1)}px)` : '';
         const grown = ease(clamp01(since / 220)) * reach;
         // glitching: every 70 ms the picture tears somewhere else

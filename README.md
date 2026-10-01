@@ -124,14 +124,14 @@ On the right, the tracks as cards like the projects' only smaller (`Playlist`, F
 
 ## The fast-swipe Easter egg
 
-Touch screens only (`src/components/SwipeEgg.tsx`). Rushing down the page, a swipe flinging it faster than 4 px a millisecond (over the last 120 ms of the swipe or of the page coasting on after it; taps, jumps to a section and swipes in the video feed don't count), calls the pixel Bogdan from his office game (x20/pixel-office) over the page, a little more cross each time:
+`src/components/SwipeEgg.tsx`. Rushing down the page, a swipe, the wheel or a trackpad flinging it faster than 3 px a millisecond (over the last 120 ms of it or of the page coasting on after it: let go at that, a phone's page runs on about two screens, where reading it runs on half of one or one; taps, jumps to a section and swipes in the video feed don't count), calls the pixel Bogdan from his office game (x20/pixel-office) over the page, a little more cross each time:
 
 1. the page stops and blurs, he walks in, waves and says in a speech bubble, typed out letter by letter, not to rush: it takes 5 minutes, swipe slowly and enjoy; he blinks while it is read, then walks off and the blur goes;
 2. the same, pleading that he worked hard on this adventure, let's go through it together;
 3. he leans in from behind the left edge, fuming, 🤬, and back out (the page runs on under him);
 4. he walks in, fumes, gathers a fireball between his hands and throws it at the screen: it comes at you getting chunkier, the glass cracks from where it hits, shards fall, the picture tears and splits into red and cyan and dies band by band to black. Left on the black: "My name is Bogdan and I'm a full-stack engineer", the contact button (to the Contact section) and a quiet way back to the page. Then he is gone for the visit.
 
-A tap on the bubble shows the rest of its words, the next sends him off. Reduced motion turns him off.
+A tap on the bubble shows the rest of its words, the next sends him off. With reduced motion there is no flash and no shaking.
 
 He is drawn on a canvas, in whole device pixels, from one strip: `public/egg/guy.png`, 15 frames, 24 KB. The game's own frames (standing, blinking, the four steps of the walk) and new poses (talking, waving, pleading, angry, gathering the fireball, throwing it), generated with GPT Image 2.5 (Higgsfield) from the game's source art and converted the way the game's frames were: his palette only, his head the size it is standing, each pixel the commonest colour of its cell, stray pixels cleaned up. The talking frame is the standing one with the open mouth of a generated one, so only the mouth moves. The bubbles are set in Tiny5, loaded with only the letters of their words.
 
