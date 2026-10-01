@@ -2,7 +2,7 @@ import { Rotate3d, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SceneCanvas } from '../components/SceneCanvas';
-import { GRAPHICS, PRINT_KINDS, SCENE_OF, type GraphicsSlug } from '../content';
+import { GRAPHICS, LOGO_FILM_OF, PRINT_KINDS, SCENE_OF, type GraphicsSlug } from '../content';
 import { LOCALE, t } from '../i18n';
 
 const OPEN_MS = 460;
@@ -27,15 +27,21 @@ export type Opening = { slug: GraphicsSlug; picture: number; cover: HTMLElement;
  * behind blurs, and under the picture come the project's name and when it was, who it was for, what was wrong and what
  * was done, then its other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into the cover.
  * A 3D project (SCENE_OF) opens on its scene instead, live up there (the cover's picture fading out over it), turned
- * by dragging, all the project's pictures under it; its printed things one after another by the chips under it.
+ * by dragging, all the project's pictures under it; its printed things one after another by the chips under it. A
+ * project with a logo film (LOGO_FILM_OF) opens on it the same way, looping and muted, the first of the chips.
  */
 export function GraphicsProject({ opening, onClose }: { opening: Opening; onClose: () => void }) {
   const project = GRAPHICS[opening.slug];
   const scene = SCENE_OF[opening.slug];
-  const hero = scene ? null : project.pictures[opening.picture];
-  const rest = scene ? project.pictures : project.pictures.filter((_, i) => i !== opening.picture);
+  const film = LOGO_FILM_OF[opening.slug];
+  const animated = !!(scene || film); // (it opens on something moving rather than a picture)
+  const hero = animated ? null : project.pictures[opening.picture];
+  const rest = animated ? project.pictures : project.pictures.filter((_, i) => i !== opening.picture);
   const kinds = PRINT_KINDS[opening.slug] ?? [];
-  const [thing, setThing] = useState(0);
+  const chips = [...(film ? (['logo'] as const) : []), ...kinds];
+  const [chip, setChip] = useState(0);
+  const filmOn = !!film && chip === 0;
+  const thing = film ? chip - 1 : chip; // (the printed thing on, when one is)
   const slot = useRef<HTMLDivElement>(null);
   const flyer = useRef<HTMLDivElement>(null);
   const under = useRef<HTMLImageElement>(null);
@@ -112,9 +118,15 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
     if (leaving.current) return;
     leaving.current = true;
     page.current?.scrollTo({ top: 0, behavior: 'instant' });
-    // (the scene flies back as it is now)
+    // (the scene, or the film, flies back as it is now)
     const live = slot.current?.querySelector<HTMLCanvasElement>('canvas[data-drawn]');
+    const playing = slot.current?.querySelector('video');
     if (live && under.current) under.current.src = live.toDataURL('image/jpeg', 0.92);
+    else if (playing && playing.readyState >= 2 && under.current) {
+      const still = Object.assign(document.createElement('canvas'), { width: playing.videoWidth, height: playing.videoHeight });
+      still.getContext('2d')?.drawImage(playing, 0, 0);
+      under.current.src = still.toDataURL('image/jpeg', 0.9);
+    }
     const from = slotBox();
     if (!from || !flyer.current) return onClose();
     put(from);
@@ -133,7 +145,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
     [t.graphics.problem, project.problem],
     [t.graphics.solution, project.solution],
   ].filter(([, text]) => text);
-  const aspect = hero ? hero.width / hero.height : 840 / 540; // (a scene: the covers' shape)
+  const aspect = hero ? hero.width / hero.height : 840 / 540; // (a scene or a film: the covers' shape)
   return createPortal(
     <div role="dialog" aria-modal="true" aria-label={project.name} className="fixed inset-0 z-[90]">
       <div ref={veil} className="absolute inset-0 opacity-0" style={{ background: 'rgb(6 8 14 / 0.62)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)' }} />
@@ -146,31 +158,35 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
                 <img src={hero.src} alt={project.name} className="h-full w-full object-cover" ref={(el) => {
                   if (el?.complete) settle();
                 }} onLoad={settle} />
+              ) : filmOn ? (
+                <video src={film.src} poster={film.poster} autoPlay muted loop playsInline onPlaying={settle} onError={settle} className="h-full w-full object-cover" />
               ) : (
                 scene && <SceneCanvas scene={scene} top thing={thing} onReady={settle} className="h-full w-full cursor-grab active:cursor-grabbing" />
               ))}
           </div>
-          {scene && landed && (
+          {animated && landed && (chips.length > 1 || !filmOn) && (
             <div className="flex animate-[fade-in_0.4s_ease-out] flex-wrap items-center justify-center gap-2 px-5 pt-4 sm:px-8 md:px-0">
-              {kinds.length > 1 &&
-                kinds.map((kind, i) => (
+              {chips.length > 1 &&
+                chips.map((kind, i) => (
                   <button
                     key={i}
                     type="button"
-                    aria-pressed={i === thing}
-                    onClick={() => setThing(i)}
+                    aria-pressed={i === chip}
+                    onClick={() => setChip(i)}
                     className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-[0.18em] transition-colors ${
-                      i === thing ? 'border-white bg-white text-[#0C0C0C]' : 'border-[#D7E2EA]/30 text-[#D7E2EA]/80 hover:border-[#D7E2EA]/70 hover:text-white'
+                      i === chip ? 'border-white bg-white text-[#0C0C0C]' : 'border-[#D7E2EA]/30 text-[#D7E2EA]/80 hover:border-[#D7E2EA]/70 hover:text-white'
                     }`}
                   >
                     {t.graphics.things[kind]}
-                    {kinds.filter((k) => k === kind).length > 1 ? ` ${kinds.slice(0, i + 1).filter((k) => k === kind).length}` : ''}
+                    {chips.filter((k) => k === kind).length > 1 ? ` ${chips.slice(0, i + 1).filter((k) => k === kind).length}` : ''}
                   </button>
                 ))}
-              <span className="flex items-center gap-1.5 text-xs text-[#D7E2EA]/50">
-                <Rotate3d aria-hidden className="h-3.5 w-3.5" />
-                {kinds[thing] === 'deck' ? `${t.graphics.shuffle} · ${t.graphics.turn}` : kinds[thing] === 'folder' ? `${t.graphics.unfold} · ${t.graphics.turn}` : t.graphics.turn}
-              </span>
+              {!filmOn && (
+                <span className="flex items-center gap-1.5 text-xs text-[#D7E2EA]/50">
+                  <Rotate3d aria-hidden className="h-3.5 w-3.5" />
+                  {kinds[thing] === 'deck' ? `${t.graphics.shuffle} · ${t.graphics.turn}` : kinds[thing] === 'folder' ? `${t.graphics.unfold} · ${t.graphics.turn}` : t.graphics.turn}
+                </span>
+              )}
             </div>
           )}
           <div className="px-5 pb-16 pt-7 sm:px-8 md:px-0 md:pt-10">

@@ -247,7 +247,7 @@ const uk: Copy = {
     turn: 'Потягніть, щоб повернути',
     unfold: 'Натисніть, щоб відкрити', // (a folder)
     shuffle: 'Натисніть, щоб перетасувати', // (a deck)
-    things: { folder: 'Папка', deck: 'Колода Таро', card: 'Візитка', flyer: 'Флаєр', voucher: 'Ваучер', guide: 'Пам’ятка' },
+    things: { logo: 'Логотип', folder: 'Папка', deck: 'Колода Таро', card: 'Візитка', flyer: 'Флаєр', voucher: 'Ваучер', guide: 'Пам’ятка' },
     projects: {
       hype: { name: 'HYPE', kind: 'Постери івентів', client: '', problem: '', solution: '' },
       ihor: { name: 'Ігор Поперечний', kind: 'Музичний постер і візитки', client: '', problem: '', solution: '' },

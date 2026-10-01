@@ -5,6 +5,7 @@ import { lang, t, type Lang } from './i18n';
 import graphicsSizes from './graphics.json';
 import type { SceneName } from './three/miniScenes';
 import prints from './prints.json';
+import logoFilms from './logoFilms.json';
 import musicTracks from './music.json';
 
 export const PERSON = {
@@ -356,6 +357,9 @@ export const SCENE_OF: Partial<Record<GraphicsSlug, SceneName>> = {
   poucher: 'poucher',
   ...Object.fromEntries(Object.keys(prints).map((slug) => [slug, `print:${slug}` as const])),
 };
+// Two projects open on their logo's animation (2026-10-01, src/logoFilms.json from scripts/prepare-media.py logos),
+// looping and muted: Mind Logistic's and Black Point's; when they have printed things too, it is the first of the chips.
+export const LOGO_FILM_OF = logoFilms as Partial<Record<GraphicsSlug, { src: string; poster: string; width: number; height: number }>>;
 // The projects whose printed things are in 3D (2026-10-01, src/prints.json from the print files in his archive):
 // they open on them, to be turned over and looked at, one thing after another by the chips under them.
 export const PRINT_KINDS = Object.fromEntries(Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => thing.kind)])) as Partial<

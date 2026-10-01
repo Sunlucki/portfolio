@@ -434,6 +434,32 @@ def scenes():
         size += os.path.getsize(path)
     return size
 
+# Two Graphics projects open on their logo's animation (2026-10-01), looping and muted, as a 3D project opens on its
+# scene: Mind Logistic's ribbon tying itself into ML (its branding showreel's clip) and Black Point's glitching
+# barbershop logo (the landscape cut of the clip on its site). H.264 without sound, 1280 px and 30 fps at most, a poster;
+# what they are goes to src/logoFilms.json.
+LOGO_FILMS = {
+    "mind-logistic": os.path.join(ML, "LOGO:BRANDING", "BRANDING SHOWREEL", "Video", "Logo.mp4"),
+    "black-point": os.path.join(WP_ASSETS, "Video", "BP LOGO S.m4v"),  # (iCloud: `brctl download` it first)
+}
+
+def logo_films():
+    size, films = 0, {}
+    for slug, src in LOGO_FILMS.items():
+        film = out("graphics", slug, "logo.mp4")
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src, "-an", "-vf", "scale='min(1280,iw)':-2,fps='min(30,source_fps)'",
+                        "-c:v", "libx264", "-crf", "22", "-preset", "slow", "-pix_fmt", "yuv420p", "-movflags", "+faststart", film], check=True)
+        probe = json.loads(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                                           "-of", "json", film], capture_output=True, text=True, check=True).stdout)["streams"][0]
+        poster = os.path.join(tempfile.mkdtemp(), "poster.png")
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", film, "-frames:v", "1", poster], check=True)
+        Image.open(poster).convert("RGB").save(out("graphics", slug, "logo.webp"), "WEBP", quality=80, method=6)
+        films[slug] = {"src": f"/graphics/{slug}/logo.mp4", "poster": f"/graphics/{slug}/logo.webp", "width": probe["width"], "height": probe["height"]}
+        size += os.path.getsize(film) + os.path.getsize(out("graphics", slug, "logo.webp"))
+    with open(os.path.join(KB, "portfolio", "src", "logoFilms.json"), "w") as fh:
+        json.dump(films, fh, indent=1)
+    return size
+
 # The Graphics projects' printed things in 3D (2026-10-01, src/three/miniScenes.ts): each side as printed, from its file in
 # the archive (a PDF's or an .ai's page at 300 dpi, a PSD's part, or its own export), the bleed trimmed, 1600 px on its
 # long side; a side hot-stamped (Da Vinci's roses card: glossy black over the roses) also gets its gloss map (its green,
@@ -643,6 +669,9 @@ if __name__ == "__main__":
         sys.exit()
     if sys.argv[1:] == ["scenes"]:
         print(f"scenes' pictures: {scenes()/1e3:.0f}KB")
+        sys.exit()
+    if sys.argv[1:] == ["logos"]:
+        print(f"logo films: {logo_films()/1e6:.1f}MB")
         sys.exit()
     if sys.argv[1:2] == ["prints"]:  # prints [project...]: all the printed things, or those projects' alone
         print(f"printed things' sides: {prints(set(sys.argv[2:]) or None)/1e3:.0f}KB")

@@ -1,0 +1,14 @@
+{
+ "mind-logistic": {
+  "src": "/graphics/mind-logistic/logo.mp4",
+  "poster": "/graphics/mind-logistic/logo.webp",
+  "width": 1280,
+  "height": 854
+ },
+ "black-point": {
+  "src": "/graphics/black-point/logo.mp4",
+  "poster": "/graphics/black-point/logo.webp",
+  "width": 854,
+  "height": 480
+ }
+}
