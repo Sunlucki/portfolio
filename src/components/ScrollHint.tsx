@@ -2,7 +2,7 @@ import { Pointer } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 
 const SWIPES = 3;
-const SWIPE_MS = 1700;
+const SWIPE_MS = 2550; // (slow enough to read the word)
 const [BOX_W, BOX_H] = [120, 250]; // the hint's box, CSS px: the finger's path runs up it
 const [W, H] = [84, 176]; // the word's canvas, in the box's middle
 const WORD_TOP = (BOX_H - H) / 2;
@@ -100,8 +100,9 @@ export function ScrollHint({ word, onDone }: { word: string; onDone: () => void 
     };
   }, [word, onDone]);
   return (
-    // (its foot, with the finger's, clear of the tagline and the button under it, however tall the screen)
-    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[200px] z-40 flex justify-center [animation:fade-in_0.4s_ease-out]">
+    // (low: the finger comes in over the tagline and the word is written above it, the finger clear of the button
+    // under it, however tall the screen)
+    <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[128px] z-40 flex justify-center [animation:fade-in_0.4s_ease-out]">
       <div className="relative" style={{ width: BOX_W, height: BOX_H, background: 'radial-gradient(closest-side, rgb(4 11 28 / 0.6), rgb(4 11 28 / 0))' }}>
         <canvas ref={canvas} className="absolute left-1/2 -translate-x-1/2" style={{ top: WORD_TOP, width: W, height: H }} />
         <span ref={ripple} className="absolute left-0 top-0 h-7 w-7 rounded-full border-2 opacity-0" style={{ borderColor: INK[0] }} />
