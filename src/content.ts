@@ -345,14 +345,14 @@ export const GRAPHICS = Object.fromEntries(
     {
       slug,
       when: GRAPHICS_DATES[slug],
-      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp?v=2`, width, height })), // (?v: a 30-day cache)
+      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp?v=3`, width, height })), // (?v: a 30-day cache)
       ...t.graphics.projects[slug],
     },
   ]),
 ) as Record<GraphicsSlug, { slug: GraphicsSlug; when: [string, string?]; pictures: { src: string; width: number; height: number }[] } & (typeof t.graphics.projects)[GraphicsSlug]>;
 // cover i (TILES): its project, and which of the project's pictures it shows (-1: its 3D scene, SCENE_OF)
 export const COVER_OF: [GraphicsSlug, number][] = [
-  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', -1], ['hype', 0], ['ihor', 0],
+  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', -1], ['hype', 4], ['ihor', 0],
   ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['chang', 0], ['lizard-moving', 0],
   ['adaya', 0], ['soul-nation', 0], ['currywurst', 0], ['perfumeria-outlet', 0], ['alibia', 1], ['yana-lashes', 0],
   ['strimat', 0], ['depilacja', 0], ['black-point', 2], ['kreem', 0], ['black-point', 7], ['magic-patron', 0],
@@ -399,10 +399,18 @@ export const PRINT_KINDS = Object.fromEntries(Object.entries(prints).map(([slug,
     )[]
   >
 >;
-// (what a tap does to each: a deck, several fronts, shuffles; a folder or a folded card opens or shuts)
+// (what a tap does to each: a badge on a lanyard turns in the next; a deck, several fronts, shuffles; a folder or a
+// folded card opens or shuts)
 export const PRINT_TAPS = Object.fromEntries(
-  Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => ('fronts' in thing ? 'shuffle' : thing.kind === 'folder' || 'inner' in thing ? 'unfold' : null))]),
-) as Partial<Record<GraphicsSlug, ('shuffle' | 'unfold' | null)[]>>;
+  Object.entries(prints).map(([slug, things]) => [
+    slug,
+    things.map((thing) => ('lanyard' in thing ? 'badge' : 'fronts' in thing ? 'shuffle' : thing.kind === 'folder' || 'inner' in thing ? 'unfold' : null)),
+  ]),
+) as Partial<Record<GraphicsSlug, ('badge' | 'shuffle' | 'unfold' | null)[]>>;
+// (the things shown on a lanyard instead, src/vendor/react-bits/Lanyard.tsx: their fronts, their back, the strap's picture)
+export const PRINT_LANYARDS = Object.fromEntries(
+  Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => ('lanyard' in thing ? { fronts: thing.fronts, back: thing.back, strap: thing.lanyard } : null))]),
+) as Partial<Record<GraphicsSlug, ({ fronts: string[]; back: string; strap: string } | null)[]>>;
 // A project's pictures in blocks under their titles (2026-10-01, his call: Black Point's logo, site, merch and social
 // media; picture numbers as in graphics.json), the T-shirts one block that changes from one to the next
 // (src/components/PixelSwap.tsx)

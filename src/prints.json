@@ -538,6 +538,7 @@
    "kind": "badges",
    "w": 105,
    "h": 148,
+   "lanyard": "/scenes/hype-strap.webp",
    "back": "/scenes/print/hype-0-back.webp",
    "fronts": [
     "/scenes/print/hype-0-front0.webp",

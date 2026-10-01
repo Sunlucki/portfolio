@@ -246,10 +246,12 @@ const de: Copy = {
     turn: 'Zum Drehen ziehen',
     unfold: 'Zum Öffnen tippen', // (a folder)
     shuffle: 'Zum Mischen tippen', // (a deck)
+    badge: 'Tippen für das nächste Badge',
+    swing: 'Ziehen zum Schwingen',
     things: { logo: 'Logo', folder: 'Mappe', deck: 'Tarot-Deck', card: 'Visitenkarte', flyer: 'Flyer', voucher: 'Gutschein', guide: 'Pflegeanleitung', sticker: 'Aufkleber', badges: 'Badges', wristband: 'Einlassband', banner: 'Banner', banners: 'Banner', sign: 'Firmenschild', certificate: 'Diplom', stickers: 'Aufkleber', posters: 'Poster', wrap: 'Anhänger-Folierung', menus: 'Menütafeln', insert: 'Beileger', inserts: 'Beileger' },
     blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social Media' },
     projects: {
-      hype: { name: 'HYPE', kind: 'Event-Poster, Badges und Einlassbänder', client: '', problem: '', solution: '' },
+      hype: { name: 'HYPE', kind: 'Logo, Event-Poster, Badges und Einlassbänder', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Musikposter und Visitenkarten', client: '', problem: '', solution: '' },
       'dc-consulting': { name: 'DC Consulting', kind: 'Logo, Mappe und Gutschein', client: '', problem: '', solution: '' },
       'touch-coffee': { name: 'Touch Coffee', kind: 'Branding', client: '', problem: '', solution: '' },

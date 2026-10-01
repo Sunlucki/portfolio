@@ -247,11 +247,13 @@ const en = {
     turn: 'Drag to turn it', // (a 3D project's scene)
     unfold: 'Tap to open it', // (a folder)
     shuffle: 'Tap to shuffle', // (a deck)
+    badge: 'Tap to change the badge', // (a badge on a lanyard)
+    swing: 'Drag to swing it',
     things: { logo: 'Logo', folder: 'Folder', deck: 'Tarot deck', card: 'Business card', flyer: 'Flyer', voucher: 'Voucher', guide: 'Aftercare guide', sticker: 'Sticker', badges: 'Badges', wristband: 'Wristband', banner: 'Banner', banners: 'Banners', sign: 'Office sign', certificate: 'Diploma', stickers: 'Stickers', posters: 'Posters', wrap: 'Trailer wrap', menus: 'Menu boards', insert: 'Order insert', inserts: 'Order inserts' }, // (its printed things' chips)
     blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social media' }, // (a project's pictures' blocks' titles)
     // each cover's project (content.ts GRAPHICS): who it was for, what was wrong, what Bogdan did
     projects: {
-      hype: { name: 'HYPE', kind: 'Event posters, badges and wristbands', client: '', problem: '', solution: '' },
+      hype: { name: 'HYPE', kind: 'Logo, event posters, badges and wristbands', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Music poster and business cards', client: '', problem: '', solution: '' },
       'dc-consulting': { name: 'DC Consulting', kind: 'Logo, folder and voucher', client: 'Notary assistance for foreigners in Poland.', problem: 'Their materials, such as the folder for documents, looked cheap and didn’t show the quality of the service: the brand didn’t feel prestigious.', solution: 'A premium folder and voucher in their colours, inspired by luxury houses like Louis Vuitton, with a pattern of their logo, to raise the value people see in the service.' },
       'touch-coffee': { name: 'Touch Coffee', kind: 'Branding', client: '', problem: '', solution: '' },

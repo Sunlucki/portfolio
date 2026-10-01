@@ -257,10 +257,12 @@ const uk: Copy = {
     turn: 'Потягніть, щоб повернути',
     unfold: 'Натисніть, щоб відкрити', // (a folder)
     shuffle: 'Натисніть, щоб перетасувати', // (a deck)
+    badge: 'Натисніть, щоб змінити бейдж',
+    swing: 'Потягніть, щоб розгойдати',
     things: { logo: 'Логотип', folder: 'Папка', deck: 'Колода Таро', card: 'Візитка', flyer: 'Флаєр', voucher: 'Ваучер', guide: 'Пам’ятка', sticker: 'Наліпка', badges: 'Бейджі', wristband: 'Браслет', banner: 'Банер', banners: 'Банери', sign: 'Табличка', certificate: 'Диплом', stickers: 'Наліпки', posters: 'Постери', wrap: 'Обклейка трейлера', menus: 'Меню', insert: 'Вкладиш', inserts: 'Вкладиші' },
     blocks: { logo: 'Лого', site: 'Сайт', merch: 'Мерч', social: 'Соціальні мережі' },
     projects: {
-      hype: { name: 'HYPE', kind: 'Постери івентів, бейджі та браслети', client: '', problem: '', solution: '' },
+      hype: { name: 'HYPE', kind: 'Логотип, постери івентів, бейджі та браслети', client: '', problem: '', solution: '' },
       ihor: { name: 'Ігор Поперечний', kind: 'Музичний постер і візитки', client: '', problem: '', solution: '' },
       'dc-consulting': { name: 'DC Consulting', kind: 'Логотип, папка й ваучер', client: '', problem: '', solution: '' },
       'touch-coffee': { name: 'Touch Coffee', kind: 'Брендинг', client: '', problem: '', solution: '' },

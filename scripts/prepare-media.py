@@ -151,7 +151,9 @@ TILES = [  # on the section's rings, eight a ring, in this order (the first ring
 # project's own folder (a full path).
 CASES = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICON REACT APP", "extracted_projects")
 GRAPHICS = {
-    "hype": ["HYPE.jpg"],
+    "hype": [f"{ARCHIVE}/HYPE/LOGO/logotype/300ppi/presentation.png"]  # (its logo, 2024, his call: the presentation, its mockups)
+            + [f"{ARCHIVE}/HYPE/LOGO/mokcup/{f}" for f in ("2.png", "Street_Sticker_Mockup_1.png", "Free_T-Shirt_Mannequin_Mockup_1.png")]
+            + ["HYPE.jpg"],
     "ihor": ["Igor music poster.jpg", "Igor music BC1.jpg", "Igor music BC2.jpg"],
     "dc-consulting": ["DC LOGO Moucup.jpg", "~dc-consulting/DC-Moucup-3-scaled.webp", "~dc-consulting/VOUCHER-MOCKUP-scaled.webp"],
     "touch-coffee": ["TouchMockup.jpg"],
@@ -486,6 +488,48 @@ def scenes():
         size += to_webp(os.path.join(SCENES, f"cherry-cola-fruit-{n}.png"), out("scenes", f"fruit-cherry-{n}.webp"), width=256, q=82)
     return size
 
+# HYPE's event badges on a lanyard (2026-10-01, his call, after React Bits' Lanyard: src/vendor/react-bits/Lanyard.tsx):
+# React Bits' badge model (its card, clip and clamp, kept in the knowledge base as sources/scenes/lanyard-card.glb)
+# without its own picture, 2.3 MB of the 2.5 (the badges are drawn on it from their sides in src/prints.json), and the
+# strap's picture: HYPE's 2023 logo in its yellow on black, as on the badges, once a tile (the strap repeats it).
+def badge():
+    data = open(os.path.join(SCENES, "lanyard-card.glb"), "rb").read()
+    head = json.loads(data[20:20 + int.from_bytes(data[12:16], "little")])
+    start = 20 + int.from_bytes(data[12:16], "little") + 8
+    blob = data[start:]
+    dropped = {im["bufferView"] for im in head.pop("images", [])}
+    head.pop("textures", None)
+    head.pop("samplers", None)
+    for material in head["materials"]:
+        material.get("pbrMetallicRoughness", {}).pop("baseColorTexture", None)
+    views, packed, moved = [], bytearray(), {}
+    for i, view in enumerate(head["bufferViews"]):
+        if i in dropped:
+            continue
+        packed += b"\0" * (-len(packed) % 4)
+        moved[i] = len(views)
+        piece = blob[view.get("byteOffset", 0):view.get("byteOffset", 0) + view["byteLength"]]
+        views.append({**view, "byteOffset": len(packed)})
+        packed += piece
+    for accessor in head["accessors"]:
+        accessor["bufferView"] = moved[accessor["bufferView"]]
+    head["bufferViews"] = views
+    packed += b"\0" * (-len(packed) % 4)
+    head["buffers"] = [{"byteLength": len(packed)}]
+    text = json.dumps(head, separators=(",", ":")).encode()
+    text += b" " * (-len(text) % 4)
+    glb = b"glTF" + (2).to_bytes(4, "little") + (12 + 8 + len(text) + 8 + len(packed)).to_bytes(4, "little")
+    glb += len(text).to_bytes(4, "little") + b"JSON" + text + len(packed).to_bytes(4, "little") + b"BIN\0" + bytes(packed)
+    with open(out("models", "badge.glb"), "wb") as fh:
+        fh.write(glb)
+    logo = Image.open(os.path.join(ARCHIVE, "HYPE", "ГРАФИКА", "NEW Hype LOGO.png")).convert("RGBA")
+    logo = logo.crop(logo.getchannel("A").getbbox())
+    logo.thumbnail((460, 104), Image.LANCZOS)
+    strap = Image.new("RGBA", (1024, 256), (12, 12, 12, 255))
+    strap.alpha_composite(logo, ((1024 - logo.width) // 2, (256 - logo.height) // 2))
+    strap.convert("RGB").save(out("scenes", "hype-strap.webp"), "WEBP", quality=88, method=6)
+    return len(glb) + os.path.getsize(out("scenes", "hype-strap.webp"))
+
 # Two Graphics projects open on their logo's animation (2026-10-01), looping and muted, as a 3D project opens on its
 # scene: Mind Logistic's ribbon tying itself into ML (its branding showreel's clip) and Black Point's glitching
 # barbershop logo (the landscape cut of the clip on its site). H.264 without sound, 1280 px and 30 fps at most, a poster;
@@ -546,9 +590,9 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
               ("gold", ("IGOR MUSIC/Igor Poperechny.pdf", 2), ("IGOR MUSIC/Igor Poperechny.pdf", 4)), (90, 50), 2),
              ("banner", ("IGOR MUSIC/Igor Poperechny BANER.pdf", 1), None, (700, 1200), 0)],
     "dc-consulting": [("voucher", "DC CONSULTING/VOUCHER/JPG/AWERS.jpg", "DC CONSULTING/VOUCHER/JPG/REWERS.jpg", (210, 148), 0)],
-    # (HYPE's event badges, A6's proportions, one back for all, and its wristband, 250 by 19 mm: the PDF's 33 pt round it
-    # cut off)
-    "hype": [("badges", [f"HYPE/BAGE/{n}.png" for n in ("FACE CONTROL", "STAFF", "ARTIST", "VIP")], "HYPE/BAGE/BACK.png", (105, 148), 0),
+    # (HYPE's event badges, A6's proportions, every one a front, one back for all (BAGE BACK), on a lanyard, its strap's
+    # picture there (badge() below), and its wristband, 250 by 19 mm: the PDF's 33 pt round it cut off)
+    "hype": [("badges", [f"HYPE/BAGE/{n}.png" for n in ("VIP", "ARTIST", "STAFF", "FACE CONTROL")], "HYPE/BAGE/BAGE BACK.png", (105, 148), 0, {"lanyard": "/scenes/hype-strap.webp"}),
              ("wristband", ("HYPE/Браслеты /OPASKA HYPE.pdf", 1), None, (250, 19), 11.64)],
     # (2026-10-01, more of his print: each project's cards, flyers, vouchers and stickers in the archive)
     # (its card's back: the logo in holographic foil on a black panel; its voucher folded in two, an invitation written in
@@ -857,6 +901,9 @@ if __name__ == "__main__":
     if sys.argv[1:2] == ["tiles"]:  # tiles [index...]: all the covers, or those alone
         only = {int(a) for a in sys.argv[2:]} or None
         print(f"tiles: {sum(tile(i, p) for i, p in enumerate(TILES) if only is None or i in only)/1e6:.1f}MB")
+        sys.exit()
+    if sys.argv[1:] == ["badge"]:
+        print(f"HYPE's badge on a lanyard: {badge()/1e3:.0f}KB")
         sys.exit()
     if sys.argv[1:] == ["logos"]:
         print(f"logo films: {logo_films()/1e6:.1f}MB")

@@ -1,10 +1,13 @@
 import { Rotate3d, X } from 'lucide-react';
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PixelSwap } from '../components/PixelSwap';
 import { SceneCanvas } from '../components/SceneCanvas';
-import { GRAPHICS, GRAPHICS_BLOCKS, LOGO_FILM_OF, PRINT_KINDS, PRINT_TAPS, SCENE_OF, type GraphicsSlug } from '../content';
+import { GRAPHICS, GRAPHICS_BLOCKS, LOGO_FILM_OF, PRINT_KINDS, PRINT_LANYARDS, PRINT_TAPS, SCENE_OF, type GraphicsSlug } from '../content';
 import { LOCALE, t } from '../i18n';
+
+// (HYPE's badges on a lanyard: physics and all, loaded only when one is shown)
+const Lanyard = lazy(() => import('../vendor/react-bits/Lanyard'));
 
 const OPEN_MS = 460;
 const CLOSE_MS = 360;
@@ -45,6 +48,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
   const filmOn = !!film && chip === 0;
   const thing = film ? chip - 1 : chip; // (the printed thing on, when one is)
   const tap = taps[thing]; // (what a tap on it does, if anything)
+  const lanyard = PRINT_LANYARDS[opening.slug]?.[thing] ?? null; // (a thing shown on a lanyard instead)
   const slot = useRef<HTMLDivElement>(null);
   const flyer = useRef<HTMLDivElement>(null);
   const under = useRef<HTMLImageElement>(null);
@@ -168,6 +172,10 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
                 }} onLoad={settle} />
               ) : filmOn ? (
                 <video src={film.src} poster={film.poster} autoPlay muted loop playsInline onPlaying={settle} onError={settle} className="h-full w-full object-cover" />
+              ) : lanyard ? (
+                <Suspense fallback={null}>
+                  <Lanyard {...lanyard} onReady={settle} />
+                </Suspense>
               ) : (
                 scene && <SceneCanvas scene={scene} top thing={thing} onReady={settle} className="h-full w-full cursor-grab active:cursor-grabbing" />
               ))}
@@ -192,7 +200,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
               {!filmOn && (
                 <span className="flex items-center gap-1.5 text-xs text-[#D7E2EA]/50">
                   <Rotate3d aria-hidden className="h-3.5 w-3.5" />
-                  {tap ? `${t.graphics[tap]} · ${t.graphics.turn}` : t.graphics.turn}
+                  {tap ? `${t.graphics[tap]} · ${tap === 'badge' ? t.graphics.swing : t.graphics.turn}` : t.graphics.turn}
                 </span>
               )}
             </div>

@@ -248,10 +248,12 @@ const pl: Copy = {
     turn: 'Przeciągnij, aby obrócić',
     unfold: 'Stuknij, aby otworzyć', // (a folder)
     shuffle: 'Stuknij, aby potasować', // (a deck)
+    badge: 'Dotknij, by zmienić identyfikator',
+    swing: 'Pociągnij, by go rozbujać',
     things: { logo: 'Logo', folder: 'Teczka', deck: 'Talia tarota', card: 'Wizytówka', flyer: 'Ulotka', voucher: 'Voucher', guide: 'Instrukcja pielęgnacji', sticker: 'Naklejka', badges: 'Identyfikatory', wristband: 'Opaska', banner: 'Baner', banners: 'Banery', sign: 'Tabliczka', certificate: 'Dyplom', stickers: 'Naklejki', posters: 'Plakaty', wrap: 'Oklejenie przyczepy', menus: 'Menu', insert: 'Ulotka', inserts: 'Ulotki' },
     blocks: { logo: 'Logo', site: 'Strona', merch: 'Merch', social: 'Social media' },
     projects: {
-      hype: { name: 'HYPE', kind: 'Plakaty wydarzeń, identyfikatory i opaski', client: '', problem: '', solution: '' },
+      hype: { name: 'HYPE', kind: 'Logo, plakaty wydarzeń, identyfikatory i opaski', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Plakat muzyczny i wizytówki', client: '', problem: '', solution: '' },
       'dc-consulting': { name: 'DC Consulting', kind: 'Logo, teczka i voucher', client: '', problem: '', solution: '' },
       'touch-coffee': { name: 'Touch Coffee', kind: 'Branding', client: '', problem: '', solution: '' },
