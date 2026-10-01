@@ -14,22 +14,30 @@ const ease = (x: number) => x * x * (3 - 2 * x);
 const easeInOut = (x: number) => (x < 0.5 ? 4 * x ** 3 : 1 - (2 - 2 * x) ** 3 / 2);
 // the contact button's purples (its magenta and violet), a little lighter so they read on the dark
 const INK = ['#E23BD6', '#9A4DFF'];
+// the soft shades they read over: one under the hand (SHADE across), one behind the word (SHADE_PAD past it)
+const SHADE_FILL = 'radial-gradient(closest-side, rgb(4 11 28 / 0.6), rgb(4 11 28 / 0))';
+const [SHADE, SHADE_PAD] = [96, 28];
 
 /**
  * A hint to scroll, for touch screens, low in the middle of the hero: a finger comes in turned to the left, presses,
  * swipes up (speeding up and slowing, on a slight arc, turning up with the swipe as a hand does), lets go, three times; and each time the word
  * (`word`, in the same hand as About's "Why?") is written behind its tip in particles, upwards, then breaks up and
- * blows away up the screen. Then it goes (`onDone`). All in the contact button's purples, over a soft shade.
+ * blows away up the screen. Then it goes (`onDone`). All in the contact button's purples, over soft shades: one
+ * under the hand, and one behind the word only while it is there.
  */
 export function ScrollHint({ word, onDone }: { word: string; onDone: () => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const finger = useRef<HTMLSpanElement>(null);
   const ripple = useRef<HTMLSpanElement>(null);
+  const handShade = useRef<HTMLSpanElement>(null);
+  const wordShade = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     const el = canvas.current;
     const hand = finger.current;
     const ring = ripple.current;
-    if (!el || !hand || !ring) return;
+    const under = handShade.current;
+    const behind = wordShade.current;
+    if (!el || !hand || !ring || !under || !behind) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     [el.width, el.height] = [W * dpr, H * dpr];
     const ctx = el.getContext('2d')!;
@@ -72,6 +80,11 @@ export function ScrollHint({ word, onDone }: { word: string; onDone: () => void 
         const turn = -45 + 8 * press + 44 * swipe + 6 * off;
         hand.style.transform = `translate(${(tipX - FINGER * TIP[0]).toFixed(1)}px, ${(tipY - FINGER * TIP[1]).toFixed(1)}px) rotate(${turn.toFixed(1)}deg) scale(${scale.toFixed(3)})`;
         hand.style.opacity = (inAt * (1 - off)).toFixed(3);
+        // a shade under the hand, at its middle (turned with it), as long as it is there
+        const a = (turn * Math.PI) / 180;
+        const [mx, my] = [FINGER * (0.5 - TIP[0]) * scale, FINGER * (0.55 - TIP[1]) * scale];
+        under.style.transform = `translate(${(tipX + mx * Math.cos(a) - my * Math.sin(a) - SHADE / 2).toFixed(1)}px, ${(tipY + mx * Math.sin(a) + my * Math.cos(a) - SHADE / 2).toFixed(1)}px)`;
+        under.style.opacity = hand.style.opacity;
         // where it touches: a ring going out
         const touch = clamp01((k - 0.2) / 0.2);
         ring.style.transform = `translate(${BOX_W / 2 - 14}px, ${TIP_FROM - 14}px) scale(${(0.3 + 1.1 * touch).toFixed(3)})`;
@@ -81,6 +94,12 @@ export function ScrollHint({ word, onDone }: { word: string; onDone: () => void 
         ctx.clearRect(0, 0, W, H);
         ctx.fillStyle = ink;
         const tip = tipY - WORD_TOP; // the tip, in the canvas
+        // and its shade: below the tip as the word is written, going as it blows away
+        const shadeTip = tip + SHADE_PAD;
+        const reveal = `linear-gradient(to bottom, transparent ${(shadeTip - 24).toFixed(1)}px, #000 ${(shadeTip + 8).toFixed(1)}px)`;
+        behind.style.setProperty('mask-image', reveal);
+        behind.style.setProperty('-webkit-mask-image', reveal);
+        behind.style.opacity = (clamp01(swipe * 6) * (1 - ease(clamp01((k - 0.76) / 0.24)))).toFixed(3);
         for (const [x, y, a, b, c] of points) {
           const written = clamp01((y - tip) / 22) * clamp01(swipe * 8);
           const away = ease(clamp01((k - 0.76 - b * 0.1) / 0.2));
@@ -103,7 +122,9 @@ export function ScrollHint({ word, onDone }: { word: string; onDone: () => void 
     // (low: the finger comes in over the tagline and the word is written above it, the finger clear of the button
     // under it, however tall the screen)
     <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-[128px] z-40 flex justify-center [animation:fade-in_0.4s_ease-out]">
-      <div className="relative" style={{ width: BOX_W, height: BOX_H, background: 'radial-gradient(closest-side, rgb(4 11 28 / 0.6), rgb(4 11 28 / 0))' }}>
+      <div className="relative" style={{ width: BOX_W, height: BOX_H }}>
+        <span ref={wordShade} className="absolute opacity-0" style={{ left: (BOX_W - W) / 2 - SHADE_PAD, top: WORD_TOP - SHADE_PAD, width: W + 2 * SHADE_PAD, height: H + 2 * SHADE_PAD, background: SHADE_FILL }} />
+        <span ref={handShade} className="absolute left-0 top-0 opacity-0" style={{ width: SHADE, height: SHADE, background: SHADE_FILL }} />
         <canvas ref={canvas} className="absolute left-1/2 -translate-x-1/2" style={{ top: WORD_TOP, width: W, height: H }} />
         <span ref={ripple} className="absolute left-0 top-0 h-7 w-7 rounded-full border-2 opacity-0" style={{ borderColor: INK[0] }} />
         <span ref={finger} className="absolute left-0 top-0 origin-[33%_8%] opacity-0" style={{ filter: 'drop-shadow(0 0 12px rgb(182 0 168 / 0.75))' }}>
