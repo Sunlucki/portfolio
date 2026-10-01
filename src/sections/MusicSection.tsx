@@ -5,6 +5,7 @@ import { SectionTitle } from '../components/SectionTitle';
 import { MUSIC } from '../content';
 import { t } from '../i18n';
 import { phoneLayout } from '../three/flow';
+import { glide } from '../glide';
 
 const MusicStage = lazy(() => import('../three/MusicStage'));
 const source = (i: number) => `/music/${String(i).padStart(3, '0')}.m4a`;
@@ -90,6 +91,15 @@ export function MusicSection() {
   };
   const step = (by: number) => play((current + by + TRACKS.length) % TRACKS.length);
   const toggle = () => (playing ? audio.current?.pause() : play(current));
+  // a track picked on a phone: the page glides up to the stage, which moves to it (slowly enough, 2.5 px a millisecond
+  // at most, for the rushing egg not to take it for the visitor's)
+  const toStage = () => {
+    const el = stage.current;
+    if (!el) return;
+    const to = el.getBoundingClientRect().top + window.scrollY - 12;
+    const far = Math.abs(to - window.scrollY);
+    if (far > 40) glide(to, () => {}, Math.max(600, far * 1.2));
+  };
   // to a point in the track that plays (starting it if it hasn't), once it knows its length
   const seek = (to: number) => {
     const el = audio.current;
@@ -171,7 +181,7 @@ export function MusicSection() {
         </div>
 
         {phone ? (
-          <PhoneList current={current} playing={playing} time={time} onPick={(k) => (k === current ? toggle() : play(k))} />
+          <PhoneList current={current} playing={playing} time={time} onPick={(k) => (k === current ? toggle() : (play(k), toStage()))} />
         ) : (
           <Playlist current={current} playing={playing} time={time} onPick={(k) => (k === current ? toggle() : play(k))} />
         )}
@@ -338,22 +348,37 @@ function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur,
 
 // Phones: the playlist as a short column right under the stage, scrolling within: the card that is on pinned over
 // its top and the others running in under it, three in view (the fourth peeking in), shaded where they go under
-// and at the bottom; its first eight tracks, or all of them when asked (or once one past the eighth is on). Scrolled
-// to its end, the page scrolls on (no trap). A track picked morphs up into the pinned place with a bounce, and the
-// one that was there back into its own.
+// and at the bottom; its first eight tracks, or all of them when asked (or once the eighth is on, so the next one is
+// there). Asked for all of them, the column grows by eight cards, so it can be seen to open. Scrolled to its end, the
+// page scrolls on (no trap). A track picked morphs up into the pinned place with a bounce, and the one that was
+// there back into its own; the column then runs on from the track after it (as it does when one ends and the next
+// plays).
 const FIRST = 8;
+const MORE = 8; // the cards the column grows by, all of them shown
 const PEEK = 22;
 const UNDER = OPEN + GAP; // the pinned card and the gap under it
 
 function PhoneList({ current, playing, time, onPick }: PlaylistProps) {
   const [all, setAll] = useState(false);
-  const count = all || current >= FIRST ? TRACKS.length : FIRST;
+  const list = useRef<HTMLDivElement>(null);
+  const count = all || current >= FIRST - 1 ? TRACKS.length : FIRST;
   const others = Array.from({ length: count }, (_, k) => k).filter((k) => k !== current);
+  // the track after the one on, right under it
+  useEffect(() => {
+    const next = (current + 1) % TRACKS.length;
+    list.current?.scrollTo({ top: (next > current ? next - 1 : next) * PITCH, behavior: 'smooth' });
+  }, [current]);
   return (
     <div>
       <LayoutGroup id="tracks">
-        <div className="relative" style={{ height: OPEN + 3 * PITCH + PEEK }}>
+        <motion.div
+          className="relative"
+          initial={false}
+          animate={{ height: OPEN + (all ? 3 + MORE : 3) * PITCH + PEEK }}
+          transition={{ type: 'spring', bounce: 0.15, duration: 0.7 }}
+        >
           <motion.div
+            ref={list}
             layoutScroll
             role="list"
             aria-label={t.music.playlist}
@@ -373,9 +398,9 @@ function PhoneList({ current, playing, time, onPick }: PlaylistProps) {
           <motion.div key={TRACKS[current].title} layoutId={`track-${current}`} layout transition={SPRING} className="absolute inset-x-0 top-0 z-[2]" style={{ height: OPEN }}>
             <TrackCard track={TRACKS[current]} k={current} on open playing={playing} time={time} onPick={onPick} morph />
           </motion.div>
-        </div>
+        </motion.div>
       </LayoutGroup>
-      {current < FIRST && (
+      {current < FIRST - 1 && (
         <button
           type="button"
           onClick={() => setAll((shown) => !shown)}

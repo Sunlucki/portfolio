@@ -6,6 +6,7 @@ import { VIDEO_ORDER, VIDEO_UNDER, VIDEO_VIEWS, YOUTUBE_FILMS } from '../content
 import { LOCALE, fill, t } from '../i18n';
 import { flow, phoneLayout } from '../three/flow';
 import { VideoFeed, type FeedHandle } from './VideoFeed';
+import { glide } from '../glide';
 import films from '../videos.json';
 
 // Bogdan's films (scripts/prepare-media.py writes their list, the films, their posters and their strips of frames)
@@ -41,30 +42,6 @@ const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduc
 // touch screens (no hover): no frames flipping
 const touch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
-// The page glides down to `to` (slower than the browser's own smooth scroll, so the particles can be seen on their
-// way), unless a finger or the wheel takes over; then `done`.
-function glide(to: number, done: () => void, ms = 1800) {
-  const from = window.scrollY;
-  const t0 = performance.now();
-  let stopped = still;
-  const stop = () => (stopped = true);
-  window.addEventListener('touchstart', stop, { once: true, passive: true });
-  window.addEventListener('wheel', stop, { once: true, passive: true });
-  const step = (now: number) => {
-    const k = Math.min(1, (now - t0) / ms);
-    if (!stopped) window.scrollTo({ top: from + (to - from) * (k < 0.5 ? 4 * k ** 3 : 1 - (2 - 2 * k) ** 3 / 2), behavior: 'instant' });
-    if (k < 1 && !stopped) requestAnimationFrame(step);
-    else {
-      window.removeEventListener('touchstart', stop);
-      window.removeEventListener('wheel', stop);
-      done();
-    }
-  };
-  if (!still) return requestAnimationFrame(step);
-  window.scrollTo({ top: to, behavior: 'instant' });
-  done();
-}
-
 /**
  * Video: Bogdan's films in a masonry grid (three columns, two on tablets, one on phones), each at its own shape,
  * wide and tall ones taking turns, dealt to the shortest column so the order still reads across (or kept right under
