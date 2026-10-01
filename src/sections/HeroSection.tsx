@@ -63,8 +63,8 @@ export function HeroSection() {
   const hintRef = useRef<HTMLDivElement>(null);
   const hintDotRef = useRef<HTMLSpanElement>(null);
   const [slatsPaused, setSlatsPaused] = useState(false);
-  // touch screens, idle on the hero for IDLE_MS: the print comes back and a finger shows to swipe (ScrollHint), again
-  // every IDLE_MS while nothing moves
+  // touch screens: a finger shows to swipe (ScrollHint) as the page opens, and again whenever the hero has been idle
+  // for IDLE_MS (the print back)
   const [hinting, setHinting] = useState(false);
   const nudge = useRef({ next: 0, on: false });
   const hintDone = useCallback(() => {
@@ -282,8 +282,9 @@ export function HeroSection() {
 
     // Dither Veil loop: burns the pointer's trail into the print (or, when the pointer has been idle for
     // a while, a slow wandering spot over the figure) and redraws while anything moves. Touch screens have no
-    // pointer to follow: the photo shows whole, and after IDLE_MS with nothing touched or scrolled the print knits
-    // back and the finger hint plays; a touch or a swipe shows the photo whole again (the print dissolving into it).
+    // pointer to follow: the print shows from the start, with the finger hint; a touch or a swipe shows the photo
+    // whole (the print dissolving into it), and after IDLE_MS with nothing touched or scrolled the print knits back
+    // and the hint plays again.
     const wander = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const touch = window.matchMedia('(hover: none)').matches;
     const pointer = { x: 0, y: 0, at: -Infinity };
@@ -344,11 +345,8 @@ export function HeroSection() {
     if (touch) {
       window.addEventListener('pointerdown', onVeilTouch, { passive: true });
       window.addEventListener('scroll', onVeilTouch, { passive: true });
-      // the photo whole from the start; idle on the hero's first frames, the hint
-      const now = performance.now();
-      whole.from = now - 1000;
-      whole.until = now + IDLE_MS;
-      nudge.current = { next: now + IDLE_MS, on: false };
+      // the print from the start, and the hint over it at once
+      nudge.current = { next: performance.now(), on: false };
       wakeVeil();
       if (wander) {
         idle = window.setInterval(() => {
@@ -387,7 +385,8 @@ export function HeroSection() {
 
   return (
     <section ref={sectionRef} id="top" aria-label={t.hero.label} className="relative h-[220vh] md:h-[290vh]">
-      <div className="sticky top-0 h-svh w-full overflow-hidden bg-[#040B1C]">
+      {/* (nothing to select: on iOS a finger held on the photo selected the whole hero) */}
+      <div className="sticky top-0 h-svh w-full select-none overflow-hidden bg-[#040B1C]">
         {/* 1 · animated backdrop */}
         <div ref={slatsRef} aria-hidden className="absolute inset-0" style={{ willChange: 'transform' }}>
           <MicroSlats color={HOODIE_BLUE} glintColor="#B7D3FF" backgroundColor="#040B1C" cursorStrength={0.8} paused={slatsPaused} />
