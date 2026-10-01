@@ -235,6 +235,10 @@ const ru: Copy = {
     client: 'Клиент',
     problem: 'Проблема',
     solution: 'Решение',
+    turn: 'Потяните, чтобы повернуть',
+    unfold: 'Нажмите, чтобы открыть', // (a folder)
+    shuffle: 'Нажмите, чтобы перетасовать', // (a deck)
+    things: { folder: 'Папка', deck: 'Колода Таро', card: 'Визитка', flyer: 'Флаер', voucher: 'Ваучер', guide: 'Памятка' },
     projects: {
       hype: { name: 'HYPE', kind: 'Постеры ивентов', client: '', problem: '', solution: '' },
       ihor: { name: 'Игорь Поперечный', kind: 'Музыкальный постер и визитки', client: '', problem: '', solution: '' },

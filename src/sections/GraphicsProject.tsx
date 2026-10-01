@@ -1,8 +1,8 @@
-import { X } from 'lucide-react';
+import { Rotate3d, X } from 'lucide-react';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { SceneCanvas } from '../components/SceneCanvas';
-import { GRAPHICS, SCENE_OF, type GraphicsSlug } from '../content';
+import { GRAPHICS, PRINT_KINDS, SCENE_OF, type GraphicsSlug } from '../content';
 import { LOCALE, t } from '../i18n';
 
 const OPEN_MS = 460;
@@ -26,14 +26,16 @@ export type Opening = { slug: GraphicsSlug; picture: number; cover: HTMLElement;
  * the screen's width (on wide screens, to the middle column) and from the cover's crop to the whole picture; the page
  * behind blurs, and under the picture come the project's name and when it was, who it was for, what was wrong and what
  * was done, then its other pictures. Closed (the cross, Esc, a tap beside it), the picture flies back into the cover.
- * A 3D project's cover (SCENE_OF) is a still of its scene: it flies up and the scene goes on live from it up there,
- * turned by dragging, all the project's pictures under it.
+ * A 3D project (SCENE_OF) opens on its scene instead, live up there (the cover's picture fading out over it), turned
+ * by dragging, all the project's pictures under it; its printed things one after another by the chips under it.
  */
 export function GraphicsProject({ opening, onClose }: { opening: Opening; onClose: () => void }) {
   const project = GRAPHICS[opening.slug];
-  const scene = opening.picture < 0 ? SCENE_OF[opening.slug] : undefined;
+  const scene = SCENE_OF[opening.slug];
   const hero = scene ? null : project.pictures[opening.picture];
-  const rest = project.pictures.filter((_, i) => i !== opening.picture);
+  const rest = scene ? project.pictures : project.pictures.filter((_, i) => i !== opening.picture);
+  const kinds = PRINT_KINDS[opening.slug] ?? [];
+  const [thing, setThing] = useState(0);
   const slot = useRef<HTMLDivElement>(null);
   const flyer = useRef<HTMLDivElement>(null);
   const under = useRef<HTMLImageElement>(null);
@@ -99,7 +101,11 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
   }, []);
   // landed: the picture is the one in the page (it scrolls with it), once it's in
   const settle = () => {
-    if (flyer.current && !leaving.current) flyer.current.style.visibility = 'hidden';
+    const el = flyer.current;
+    if (!el || leaving.current) return;
+    // (fading out over it: a scene's first frame isn't the cover's picture)
+    el.style.transition = 'opacity 0.35s ease-out';
+    el.style.opacity = '0';
   };
 
   const close = () => {
@@ -112,7 +118,7 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
     const from = slotBox();
     if (!from || !flyer.current) return onClose();
     put(from);
-    flyer.current.style.visibility = 'visible';
+    Object.assign(flyer.current.style, { transition: 'none', opacity: '1', visibility: 'visible' });
     setLanded(false);
     fly(from, coverBox(), true, onClose);
   };
@@ -141,9 +147,32 @@ export function GraphicsProject({ opening, onClose }: { opening: Opening; onClos
                   if (el?.complete) settle();
                 }} onLoad={settle} />
               ) : (
-                scene && <SceneCanvas scene={scene} top onReady={settle} className="h-full w-full cursor-grab active:cursor-grabbing" />
+                scene && <SceneCanvas scene={scene} top thing={thing} onReady={settle} className="h-full w-full cursor-grab active:cursor-grabbing" />
               ))}
           </div>
+          {scene && landed && (
+            <div className="flex animate-[fade-in_0.4s_ease-out] flex-wrap items-center justify-center gap-2 px-5 pt-4 sm:px-8 md:px-0">
+              {kinds.length > 1 &&
+                kinds.map((kind, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-pressed={i === thing}
+                    onClick={() => setThing(i)}
+                    className={`rounded-full border px-4 py-1.5 text-xs uppercase tracking-[0.18em] transition-colors ${
+                      i === thing ? 'border-white bg-white text-[#0C0C0C]' : 'border-[#D7E2EA]/30 text-[#D7E2EA]/80 hover:border-[#D7E2EA]/70 hover:text-white'
+                    }`}
+                  >
+                    {t.graphics.things[kind]}
+                    {kinds.filter((k) => k === kind).length > 1 ? ` ${kinds.slice(0, i + 1).filter((k) => k === kind).length}` : ''}
+                  </button>
+                ))}
+              <span className="flex items-center gap-1.5 text-xs text-[#D7E2EA]/50">
+                <Rotate3d aria-hidden className="h-3.5 w-3.5" />
+                {kinds[thing] === 'deck' ? `${t.graphics.shuffle} · ${t.graphics.turn}` : kinds[thing] === 'folder' ? `${t.graphics.unfold} · ${t.graphics.turn}` : t.graphics.turn}
+              </span>
+            </div>
+          )}
           <div className="px-5 pb-16 pt-7 sm:px-8 md:px-0 md:pt-10">
             <h2 className="text-3xl font-semibold uppercase tracking-wide text-white sm:text-4xl">{project.name}</h2>
             <p className="mt-2 text-sm uppercase tracking-[0.2em] text-[#D7E2EA]/55">{[project.kind, when(project.when)].filter(Boolean).join(' · ')}</p>

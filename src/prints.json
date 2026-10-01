@@ -1,0 +1,563 @@
+{
+ "profi-dokument": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50.6,
+   "front": "/scenes/print/profi-dokument-0-front.webp",
+   "back": "/scenes/print/profi-dokument-0-back.webp"
+  },
+  {
+   "kind": "flyer",
+   "w": 180,
+   "h": 90,
+   "front": "/scenes/print/profi-dokument-1-front.webp",
+   "back": "/scenes/print/profi-dokument-1-back.webp"
+  }
+ ],
+ "yana-lashes": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/yana-lashes-0-front.webp",
+   "back": "/scenes/print/yana-lashes-0-back.webp"
+  }
+ ],
+ "zero-sladu": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/zero-sladu-0-front.webp",
+   "back": "/scenes/print/zero-sladu-0-back.webp"
+  }
+ ],
+ "time-relax-body": [
+  {
+   "kind": "card",
+   "w": 54,
+   "h": 85,
+   "front": "/scenes/print/time-relax-body-0-front.webp",
+   "back": "/scenes/print/time-relax-body-0-back.webp"
+  }
+ ],
+ "ihor": [
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/ihor-0-front.webp",
+   "back": "/scenes/print/ihor-0-back.webp"
+  },
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/ihor-1-front.webp",
+   "back": "/scenes/print/ihor-1-back.webp"
+  }
+ ],
+ "dc-consulting": [
+  {
+   "kind": "folder",
+   "w": 488.0,
+   "h": 377.0,
+   "page": [
+    1383.31,
+    1068.66
+   ],
+   "outside": "/scenes/print/dc-consulting-folder-outside.webp",
+   "outsideGloss": "/scenes/print/dc-consulting-folder-outsideGloss.webp",
+   "inside": "/scenes/print/dc-consulting-folder-inside.webp",
+   "folds": {
+    "glue": 144.49,
+    "spine": 759.31,
+    "pocket": 878.83
+   },
+   "panels": {
+    "glue": [
+     [
+      144.49,
+      16.54
+     ],
+     [
+      138.82,
+      16.54
+     ],
+     [
+      27.05,
+      70.22
+     ],
+     [
+      24.29,
+      71.33
+     ],
+     [
+      21.79,
+      72.84
+     ],
+     [
+      19.59,
+      74.71
+     ],
+     [
+      17.72,
+      76.88
+     ],
+     [
+      16.21,
+      79.31
+     ],
+     [
+      15.08,
+      81.97
+     ],
+     [
+      14.39,
+      84.79
+     ],
+     [
+      14.15,
+      87.75
+     ],
+     [
+      14.15,
+      821.78
+     ],
+     [
+      14.44,
+      825.03
+     ],
+     [
+      15.27,
+      828.1
+     ],
+     [
+      16.61,
+      830.95
+     ],
+     [
+      18.4,
+      833.51
+     ],
+     [
+      20.59,
+      835.74
+     ],
+     [
+      23.15,
+      837.57
+     ],
+     [
+      26.03,
+      838.96
+     ],
+     [
+      29.18,
+      839.84
+     ],
+     [
+      138.82,
+      871.46
+     ],
+     [
+      144.49,
+      871.46
+     ]
+    ],
+    "back": [
+     [
+      759.31,
+      16.54
+     ],
+     [
+      144.49,
+      16.54
+     ],
+     [
+      144.49,
+      871.46
+     ],
+     [
+      150.15,
+      871.46
+     ],
+     [
+      150.15,
+      878.83
+     ],
+     [
+      739.48,
+      878.83
+     ],
+     [
+      739.48,
+      873.14
+     ],
+     [
+      759.31,
+      873.14
+     ]
+    ],
+    "front": [
+     [
+      764.98,
+      16.54
+     ],
+     [
+      759.31,
+      16.54
+     ],
+     [
+      759.31,
+      873.14
+     ],
+     [
+      1368.47,
+      873.14
+     ],
+     [
+      1368.47,
+      16.54
+     ],
+     [
+      764.98,
+      16.54
+     ]
+    ],
+    "pocket": [
+     [
+      150.15,
+      878.83
+     ],
+     [
+      150.15,
+      932.84
+     ],
+     [
+      181.2,
+      963.41
+     ],
+     [
+      181.39,
+      963.66
+     ],
+     [
+      181.54,
+      963.94
+     ],
+     [
+      181.63,
+      964.24
+     ],
+     [
+      181.67,
+      964.54
+     ],
+     [
+      181.66,
+      964.86
+     ],
+     [
+      181.62,
+      965.19
+     ],
+     [
+      181.54,
+      965.51
+     ],
+     [
+      181.42,
+      965.82
+     ],
+     [
+      180.78,
+      966.78
+     ],
+     [
+      179.73,
+      967.77
+     ],
+     [
+      178.38,
+      968.77
+     ],
+     [
+      176.86,
+      969.75
+     ],
+     [
+      175.26,
+      970.71
+     ],
+     [
+      173.72,
+      971.63
+     ],
+     [
+      172.35,
+      972.49
+     ],
+     [
+      171.26,
+      973.27
+     ],
+     [
+      167.84,
+      976.36
+     ],
+     [
+      164.78,
+      979.8
+     ],
+     [
+      162.11,
+      983.56
+     ],
+     [
+      159.85,
+      987.61
+     ],
+     [
+      158.04,
+      991.92
+     ],
+     [
+      156.7,
+      996.45
+     ],
+     [
+      155.88,
+      1001.18
+     ],
+     [
+      155.6,
+      1006.07
+     ],
+     [
+      156.46,
+      1014.59
+     ],
+     [
+      158.93,
+      1022.52
+     ],
+     [
+      162.83,
+      1029.7
+     ],
+     [
+      168.01,
+      1035.96
+     ],
+     [
+      174.27,
+      1041.12
+     ],
+     [
+      181.47,
+      1045.01
+     ],
+     [
+      189.42,
+      1047.48
+     ],
+     [
+      197.95,
+      1048.34
+     ],
+     [
+      204.21,
+      1047.88
+     ],
+     [
+      210.18,
+      1046.55
+     ],
+     [
+      215.8,
+      1044.41
+     ],
+     [
+      221.0,
+      1041.53
+     ],
+     [
+      225.72,
+      1037.98
+     ],
+     [
+      229.9,
+      1033.81
+     ],
+     [
+      233.46,
+      1029.1
+     ],
+     [
+      236.35,
+      1023.91
+     ],
+     [
+      236.51,
+      1023.55
+     ],
+     [
+      236.67,
+      1023.19
+     ],
+     [
+      236.82,
+      1022.84
+     ],
+     [
+      237.0,
+      1022.51
+     ],
+     [
+      237.19,
+      1022.2
+     ],
+     [
+      237.43,
+      1021.92
+     ],
+     [
+      237.72,
+      1021.66
+     ],
+     [
+      238.06,
+      1021.43
+     ],
+     [
+      238.43,
+      1021.27
+     ],
+     [
+      238.79,
+      1021.2
+     ],
+     [
+      239.14,
+      1021.19
+     ],
+     [
+      239.48,
+      1021.24
+     ],
+     [
+      239.8,
+      1021.34
+     ],
+     [
+      240.1,
+      1021.47
+     ],
+     [
+      240.38,
+      1021.64
+     ],
+     [
+      240.63,
+      1021.83
+     ],
+     [
+      273.41,
+      1054.1
+     ],
+     [
+      589.71,
+      1054.1
+     ],
+     [
+      596.74,
+      1053.69
+     ],
+     [
+      603.59,
+      1052.46
+     ],
+     [
+      610.21,
+      1050.47
+     ],
+     [
+      616.54,
+      1047.73
+     ],
+     [
+      622.5,
+      1044.27
+     ],
+     [
+      628.04,
+      1040.14
+     ],
+     [
+      633.1,
+      1035.36
+     ],
+     [
+      637.6,
+      1029.97
+     ],
+     [
+      739.48,
+      884.45
+     ],
+     [
+      739.48,
+      878.83
+     ]
+    ]
+   }
+  },
+  {
+   "kind": "voucher",
+   "w": 210,
+   "h": 148,
+   "front": "/scenes/print/dc-consulting-0-front.webp",
+   "back": "/scenes/print/dc-consulting-0-back.webp"
+  }
+ ],
+ "da-vinci": [
+  {
+   "kind": "deck",
+   "w": 50,
+   "h": 90,
+   "back": "/scenes/print/da-vinci-0-back.webp",
+   "fronts": [
+    "/scenes/print/da-vinci-0-front0.webp",
+    "/scenes/print/da-vinci-0-front1.webp",
+    "/scenes/print/da-vinci-0-front2.webp",
+    "/scenes/print/da-vinci-0-front3.webp",
+    "/scenes/print/da-vinci-0-front4.webp"
+   ]
+  },
+  {
+   "kind": "card",
+   "w": 90,
+   "h": 50,
+   "front": "/scenes/print/da-vinci-1-front.webp",
+   "frontGloss": "/scenes/print/da-vinci-1-front-gloss.webp",
+   "back": "/scenes/print/da-vinci-1-back.webp",
+   "backGloss": "/scenes/print/da-vinci-1-back-gloss.webp"
+  },
+  {
+   "kind": "flyer",
+   "w": 105,
+   "h": 148,
+   "front": "/scenes/print/da-vinci-2-front.webp",
+   "back": "/scenes/print/da-vinci-2-back.webp"
+  },
+  {
+   "kind": "guide",
+   "w": 210,
+   "h": 148,
+   "front": "/scenes/print/da-vinci-3-front.webp",
+   "back": "/scenes/print/da-vinci-3-back.webp"
+  }
+ ]
+}

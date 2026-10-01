@@ -4,6 +4,7 @@
 import { lang, t, type Lang } from './i18n';
 import graphicsSizes from './graphics.json';
 import type { SceneName } from './three/miniScenes';
+import prints from './prints.json';
 import musicTracks from './music.json';
 
 export const PERSON = {
@@ -350,7 +351,16 @@ export const COVER_OF: [GraphicsSlug, number][] = [
 // The projects that open on a live 3D scene (2026-10-01), Mind Logistic's site's own (src/three/miniScenes.ts): the
 // cover is a still of it (no 3D in the rows, his call), the project opens on the scene, all its pictures under it
 // (-1 above).
-export const SCENE_OF: Partial<Record<GraphicsSlug, SceneName>> = { elixir: 'elixir', poucher: 'poucher' };
+export const SCENE_OF: Partial<Record<GraphicsSlug, SceneName>> = {
+  elixir: 'elixir',
+  poucher: 'poucher',
+  ...Object.fromEntries(Object.keys(prints).map((slug) => [slug, `print:${slug}` as const])),
+};
+// The projects whose printed things are in 3D (2026-10-01, src/prints.json from the print files in his archive):
+// they open on them, to be turned over and looked at, one thing after another by the chips under them.
+export const PRINT_KINDS = Object.fromEntries(Object.entries(prints).map(([slug, things]) => [slug, things.map((thing) => thing.kind)])) as Partial<
+  Record<GraphicsSlug, ('deck' | 'folder' | 'card' | 'flyer' | 'voucher' | 'guide')[]>
+>;
 
 // Music: Bogdan's playlist (2026-09-30): fifteen tracks in his order, then the rest of his LUCKI BEATS album mixed,
 // the titles in English and without "Beat" (his call). Track N plays /music/NNN.m4a, the AAC master from his Music

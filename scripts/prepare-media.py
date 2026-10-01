@@ -14,6 +14,8 @@ Outputs into ../public:
   music/NNN.m4a                                         — the music player's playlist (AAC as mastered)
   scenes/*.webp                                         — the 3D covers' labels and backdrop (`scenes` alone; their models:
                                                           scripts/prepare-scenes.mjs)
+  scenes/print/*.webp                                   — the printed things' sides, for their 3D views (`prints` alone, the
+                                                          files in the archive downloaded from iCloud first)
   video/<slug>.mp4, .webp, -frames.webp                 — the Video section's films, posters and hover strips (some
                                                           films alone: python3 scripts/prepare-media.py videos <slug>...)
 Re-run safe: overwrites outputs.
@@ -429,6 +431,170 @@ def scenes():
             size += to_webp(os.path.join(MLSITE, "POUCHER", name, f"{name} {part}.jpg"), out("scenes", f"poucher-{i}-{part.lower()}.webp"), width=width, q=80)
     return size
 
+# The Graphics projects' printed things in 3D (2026-10-01, src/three/miniScenes.ts): each side as printed, from its file in
+# the archive (a PDF's or an .ai's page at 300 dpi, a PSD's part, or its own export), the bleed trimmed, 1600 px on its
+# long side; a side hot-stamped (Da Vinci's roses card: glossy black over the roses) also gets its gloss map (its green,
+# the roughness three.js reads: the paper's 0.75, the stamp's 0.08, glossy as lacquer). Sizes in millimetres and what each thing is go to
+# src/prints.json. The archive lives in iCloud: `brctl download` the files first. A side: a file, (file, page), (file,
+# (left, top, right, bottom) as fractions), or ("foil", art, stamp): the stamp's shapes in glossy black over the art. A
+# deck (Da Vinci's five Tarot cards): its fronts, one back for all. A side laid out across a thing that stands upright
+# is turned a quarter anticlockwise (the Tarot cards' titles read along their long side).
+DVR = "Da Vinci Tatoo/PNG/Roses/DAVINCI TATTOO BUISINESS CARD_"
+PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm)]
+    "profi-dokument": [("card", "Нотариальные услуги/Front.jpg", "Нотариальные услуги/Back.jpg", (90, 50.6), 0),
+                       ("flyer", "Нотариальные услуги/Флаер/FRONT.png", "Нотариальные услуги/Флаер/BACK.png", (180, 90), 2)],
+    "yana-lashes": [("card", ("Yana Lashes/PDF/Busines Card.pdf", 1), ("Yana Lashes/PDF/Busines Card.pdf", 2), (90, 50), 2)],
+    "zero-sladu": [("card", ("ZERO ŚLADU/WIZYTÓWKA/ZERO ŚLADU WIZYTÓWKA.pdf", 1), ("ZERO ŚLADU/WIZYTÓWKA/ZERO ŚLADU WIZYTÓWKA.pdf", 2), (90, 50), 0)],
+    "time-relax-body": [("card", ("TIme Relax Body/biznes_karta_85x54mm.pdf", 1), ("TIme Relax Body/biznes_karta_85x54mm.pdf", 2), (54, 85), 2)],
+    "ihor": [("card", ("IGOR MUSIC/Igor Poperechny.pdf", 1), ("IGOR MUSIC/Igor Poperechny.pdf", 2), (90, 50), 2),
+             ("card", ("IGOR MUSIC/Igor Poperechny.pdf", 3), ("IGOR MUSIC/Igor Poperechny.pdf", 4), (90, 50), 2)],
+    "dc-consulting": [("voucher", "DC CONSULTING/VOUCHER/JPG/AWERS.jpg", "DC CONSULTING/VOUCHER/JPG/REWERS.jpg", (210, 148), 0)],
+    "da-vinci": [("deck", [(f"Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC {n}.pdf", 1) for n in range(1, 6)], ("Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC 1.pdf", 2), (50, 90), 0),
+                 ("card", ("foil", DVR + "Awers.png", DVR + "Awers Hotstamping.png"), ("foil", DVR + "Rewers.png", DVR + "Rewers Hotstamping.png"), (90, 50), 3),
+                 ("flyer", ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 1), ("Da Vinci Tatoo/PDF/Флаер/DA-VINCI - ФЛАЕР.pdf", 2), (105, 148), 0),
+                 ("guide", ("Da Vinci Tatoo/PDF/Инструкция/DA-VINCI - ИНСТРУКЦИЯ.pdf", 1), ("Da Vinci Tatoo/PDF/Инструкция/DA-VINCI - ИНСТРУКЦИЯ.pdf", 2), (210, 148), 0)],
+}
+
+def side(spec):  # a side of a printed thing, as a picture, and its gloss map if it is hot-stamped
+    if isinstance(spec, tuple) and spec[0] == "foil":
+        art = Image.open(os.path.join(ARCHIVE, spec[1])).convert("RGBA")
+        stamp = Image.open(os.path.join(ARCHIVE, spec[2])).convert("RGBA").getchannel("A")
+        under = Image.new("RGBA", art.size, (10, 10, 10, 255))  # (the card itself is black: its export lets it show through)
+        under.alpha_composite(art)
+        under.paste((8, 8, 8, 255), mask=stamp)
+        gloss = Image.merge("RGB", (Image.new("L", art.size, 0), stamp.point(lambda a: 191 - round(a / 255 * 171)), Image.new("L", art.size, 0)))
+        return under.convert("RGB"), gloss
+    path, part = (spec, None) if isinstance(spec, str) else spec
+    path = os.path.join(ARCHIVE, path)
+    if path.endswith((".pdf", ".ai")):
+        tmp = tempfile.mkdtemp()
+        subprocess.run(["pdftoppm", "-r", "300", "-f", str(part), "-l", str(part), "-singlefile", "-png", path, os.path.join(tmp, "page")], check=True)
+        return Image.open(os.path.join(tmp, "page.png")).convert("RGB"), None
+    im = Image.open(path)
+    if im.mode == "RGBA":  # (on white, as printed)
+        im = Image.alpha_composite(Image.new("RGBA", im.size, "white"), im)
+    im = im.convert("RGB")
+    if isinstance(part, tuple):
+        im = im.crop(tuple(round(v * s) for v, s in zip(part, im.size * 2)))
+    return im, None
+
+# DC Consulting's folder, folded (2026-10-01): its sheet as printed (BOLD NO GUIDE: page 1 outside, 2 inside, 3 the
+# white layer, hot-stamped in gold on the outside), and its die line from the version with the guides (33 pt more
+# round it): the cut outline (the grey band's inner edge, its curves sampled) split along the folds (the green
+# double creases, taken at their middles) into the glue flap, the back cover (with the pocket and the flap on it), the
+# front cover and the pocket, in points on the printed page.
+FOLDER = "DC CONSULTING/FOLDER /AI/"
+
+def folder():
+    art = os.path.join(ARCHIVE, FOLDER, "Folder DC Consulting (BOLD) NO GUIDE.pdf")
+    pages = []
+    for page in (1, 2, 3):
+        tmp = tempfile.mkdtemp()
+        subprocess.run(["pdftoppm", "-r", "150", "-f", str(page), "-l", str(page), "-singlefile", "-png", art, os.path.join(tmp, "page")], check=True)
+        pages.append(Image.open(os.path.join(tmp, "page.png")).convert("RGB"))
+    outside, inside, white = pages
+    foil = white.convert("L").point(lambda v: 255 - v)  # (its shapes, dark on the white page)
+    gold = Image.new("RGB", outside.size, (201, 164, 92))
+    outside = Image.composite(gold, outside, foil)
+    gloss = Image.merge("RGB", (Image.new("L", outside.size, 0), foil.point(lambda a: 178 - round(a / 255 * 122)), foil))
+    sides = {}
+    for name, im in (("outside", outside), ("outsideGloss", gloss), ("inside", inside)):
+        im.thumbnail((2400, 2400), Image.LANCZOS)
+        dst = out("scenes", "print", f"dc-consulting-folder-{name}.webp")
+        im.save(dst, "WEBP", quality=84, method=6)
+        sides[name] = f"/scenes/print/dc-consulting-folder-{name}.webp"
+    # the die line
+    tmp = tempfile.mkdtemp()
+    subprocess.run(["pdftocairo", "-svg", "-f", "1", "-l", "1", os.path.join(ARCHIVE, FOLDER, "Folder DC Consulting.pdf"), os.path.join(tmp, "die.svg")], check=True)
+    svg = open(os.path.join(tmp, "die.svg")).read()
+    band = max((p for p in re.findall(r"<path\b[^>]*>", svg) if 'fill="rgb(77.6474%' in p), key=len)  # (the others: the holes' dots)
+    d = re.search(r' d="([^"]+)"', band).group(1)
+    cut = d[d.index("Z") + 1:]  # (its second outline, the cut itself)
+    tokens = re.findall(r"[MLCZ]|-?\d+\.?\d*", cut)
+    outline, i, at = [], 0, None
+    while i < len(tokens):
+        t = tokens[i]
+        if t in "ML":
+            at = (float(tokens[i + 1]), float(tokens[i + 2])); outline.append(at); i += 3
+        elif t == "C":
+            c1, c2, end = [(float(tokens[i + k]), float(tokens[i + k + 1])) for k in (1, 3, 5)]
+            for n in range(1, 9):  # (each curve as eight straight bits)
+                u = n / 8
+                outline.append(tuple((1 - u) ** 3 * a + 3 * (1 - u) ** 2 * u * b + 3 * (1 - u) * u ** 2 * c + u ** 3 * e for a, b, c, e in zip(at, c1, c2, end)))
+            at = end; i += 7
+        else:
+            i += 1
+    folds = {}
+    for p in re.findall(r"<path\b[^>]*>", svg):
+        if 'stroke="rgb(0%, 58.824158%, 25.489807%)"' not in p:
+            continue
+        m = [float(v) for v in re.search(r'transform="matrix\(([^)]+)\)"', p).group(1).split(",")]
+        x0, y0, x1, y1 = [float(v) for v in re.findall(r"-?\d+\.?\d*", re.search(r' d="([^"]+)"', p).group(1))]
+        ends = [(m[0] * x + m[4], m[3] * y + m[5]) for x, y in ((x0, y0), (x1, y1))]
+        if abs(ends[0][0] - ends[1][0]) < 1:
+            folds.setdefault("x", []).append(ends[0][0])
+        else:
+            folds.setdefault("y", []).append(ends[0][1])
+    xs, ys = sorted(folds["x"]), sorted(folds["y"])
+    glue, spine, pocket = (xs[0] + xs[1]) / 2, (xs[2] + xs[3]) / 2, (ys[0] + ys[1]) / 2
+
+    def clip(poly, x0, x1, y0, y1):  # (Sutherland and Hodgman's, against a box)
+        for inside_, cross in ((lambda p: p[0] >= x0, lambda a, b: (x0, a[1] + (b[1] - a[1]) * (x0 - a[0]) / (b[0] - a[0]))),
+                               (lambda p: p[0] <= x1, lambda a, b: (x1, a[1] + (b[1] - a[1]) * (x1 - a[0]) / (b[0] - a[0]))),
+                               (lambda p: p[1] >= y0, lambda a, b: (a[0] + (b[0] - a[0]) * (y0 - a[1]) / (b[1] - a[1]), y0)),
+                               (lambda p: p[1] <= y1, lambda a, b: (a[0] + (b[0] - a[0]) * (y1 - a[1]) / (b[1] - a[1]), y1))):
+            kept = []
+            for k, cur in enumerate(poly):
+                prev = poly[k - 1]
+                if inside_(cur):
+                    if not inside_(prev):
+                        kept.append(cross(prev, cur))
+                    kept.append(cur)
+                elif inside_(prev):
+                    kept.append(cross(prev, cur))
+            poly = kept
+        return [[round(x - 33, 2), round(y - 33, 2)] for x, y in poly]  # (on the printed page)
+
+    big = 1e5
+    panels = {"glue": clip(outline, -big, glue, -big, big), "back": clip(outline, glue, spine, -big, pocket),
+              "front": clip(outline, spine, big, -big, big), "pocket": clip(outline, glue, spine, pocket, big)}
+    w, h = 1383.31, 1068.66  # (the printed page, in points)
+    return {"kind": "folder", "w": round(w * 0.35278, 1), "h": round(h * 0.35278, 1), "page": [w, h], **sides,
+            "folds": {"glue": round(glue - 33, 2), "spine": round(spine - 33, 2), "pocket": round(pocket - 33, 2)}, "panels": panels}
+
+def prints():
+    for old in glob.glob(out("scenes", "print", "*.webp")):
+        os.remove(old)
+    size, sheets = 0, {}
+    for slug, things in PRINTS.items():
+        sheets[slug] = []
+        for i, (kind, front, back, (w, h), bleed) in enumerate(things):
+            sheet = {"kind": kind, "w": w, "h": h}
+            faces = [(f"front{n}", spec) for n, spec in enumerate(front)] if isinstance(front, list) else [("front", front)]
+            for face, spec in faces + [("back", back)]:
+                if spec is None:
+                    continue
+                for k, im in enumerate(side(spec)):
+                    if im is None:
+                        continue
+                    if w < h and im.width > im.height:  # (upright, from a layout across)
+                        im = im.transpose(Image.Transpose.ROTATE_90)
+                    if bleed:  # the bleed, as a share of the side with it
+                        bx, by = round(im.width * bleed / (w + 2 * bleed)), round(im.height * bleed / (h + 2 * bleed))
+                        im = im.crop((bx, by, im.width - bx, im.height - by))
+                    im.thumbnail((1600, 1600), Image.LANCZOS)
+                    name = f"{slug}-{i}-{face}{'-gloss' if k else ''}.webp"
+                    im.save(out("scenes", "print", name), "WEBP", quality=85, method=6)
+                    size += os.path.getsize(out("scenes", "print", name))
+                    sheet[face + ("Gloss" if k else "")] = f"/scenes/print/{name}"
+            if isinstance(front, list):  # (a deck's fronts, in order)
+                sheet["fronts"] = [sheet.pop(f"front{n}") for n in range(len(front))]
+            sheets[slug].append(sheet)
+    sheets["dc-consulting"].insert(0, folder())
+    with open(os.path.join(KB, "portfolio", "src", "prints.json"), "w") as fh:
+        json.dump(sheets, fh, ensure_ascii=False, indent=1)
+    return size
+
 def graphics(only=None):  # only: the projects to make again; the rest keep their pictures, and their sizes from graphics.json
     known = {}
     if only is not None:
@@ -457,6 +623,9 @@ if __name__ == "__main__":
         sys.exit()
     if sys.argv[1:] == ["scenes"]:
         print(f"scenes' pictures: {scenes()/1e3:.0f}KB")
+        sys.exit()
+    if sys.argv[1:] == ["prints"]:
+        print(f"printed things' sides: {prints()/1e3:.0f}KB")
         sys.exit()
     if sys.argv[1:2] == ["videos"]:  # videos <slug>...: those films again, the others kept as they are
         print(f"videos: {', '.join(sys.argv[2:])} {videos(set(sys.argv[2:]))/1e6:.1f}MB")

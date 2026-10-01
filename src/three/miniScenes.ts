@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import printsJson from '../prints.json';
 
 /**
  * The Graphics covers that are live 3D scenes: Mind Logistic's site's own (Bogdan's, ~/Developer/MIND LOGISTIC:
@@ -6,16 +8,28 @@ import * as THREE from 'three';
  * its Poucher can through its four in a lightning storm, ported as they are. Their covers are stills of them (no 3D in
  * the rows, Bogdan's call); a cover's project opens on its scene. One WebGL renderer, off the page, draws a scene once
  * a frame into the canvases that show it, only while one is on screen (the open project's top first, if there are
- * others). The models and pictures: scripts/prepare-scenes.mjs, prepare-media.py scenes.
+ * others). The models and pictures: scripts/prepare-scenes.mjs, prepare-media.py scenes. And the printed things of the
+ * other projects (business cards, flyers, a voucher, a guide: `print:<project>`, below), to be turned over and looked at.
  */
-export type SceneName = 'elixir' | 'poucher';
+export type SceneName = 'elixir' | 'poucher' | `print:${string}`;
 type View = { canvas: HTMLCanvasElement; ctx: CanvasRenderingContext2D; name: SceneName; top: boolean; shown: boolean; drawn: boolean; onReady?: () => void };
-type Live = { scene: THREE.Scene; camera: THREE.PerspectiveCamera; clear: number; toneMapping: THREE.ToneMapping; step: (dt: number) => void; size?: (w: number, h: number) => void };
+type Live = {
+  scene: THREE.Scene;
+  camera: THREE.PerspectiveCamera;
+  clear: number;
+  toneMapping: THREE.ToneMapping;
+  exposure?: number;
+  step: (dt: number) => void;
+  size?: (w: number, h: number) => void;
+  prepare?: (gl: THREE.WebGLRenderer) => void; // once, before it is first drawn
+};
 
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const MAX = 1600; // a canvas's widest, in pixels
 const views = new Set<View>();
 const live = new Map<SceneName, Live | null>(); // null while it loads
+const prepared = new Set<SceneName>();
+const picks = new Map<SceneName, number>(); // the thing a printed things' scene shows
 let renderer: THREE.WebGLRenderer | null | undefined;
 let frame = 0;
 let last = 0;
@@ -40,18 +54,25 @@ export function show(canvas: HTMLCanvasElement, name: SceneName, { top = false, 
   watch?.observe(canvas);
   if (!live.has(name)) {
     live.set(name, null);
-    (name === 'elixir' ? elixir() : poucher()).then((scene) => {
+    (name === 'elixir' ? elixir() : name === 'poucher' ? poucher() : sheets(name)).then((scene) => {
       live.set(name, scene);
       wake();
     }, () => {}); // (the cover keeps its still)
   }
-  const letGo = top ? turns[name].hold(canvas) : () => {};
+  const letGo = top ? turnOf(name).hold(canvas) : () => {};
   wake();
   return () => {
     views.delete(view);
     watch?.unobserve(canvas);
     letGo();
   };
+}
+
+/** Shows thing `index` of a printed things' scene (it turns over to it). */
+export function pick(name: SceneName, index: number) {
+  picks.set(name, index);
+  for (const view of views) if (view.name === name) view.drawn = false; // (drawn again, if motion is reduced)
+  wake();
 }
 
 function wake() {
@@ -90,15 +111,20 @@ function tick(now: number) {
   const tops = shown.filter((view) => view.top);
   const drawing = tops.length ? tops : shown;
   let going = false;
-  for (const name of ['elixir', 'poucher'] as const) {
+  for (const name of new Set(drawing.map((view) => view.name))) {
     const scene = live.get(name);
     const mine = drawing.filter((view) => view.name === name && !(still && view.drawn));
     if (!scene || !mine.length) continue;
     const gl = context();
     if (!gl) return;
     going = true;
+    if (!prepared.has(name)) {
+      prepared.add(name);
+      scene.prepare?.(gl);
+    }
     scene.step(still ? 0 : dt);
     gl.toneMapping = scene.toneMapping;
+    gl.toneMappingExposure = scene.exposure ?? 1;
     gl.setClearColor(scene.clear, 1);
     let drawn = '';
     for (const view of mine) {
@@ -187,7 +213,83 @@ class Turn {
     };
   }
 }
-const turns: Record<SceneName, Turn> = { elixir: new Turn(), poucher: new Turn() };
+// A printed thing: it shows its front, and every few seconds turns over to its back and on round again; dragged
+// sideways it turns with the finger (tilting a little with it), and let go it settles on the nearer side. `round()`
+// turns it on to the next front from where it is (passing edge-on on the way, where a thing can be swapped unseen).
+// `auto` off, it stays on the side it is on; a touch that doesn't drag counts in `taps`.
+class Flip {
+  private angle = 0;
+  private target = 0;
+  private tilt = 0;
+  private held = false;
+  private since = 0;
+  auto = true;
+  taps = 0;
+  update(dt: number) {
+    if (!this.held) {
+      this.since += dt;
+      if (this.since > 4.5 && this.auto) {
+        this.target += Math.PI;
+        this.since = 0;
+      }
+      const k = 1 - Math.exp(-dt * 2.6);
+      this.angle += (this.target - this.angle) * k;
+      this.tilt += (0 - this.tilt) * k;
+    }
+    return { x: this.tilt, y: this.angle };
+  }
+  round() {
+    this.target = (Math.floor(this.angle / (2 * Math.PI) + 0.25) + 1) * 2 * Math.PI;
+    this.since = -1; // (and a while on its front then)
+  }
+  hold(el: HTMLElement) {
+    let pointer: number | null = null;
+    let [lastX, lastY] = [0, 0];
+    let start = { x: 0, y: 0, t: 0 };
+    el.style.touchAction = 'pan-y';
+    const down = (e: PointerEvent) => {
+      if (pointer !== null) return;
+      pointer = e.pointerId;
+      this.held = true;
+      [lastX, lastY] = [e.clientX, e.clientY];
+      start = { x: e.clientX, y: e.clientY, t: performance.now() };
+      el.setPointerCapture(e.pointerId);
+    };
+    const move = (e: PointerEvent) => {
+      if (e.pointerId !== pointer) return;
+      const r = el.getBoundingClientRect();
+      this.angle += ((e.clientX - lastX) / r.width) * Math.PI * 1.4;
+      this.tilt = Math.max(-0.5, Math.min(0.5, this.tilt + ((e.clientY - lastY) / r.height) * (Math.PI / 2)));
+      this.target = this.angle;
+      [lastX, lastY] = [e.clientX, e.clientY];
+    };
+    const up = (e: PointerEvent) => {
+      if (e.pointerId !== pointer) return;
+      pointer = null;
+      this.held = false;
+      this.target = Math.round(this.angle / Math.PI) * Math.PI;
+      this.since = 0;
+      if (Math.hypot(e.clientX - start.x, e.clientY - start.y) < 8 && performance.now() - start.t < 500) this.taps++;
+      if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
+    };
+    el.addEventListener('pointerdown', down);
+    el.addEventListener('pointermove', move);
+    el.addEventListener('pointerup', up);
+    el.addEventListener('pointercancel', up);
+    return () => {
+      el.removeEventListener('pointerdown', down);
+      el.removeEventListener('pointermove', move);
+      el.removeEventListener('pointerup', up);
+      el.removeEventListener('pointercancel', up);
+      this.held = false;
+    };
+  }
+}
+const turns = new Map<SceneName, Turn | Flip>();
+const turnOf = <T extends Turn | Flip>(name: SceneName) => {
+  if (!turns.has(name)) turns.set(name, name.startsWith('print:') ? new Flip() : new Turn());
+  return turns.get(name) as T;
+};
 
 // A model of scripts/prepare-scenes.mjs: its meshes, in order, each with its geometry
 async function model(url: string) {
@@ -369,7 +471,7 @@ async function elixir(): Promise<Live> {
       }
       pivot.position.y = Math.sin(time * 1.5) * 0.12 + y;
       pivot.scale.setScalar(scale);
-      const turn = turns.elixir.update(dt);
+      const turn = turnOf<Turn>('elixir').update(dt);
       pivot.rotation.set(turn.x, turn.y, tilt);
     },
   };
@@ -584,8 +686,265 @@ async function poucher(): Promise<Live> {
       storm.uniforms.iTime.value = time;
       pivot.position.y = Math.sin(time * 1.5) * 0.12 + y;
       pivot.scale.setScalar(scale);
-      const turn = turns.poucher.update(dt);
+      const turn = turnOf<Turn>('poucher').update(dt);
       pivot.rotation.set(turn.x, turn.y, tilt);
+    },
+  };
+}
+
+// The printed things (src/prints.json, scripts/prepare-media.py prints): each a sheet of its real proportions, its
+// edge a little thicker than paper so it reads, both its sides printed on it, a hot-stamped side glossy where it is
+// stamped; lit like a product shot (a room's reflections and a key light), floating over its soft shadow. Picked, the
+// next thing comes in turning over, swapped while edge-on, so the swap can't be seen. A deck (Da Vinci's Tarot cards)
+// lies stacked face up, and shuffles when tapped (and by itself every few seconds): it splits in two halves, which
+// riffle back together card by card in a new order, so a new card comes up on top. A folder (DC Consulting's) is
+// folded from its own die line: its pocket and glue flap turned in on the back cover, its front cover on the spine,
+// closed, then opening to show its inside (and on, and back; a tap opens or closes it).
+type Sheet = {
+  kind: string;
+  w: number;
+  h: number;
+  front?: string;
+  fronts?: string[];
+  back?: string;
+  frontGloss?: string;
+  backGloss?: string;
+  // a folder's
+  page?: number[];
+  outside?: string;
+  outsideGloss?: string;
+  inside?: string;
+  folds?: { glue: number; spine: number; pocket: number };
+  panels?: Record<'glue' | 'back' | 'front' | 'pocket', number[][]>;
+};
+const PRINTS = printsJson as Record<string, Sheet[]>;
+const SHUFFLE = { split: 0.35, gap: 0.08, deal: 0.32 }; // seconds: the halves part, each card's turn after the last, its way in
+
+// a soft round spot, white at its middle (a shadow when drawn dark, a glow when light)
+function spot(alpha: number) {
+  const c = Object.assign(document.createElement('canvas'), { width: 128, height: 128 });
+  const g = c.getContext('2d')!;
+  const fade = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  fade.addColorStop(0, `rgba(255,255,255,${alpha})`);
+  fade.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = fade;
+  g.fillRect(0, 0, 128, 128);
+  return new THREE.CanvasTexture(c);
+}
+
+async function sheets(name: SceneName): Promise<Live> {
+  const things = PRINTS[name.slice('print:'.length)];
+  const sides = things.map((thing) => ({
+    fronts: (thing.fronts ?? [thing.front ?? thing.outside!]).map((url) => picture(url)),
+    back: thing.back ?? thing.inside ? picture((thing.back ?? thing.inside)!) : null,
+    frontGloss: thing.frontGloss ?? thing.outsideGloss ? picture((thing.frontGloss ?? thing.outsideGloss)!) : null,
+    backGloss: thing.backGloss ? picture(thing.backGloss) : null,
+  }));
+  for (const side of sides) for (const gloss of [side.frontGloss, side.backGloss]) if (gloss) gloss.colorSpace = THREE.NoColorSpace; // (data, not colour)
+  const ready = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss].every((texture) => !texture || texture.image);
+  await Promise.all([...sides[0].fronts, sides[0].back, sides[0].frontGloss, sides[0].backGloss].map((texture) => texture?.ready));
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
+  camera.position.set(0, 0.25, 13);
+  camera.lookAt(0, 0, 0);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+  const key = new THREE.DirectionalLight(0xffffff, 1.6);
+  key.position.set(4, 5, 7);
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.9);
+  rim.position.set(-5, 2, -6);
+  scene.add(rim);
+
+  const glow = new THREE.Mesh(new THREE.PlaneGeometry(16, 16), new THREE.MeshBasicMaterial({ map: spot(0.09), transparent: true, depthWrite: false, toneMapped: false }));
+  glow.position.z = -6;
+  scene.add(glow);
+  const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: spot(1), color: 0x000000, transparent: true, opacity: 0.55, depthWrite: false }));
+  shadow.rotation.x = -Math.PI / 2;
+  scene.add(shadow);
+
+  const edge = new THREE.MeshStandardMaterial({ color: 0xeceae4, roughness: 0.9 });
+  const box = new THREE.BoxGeometry(1, 1, 1);
+  const paper = (map: THREE.Texture | null, gloss: THREE.Texture | null) =>
+    new THREE.MeshStandardMaterial({ map, color: map ? 0xffffff : 0xf4f2ec, roughnessMap: gloss, roughness: gloss ? 1 : 0.62 }); // (a blank side: the paper)
+  const pivot = new THREE.Group();
+  scene.add(pivot);
+  // each thing's sheets: one, or a deck's cards, or a folder (built as the thing first shows)
+  const built: THREE.Object3D[][] = [];
+  type Folded = { front: THREE.Group; root: THREE.Group; back: number; open: number; target: number; since: number };
+  const folders: Folded[] = [];
+  let folder: Folded | null = null; // the shown thing's, if it is one
+  const fold = (thing: Sheet, i: number) => {
+    // its pieces on the page, in points, from the spine (x) and the covers' middle (y), as big as the view takes open
+    const f = thing.folds!;
+    const panels = thing.panels!;
+    const page = thing.page!;
+    const ys = panels.back.map(([, y]) => y);
+    const top = Math.min(...ys);
+    const middle = (top + f.pocket) / 2;
+    const right = Math.max(...panels.front.map(([x]) => x));
+    const k = Math.min(7.8 / (right - f.glue), 5 / (f.pocket - top));
+    const t = 0.012; // (a board's thickness, apart)
+    const side = sides[i];
+    const outside = new THREE.MeshStandardMaterial({ map: side.fronts[0], roughnessMap: side.frontGloss, metalnessMap: side.frontGloss, roughness: 1, metalness: 1 });
+    const inside = new THREE.MeshStandardMaterial({ map: side.back, roughness: 0.6, side: THREE.BackSide });
+    // a piece, from its hinge at (hx, hy): its outside (+z) and its inside (the page mirrored), the print on each
+    const piece = (poly: number[][], hx: number, hy: number) => {
+      const shape = new THREE.Shape(poly.map(([x, y]) => new THREE.Vector2((x - hx) * k, -(y - hy) * k)));
+      const geometry = new THREE.ShapeGeometry(shape);
+      const at = geometry.getAttribute('position');
+      const uv = (mirror: boolean) =>
+        new THREE.BufferAttribute(
+          Float32Array.from({ length: at.count * 2 }, (_, n) => {
+            const v = n >> 1;
+            const x = at.getX(v) / k + hx;
+            const y = -at.getY(v) / k + hy;
+            return n % 2 ? 1 - y / page[1] : mirror ? 1 - x / page[0] : x / page[0];
+          }),
+          2,
+        );
+      const outer = geometry.clone();
+      outer.setAttribute('uv', uv(false));
+      geometry.setAttribute('uv', uv(true));
+      return new THREE.Group().add(new THREE.Mesh(outer, outside), new THREE.Mesh(geometry, inside));
+    };
+    const back = piece(panels.back, f.spine, middle);
+    const pocket = piece(panels.pocket, f.spine, f.pocket);
+    pocket.position.set(0, -(f.pocket - middle) * k, -t);
+    pocket.rotation.x = Math.PI; // (turned in, onto the back cover)
+    const glue = piece(panels.glue, f.glue, middle);
+    glue.position.set((f.glue - f.spine) * k, 0, -2 * t);
+    glue.rotation.y = -Math.PI; // (over the pocket's edge)
+    back.add(pocket, glue);
+    const front = piece(panels.front, f.spine, middle);
+    const root = new THREE.Group().add(back, front);
+    root.rotation.y = Math.PI; // (closed, its front cover towards us)
+    folders[i] = { front, root, back: (f.spine - f.glue) * k, open: 0, target: 0, since: 0 };
+    return [root];
+  };
+  let size = { w: 1, h: 1, t: 0.04 };
+  let shown: THREE.Object3D[] = [];
+  let cards: THREE.Mesh[] = []; // the shown thing's
+  let order: number[] = []; // a deck's cards from the bottom up
+  let lie: { x: number; y: number; r: number }[] = []; // each card's little offset in the stack
+  let shuffle: { at: number; next: number[] } | null = null;
+  let nextShuffle = 5;
+  const scatter = () => cards.map(() => ({ x: (Math.random() - 0.5) * 0.06, y: (Math.random() - 0.5) * 0.06, r: (Math.random() - 0.5) * 0.05 }));
+  const show = (i: number) => {
+    const thing = things[i];
+    const side = sides[i];
+    // as big as the view takes, at its proportions; its thickness 0.4 mm on cards, 0.25 on bigger things, drawn thicker
+    const k = Math.min(7.8 / thing.w, 5 / thing.h);
+    size = { w: thing.w * k, h: thing.h * k, t: Math.max(0.04, (Math.max(thing.w, thing.h) <= 100 ? 0.4 : 0.25) * k * 1.6) };
+    if (!built[i])
+      built[i] =
+        thing.kind === 'folder'
+          ? fold(thing, i)
+          : side.fronts.map((map) => {
+              const mesh = new THREE.Mesh(box, [edge, edge, edge, edge, paper(map, side.frontGloss), paper(side.back, side.backGloss)]);
+              mesh.scale.set(size.w, size.h, size.t);
+              return mesh;
+            });
+    pivot.remove(...shown);
+    shown = built[i];
+    pivot.add(...shown);
+    cards = thing.kind === 'folder' ? [] : (shown as THREE.Mesh[]);
+    folder = folders[i] ?? null;
+    if (folder) Object.assign(folder, { open: 0, target: 0, since: 0 }); // (shut, to begin with)
+    order = cards.map((_, n) => n);
+    lie = scatter();
+    shuffle = null;
+    turnOf<Flip>(name).auto = cards.length === 1; // (a deck stays face up, a folder opens instead)
+  };
+  show(0);
+  const flip = turnOf<Flip>(name);
+  const ease = (x: number) => (x <= 0 ? 0 : x >= 1 ? 1 : 1 - (1 - x) ** 3);
+  // the z of stack place p, the stack centred
+  const zOf = (p: number) => (p - (cards.length - 1) / 2) * size.t * 1.3;
+  let time = 0;
+  let wanted = 0;
+  let swapping = false;
+  return {
+    scene,
+    camera,
+    clear: 0x0b0b0e,
+    toneMapping: THREE.NeutralToneMapping,
+    prepare(gl) {
+      const pmrem = new THREE.PMREMGenerator(gl);
+      scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      scene.environmentIntensity = 0.75;
+      pmrem.dispose();
+    },
+    step(dt) {
+      time += dt;
+      const asked = picks.get(name) ?? 0;
+      if (asked !== wanted && ready(asked)) {
+        wanted = asked;
+        if (still) show(wanted);
+        else {
+          flip.round();
+          swapping = true;
+        }
+      }
+      const turn = flip.update(dt);
+      // swapped while edge-on
+      if (swapping && Math.abs(Math.cos(turn.y)) < 0.15) {
+        show(wanted);
+        swapping = false;
+      }
+      // a deck shuffles when tapped, and by itself now and then
+      const n = cards.length;
+      if (n > 1 && !shuffle && !still && (flip.taps > 0 || time > nextShuffle)) {
+        const next = [...order];
+        do for (let a = n - 1; a > 0; a--) { const b = Math.floor(Math.random() * (a + 1)); [next[a], next[b]] = [next[b], next[a]]; }
+        while (next[n - 1] === order[n - 1]); // (a new card on top)
+        shuffle = { at: time, next };
+        nextShuffle = time + 7;
+      }
+      if (shuffle) {
+        const s = time - shuffle.at;
+        const parted = ease(s / SHUFFLE.split);
+        for (let q = 0; q < n; q++) {
+          const c = shuffle.next[q]; // the card that ends at place q
+          const p = order.indexOf(c); // where it was
+          const half = p < n / 2 ? -1 : 1;
+          const dealt = ease((s - SHUFFLE.split - q * SHUFFLE.gap) / SHUFFLE.deal);
+          const card = cards[c];
+          // from its place out to its half, then in to its new place, over the cards dealt before it
+          const x = lie[c].x + half * size.w * 0.6 * parted;
+          card.position.set(x + (lie[c].x - x) * dealt, lie[c].y, zOf(p) + (zOf(q) - zOf(p)) * dealt + Math.sin(dealt * Math.PI) * size.t * 6 + parted * (1 - dealt) * 0.1);
+          card.rotation.set(0, 0, lie[c].r + half * 0.14 * parted * (1 - dealt));
+        }
+        if (s > SHUFFLE.split + (n - 1) * SHUFFLE.gap + SHUFFLE.deal) {
+          order = shuffle.next;
+          shuffle = null;
+        }
+      } else
+        order.forEach((c, p) => {
+          cards[c].position.set(lie[c].x, lie[c].y, zOf(p));
+          cards[c].rotation.set(0, 0, lie[c].r);
+        });
+      // a folder opens and closes, by itself (shut 3 s, open 4 s) or when tapped
+      let wide = 1;
+      if (folder) {
+        folder.since += dt;
+        if (flip.taps > 0 || folder.since > (folder.target ? 4 : 3)) {
+          folder.target = 1 - folder.target;
+          folder.since = 0;
+        }
+        folder.open += (folder.target - folder.open) * (1 - Math.exp(-dt * (still ? 99 : 2.2)));
+        folder.front.rotation.y = Math.PI * (1 - folder.open * 0.93);
+        folder.front.position.z = -0.036 * (1 - folder.open); // (over the pocket and the flap when shut)
+        folder.root.position.x = -(folder.back / 2) * (1 - folder.open); // (shut: the back cover in the middle)
+        wide = 0.5 + folder.open / 2;
+      }
+      flip.taps = 0;
+      pivot.rotation.set(turn.x - 0.06 + Math.sin(time * 0.5) * 0.04, turn.y + Math.sin(time * 0.7) * 0.12, 0);
+      pivot.position.y = Math.sin(time * 1.2) * 0.06;
+      // the shadow under it, as wide as it shows from above
+      shadow.position.set(0, -size.h / 2 - 0.45, 0);
+      shadow.scale.set(size.w * wide * Math.max(0.12, Math.abs(Math.cos(pivot.rotation.y))) * 1.15 + 0.4, 1.1, 1);
+      (shadow.material as THREE.MeshBasicMaterial).opacity = 0.5 - pivot.position.y * 0.8;
     },
   };
 }

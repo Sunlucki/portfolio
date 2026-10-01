@@ -234,6 +234,10 @@ const en = {
     client: 'Client',
     problem: 'Problem',
     solution: 'Solution',
+    turn: 'Drag to turn it', // (a 3D project's scene)
+    unfold: 'Tap to open it', // (a folder)
+    shuffle: 'Tap to shuffle', // (a deck)
+    things: { folder: 'Folder', deck: 'Tarot deck', card: 'Business card', flyer: 'Flyer', voucher: 'Voucher', guide: 'Aftercare guide' }, // (its printed things' chips)
     // each cover's project (content.ts GRAPHICS): who it was for, what was wrong, what Bogdan did
     projects: {
       hype: { name: 'HYPE', kind: 'Event posters', client: '', problem: '', solution: '' },

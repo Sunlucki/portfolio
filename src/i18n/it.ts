@@ -236,6 +236,10 @@ const it: Copy = {
     client: 'Cliente',
     problem: 'Problema',
     solution: 'Soluzione',
+    turn: 'Trascina per ruotarlo',
+    unfold: 'Tocca per aprirla', // (a folder)
+    shuffle: 'Tocca per mescolare', // (a deck)
+    things: { folder: 'Cartella', deck: 'Mazzo di tarocchi', card: 'Biglietto da visita', flyer: 'Volantino', voucher: 'Buono regalo', guide: 'Guida alla cura' },
     projects: {
       hype: { name: 'HYPE', kind: 'Poster di eventi', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Poster musicale e biglietti da visita', client: '', problem: '', solution: '' },

@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import type { SceneName } from '../three/miniScenes';
 
 // A live 3D cover (src/three/miniScenes.ts, loaded with the first): a canvas the shared renderer draws its scene into
-// while it is on screen, marked data-drawn once it has; `top`, the open project's, turned by dragging.
-export function SceneCanvas({ scene, top = false, onReady, className = '' }: { scene: SceneName; top?: boolean; onReady?: () => void; className?: string }) {
+// while it is on screen, marked data-drawn once it has; `top`, the open project's, turned by dragging; `thing`, which
+// of a printed things' scene's things it shows.
+export function SceneCanvas({ scene, top = false, thing = 0, onReady, className = '' }: { scene: SceneName; top?: boolean; thing?: number; onReady?: () => void; className?: string }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const ready = useRef(onReady);
   useEffect(() => {
@@ -28,5 +29,8 @@ export function SceneCanvas({ scene, top = false, onReady, className = '' }: { s
       off();
     };
   }, [scene, top]);
+  useEffect(() => {
+    void import('../three/miniScenes').then(({ pick }) => pick(scene, thing));
+  }, [scene, thing]);
   return <canvas ref={canvas} aria-hidden className={className} />;
 }

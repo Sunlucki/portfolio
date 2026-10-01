@@ -235,6 +235,10 @@ const pl: Copy = {
     client: 'Klient',
     problem: 'Problem',
     solution: 'Rozwiązanie',
+    turn: 'Przeciągnij, aby obrócić',
+    unfold: 'Stuknij, aby otworzyć', // (a folder)
+    shuffle: 'Stuknij, aby potasować', // (a deck)
+    things: { folder: 'Teczka', deck: 'Talia tarota', card: 'Wizytówka', flyer: 'Ulotka', voucher: 'Voucher', guide: 'Instrukcja pielęgnacji' },
     projects: {
       hype: { name: 'HYPE', kind: 'Plakaty wydarzeń', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Plakat muzyczny i wizytówki', client: '', problem: '', solution: '' },

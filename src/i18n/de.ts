@@ -233,6 +233,10 @@ const de: Copy = {
     client: 'Kunde',
     problem: 'Problem',
     solution: 'Lösung',
+    turn: 'Zum Drehen ziehen',
+    unfold: 'Zum Öffnen tippen', // (a folder)
+    shuffle: 'Zum Mischen tippen', // (a deck)
+    things: { folder: 'Mappe', deck: 'Tarot-Deck', card: 'Visitenkarte', flyer: 'Flyer', voucher: 'Gutschein', guide: 'Pflegeanleitung' },
     projects: {
       hype: { name: 'HYPE', kind: 'Event-Poster', client: '', problem: '', solution: '' },
       ihor: { name: 'Ihor Poperechny', kind: 'Musikposter und Visitenkarten', client: '', problem: '', solution: '' },

@@ -244,6 +244,10 @@ const uk: Copy = {
     client: 'Клієнт',
     problem: 'Проблема',
     solution: 'Рішення',
+    turn: 'Потягніть, щоб повернути',
+    unfold: 'Натисніть, щоб відкрити', // (a folder)
+    shuffle: 'Натисніть, щоб перетасувати', // (a deck)
+    things: { folder: 'Папка', deck: 'Колода Таро', card: 'Візитка', flyer: 'Флаєр', voucher: 'Ваучер', guide: 'Пам’ятка' },
     projects: {
       hype: { name: 'HYPE', kind: 'Постери івентів', client: '', problem: '', solution: '' },
       ihor: { name: 'Ігор Поперечний', kind: 'Музичний постер і візитки', client: '', problem: '', solution: '' },
