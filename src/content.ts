@@ -394,9 +394,11 @@ export const YOUTUBE_FILMS = [
 ];
 
 // The Video section's order (Bogdan's, 2026-09-30): Who Am I?, his films in his list's order, then the videos on
-// YouTube (the grid lets wide and tall ones take turns); and the films he wants right under another in the grid.
+// YouTube (the grid lets wide and tall ones take turns); and the films he wants right under another in the grid. The
+// clients' films he added on 2026-10-01 come after Dima Space, in the order he named them.
 export const VIDEO_ORDER = [
-  'who-am-i', 'promo', 'dima-space', 'hype-hop', 'grzyb', 'chase-1090', 'hype-party', 'ant-interview', 'vlad-interview', 'loma', 'industrial',
+  'who-am-i', 'promo', 'dima-space', 'protectdent', 'xylimelts', 'currywurst', 'mind-logistic', 'tesla', 'dreams-come-true', 'magic', 'yellow',
+  'hype-hop', 'grzyb', 'chase-1090', 'hype-party', 'ant-interview', 'vlad-interview', 'loma', 'industrial',
   'eyes-in-the-night', 'adrian-the-barber', 'choose-your-style', 'juli-the-barber', 'rodi-m3', 'skater-cut', 'vlad-the-barber', 'valentines-day',
   'black-point', 'diablica', 'lal', 'hype-hop-alibia', 'magazin',
 ];

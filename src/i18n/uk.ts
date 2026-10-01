@@ -272,6 +272,10 @@ const uk: Copy = {
       'ARAB · co-director': 'ARAB · співрежисер',
       'Filming and editing': 'Зйомка та монтаж',
       'SUNLUCKI production': 'Продакшн SUNLUCKI',
+      'Website hero film': 'Відео для сайту',
+      'How to use': 'Як застосовувати',
+      'Promo film': 'Проморолик',
+      'Branding showreel': 'Шоурил брендингу',
     },
   },
   music: {

@@ -265,6 +265,10 @@ const it: Copy = {
       'ARAB · co-director': 'ARAB · co-regista',
       'Filming and editing': 'Riprese e montaggio',
       'SUNLUCKI production': 'Produzione SUNLUCKI',
+      'Website hero film': 'Video per il sito',
+      'How to use': 'Come si usa',
+      'Promo film': 'Video promozionale',
+      'Branding showreel': 'Showreel del branding',
     },
   },
   music: {

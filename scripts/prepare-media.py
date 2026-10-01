@@ -11,7 +11,8 @@ Outputs into ../public:
                                                           python3 scripts/prepare-media.py graphics), sized in src/graphics.json
   about/pointer.webp (560px, alpha)                     — 3D pointer icon (contact section)
   music/NNN.m4a                                         — the music player's playlist (AAC as mastered)
-  video/<slug>.mp4, .webp, -frames.webp                 — the Video section's films, posters and hover strips
+  video/<slug>.mp4, .webp, -frames.webp                 — the Video section's films, posters and hover strips (some
+                                                          films alone: python3 scripts/prepare-media.py videos <slug>...)
 Re-run safe: overwrites outputs.
 """
 import os, sys, subprocess, tempfile, glob, re, json, random, unicodedata
@@ -103,6 +104,7 @@ COVERS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICO
 WP_ASSETS = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB", "assets")
 COVERS_BACKUP = os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "WEB", "WORDPRESS", "BACKUP", "public_html",
                              "styleicon.pl", "wp-content", "uploads")
+ML = os.path.join(HOME, "Desktop", "Проэкты", "АКТИВНЫЕ", "MIND LOGIISTIC")  # Mind Logistic's folder (its name so spelt)
 TILES = [
     f"{COVERS}/2025/05/HYPE.jpg", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
     f"{COVERS}/2025/05/TouchMockup.jpg", f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", (f"{WP_ASSETS}/Black Point - T-shirt AM.jpg", (0.25, 0.28, 0.75, 0.81)),
@@ -278,6 +280,7 @@ def music():
 # through on hover; writes video/<slug>.mp4, .webp, -frames.webp and src/videos.json (slug, title, credit, size,
 # seconds). Titles in English, without the file's version marks.
 FILMS = os.path.join(HOME, "Desktop", "Видео")
+ARCHIVE = os.path.join(HOME, "Desktop", "Проэкты", "АРХИВ")  # the past clients' folders
 REELS = "VIDEO PORTFOLIO/BARBERSHOP/INSTAGRAM : TIK TOK "  # the folder's name ends in a space
 VIDEOS = [  # slug, source, title, credit
     ("who-am-i", os.path.join(KB, "WHO AM I? - 4K.mov"), "Who Am I?", "AI film"),
@@ -300,22 +303,35 @@ VIDEOS = [  # slug, source, title, credit
     ("skater-cut", f"{REELS}/Scater Cut.mov", "Skater Cut", "Black Point barbershop"),
     ("vlad-the-barber", f"{REELS}/Vlad The barber.MOV", "Vlad the Barber", "Black Point barbershop"),
     ("valentines-day", f"{REELS}/WALENTYNKI LONG.mov", "Valentine’s Day", "Black Point barbershop"),
+    # the clients' films (2026-10-01), from their projects' folders
+    ("protectdent", os.path.join(HOME, "Developer", "PROTECTDENT", "public", "hero-video.mp4"), "PROTECTDENT", "Website hero film"),
+    ("xylimelts", os.path.join(HOME, "Developer", "XYLIMELTS", "ASSETS", "MY ASSETS", "VIDEO", "INSTRUKCJA VERTICAL.mov"), "XyliMelts", "How to use"),
+    ("currywurst", f"{ARCHIVE}/CURRYWURST/PROMO FILM/CURRYWURST PROMO UPSCALE.mp4", "Currywurst", "Promo film"),
+    ("mind-logistic", f"{ML}/LOGO:BRANDING/BRANDING SHOWREEL/Video/# MIND LOGISTIC BRANDING SHOWREEL.mov", "Mind Logistic", "Branding showreel"),
+    ("tesla", f"{ARCHIVE}/TESLA SERVICE/TESLA SERVICE EDIT.mov", "Tesla Service", "Promo film"),
+    ("dreams-come-true", f"{ARCHIVE}/Наращивание волос/ADS/SPELNIENIE MARZEN.m4v", "Dreams Come True", "Hair Hub"),
+    ("magic", f"{ARCHIVE}/Magic Patrone/MAGIC V3.mp4", "Magic", "Magic Patron"),
+    ("yellow", f"{ARCHIVE}/KREEM/Yellow.mov", "Yellow", "KREEM"),
 ]
 FRAMES = 10
 
-def videos(only=None):  # only: the slugs to encode again; the rest are just listed
+def videos(only=None):  # only: the slugs to encode again; the rest keep their films, and their sizes from videos.json
+    known = {}
+    if only is not None:
+        with open(os.path.join(KB, "portfolio", "src", "videos.json")) as fh:
+            known = {film["slug"]: film for film in json.load(fh)}
     size, films = 0, []
     for slug, name, title, credit in VIDEOS:
+        film = out("video", f"{slug}.mp4")
+        if slug in known and slug not in only and os.path.exists(film):  # (its source, maybe only in iCloud, left alone)
+            films.append({"slug": slug, "title": title, **({"credit": credit} if credit else {}), **{k: known[slug][k] for k in ("width", "height", "seconds")}})
+            continue
         src = os.path.join(FILMS, name)
         probe = json.loads(subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration",
                                            "-of", "json", src], capture_output=True, text=True, check=True).stdout)
         w, h = probe["streams"][0]["width"], probe["streams"][0]["height"]
         seconds = float(probe["format"]["duration"])
         fit = "scale='min(1920,iw)':-2" if w >= h else "scale=-2:'min(1920,ih)'"
-        film = out("video", f"{slug}.mp4")
-        if only is not None and slug not in only and os.path.exists(film):
-            films.append({"slug": slug, "title": title, **({"credit": credit} if credit else {}), "width": w, "height": h, "seconds": round(seconds)})
-            continue
         subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", src, "-map", "0:v:0", "-map", "0:a:0?", "-vf", f"{fit},fps='min(30,source_fps)'",
                         "-c:v", "libx264", "-preset", "medium", "-crf", "23", "-maxrate", "5M", "-bufsize", "10M", "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "160k",
                         "-movflags", "+faststart", film], check=True)
@@ -389,6 +405,9 @@ def graphics():
 if __name__ == "__main__":
     if sys.argv[1:] == ["graphics"]:
         print(f"graphics: {sum(map(len, GRAPHICS.values()))} pictures {graphics()/1e6:.1f}MB")
+        sys.exit()
+    if sys.argv[1:2] == ["videos"]:  # videos <slug>...: those films again, the others kept as they are
+        print(f"videos: {', '.join(sys.argv[2:])} {videos(set(sys.argv[2:]))/1e6:.1f}MB")
         sys.exit()
     assert ART and os.path.isdir(ART), "set ARTIMG to the extracted artifact screenshots dir"
     n = hero_frames()

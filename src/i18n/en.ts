@@ -264,6 +264,10 @@ const en = {
       'ARAB · co-director': 'ARAB · co-director',
       'Filming and editing': 'Filming and editing',
       'SUNLUCKI production': 'SUNLUCKI production',
+      'Website hero film': 'Website hero film',
+      'How to use': 'How to use',
+      'Promo film': 'Promo film',
+      'Branding showreel': 'Branding showreel',
     } as Record<string, string>,
   },
   music: {
