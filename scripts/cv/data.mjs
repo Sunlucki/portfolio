@@ -11,7 +11,7 @@ export const person = {
   headline: 'Product Engineer & Solutions Architect',
   focus: 'AI-assisted SDLC · agentic coding · CRM, commerce and fintech platforms',
   location: 'Poznań, Poland (CET)',
-  terms: 'Remote · B2B through my own company, SIMBIA sp. z o.o.',
+  terms: 'Remote from home · on site for key company events · B2B through my own company, SIMBIA sp. z o.o.',
   email: 'hello@sunlucki.pl',
   links: [
     { label: 'sunlucki.pl', url: 'https://sunlucki.pl' },
@@ -33,7 +33,7 @@ export const summary =
   'marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, a workforce platform for ' +
   'staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents ' +
   'with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before ' +
-  'engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk ' +
+  'engineering full time I co-owned businesses and managed a team of 6, so I explain architecture in terms of cost, risk ' +
   'and business value.';
 
 export const numbers = [
@@ -74,7 +74,7 @@ export const sdlc = [
 ];
 
 export const tools =
-  'Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (Chrome browser automation, iOS Simulator, Figma, Spline) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM';
+  'Claude Code (primary, on commercial client projects; in VS Code and the CLI) · GitHub Copilot (VS Code) · OpenAI Codex · Cursor (tried, VS Code preferred) · MCP servers (Chrome browser automation, iOS Simulator, Figma, Spline) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM';
 
 export const aiSystems = [
   'LLM lead-qualification pipeline (PROTECTDENT): map-based discovery, site crawling, evidence-based scoring from 0 to 100 and reply-intent classification into 8 intents; 7,800+ qualified B2B accounts.',
@@ -107,7 +107,7 @@ export const fit = [
   },
   {
     ask: 'Business value and stakeholders',
-    evidence: 'Co-founder and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier co-owned a business and led a creative team; a 90-day EU go-to-market plan with pricing research across 9 countries.',
+    evidence: 'Co-founder and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier co-owned and ran a business with a team of 6; a 90-day EU go-to-market plan with pricing research across 9 countries.',
   },
   {
     ask: 'Communication with technical and non-technical audiences',
@@ -115,7 +115,7 @@ export const fit = [
   },
   {
     ask: 'Leadership',
-    evidence: 'Co-founder and Board Member of SIMBIA sp. z o.o. (2026); President of the Management Board of Black Point Group sp. z o.o. and leader of its creative and marketing team (2022–2025); pro bono tech lead of a foundation’s MVP (2026).',
+    evidence: 'Managed a team of 6 at Black Point (co-owner from 2020; President of the Management Board of Black Point Group sp. z o.o., 2022–2025); co-founder and Board Member of SIMBIA sp. z o.o. (2026); pro bono tech lead of a foundation’s MVP (2026).',
   },
 ];
 
@@ -138,12 +138,12 @@ export const experience = [
     text: 'Designed, built and operate 10+ production systems for Polish and EU businesses, licensed to clients (21 repositories, about 1,560 commits in 2026); since August 2026 through SIMBIA sp. z o.o.',
   },
   {
-    org: 'STYLEICON (own studio)',
-    role: 'Owner: web, branding and video studio',
-    start: '2025-01',
+    org: 'Self-employed (from 2025 as STYLEICON)',
+    role: 'Freelance Web Developer & Designer',
+    start: '2020-09',
     end: '2025-12',
     place: 'Poznań',
-    text: 'Websites, brand identities and video production for local businesses.',
+    text: 'Websites and e-shops for small businesses, designed and built single-handed on WordPress and Elementor alongside running the businesses below: Black Point (a barbershop with online booking), Architect Vision (an interior design studio), Hair Hub (a hair salon), Alibia (an e-shop) and more; from 2025 under the STYLEICON brand, with branding and video (13 sites on sunlucki.pl).',
   },
   {
     org: 'spin.clinic',
@@ -166,7 +166,7 @@ export const experience = [
     start: '2022-09',
     end: '2025-01',
     place: 'Poznań',
-    text: 'Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.',
+    text: 'Managed a team of 6 and the marketing operations: campaigns, brand strategy, content and video production, client communication.',
   },
   {
     org: 'Black Point Barbershop',
@@ -288,7 +288,7 @@ export const alsoBuilt =
 export const skills = [
   {
     group: 'AI and SDLC',
-    items: ['AI-assisted SDLC', 'Agentic coding', 'Multi-agent orchestration', 'Claude Code', 'OpenAI Codex', 'MCP', 'LLM integration', 'Structured outputs', 'Prompt caching', 'Document AI / OCR', 'LLM pipelines', 'Prompt engineering'],
+    items: ['AI-assisted SDLC', 'Agentic coding', 'Multi-agent orchestration', 'Claude Code', 'GitHub Copilot', 'OpenAI Codex', 'MCP', 'LLM integration', 'Structured outputs', 'Prompt caching', 'Document AI / OCR', 'LLM pipelines', 'Prompt engineering'],
   },
   {
     group: 'Architecture',

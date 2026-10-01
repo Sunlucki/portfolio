@@ -28,8 +28,8 @@ const month = (ym) => {
   return m ? `${MONTHS[+m - 1]} ${y}` : y;
 };
 const when = ({ start, end }) =>
-  end === start ? `<time datetime="${start}">${month(start)}</time> (1 month)` : `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}`;
-const whenText = ({ start, end }) => (end === start ? `${month(start)} (1 month)` : `${month(start)} – ${end ? month(end) : 'present'}`);
+  `<time datetime="${start}">${month(start)}</time> – ${end ? `<time datetime="${end}">${month(end)}</time>` : 'present'}${end === start ? ' (1 month)' : ''}`;
+const whenText = ({ start, end }) => `${month(start)} – ${end ? month(end) : 'present'}${end === start ? ' (1 month)' : ''}`;
 // newest first: the roles still going, then by when they ended, then by when they began
 const byRecency = (a, b) => (b.end ?? '9999').localeCompare(a.end ?? '9999') || b.start.localeCompare(a.start);
 const txt = (s) => esc(s).replace(/([\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)+)/gu, '<span class="nw">$1</span>');

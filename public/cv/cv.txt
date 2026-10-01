@@ -3,13 +3,13 @@
 **Product Engineer & Solutions Architect**  
 AI-assisted SDLC · agentic coding · CRM, commerce and fintech platforms
 
-Poznań, Poland (CET) · Remote · B2B through my own company, SIMBIA sp. z o.o.  
+Poznań, Poland (CET) · Remote from home · on site for key company events · B2B through my own company, SIMBIA sp. z o.o.  
 hello@sunlucki.pl · https://sunlucki.pl · https://www.linkedin.com/in/sunlucki · https://github.com/Sunlucki  
 Languages: English C2 · Polish C2 · Ukrainian native · Russian native
 
 ## Summary
 
-I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, a workforce platform for staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and led a creative team, so I explain architecture in terms of cost, risk and business value.
+I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, a workforce platform for staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before engineering full time I co-owned businesses and managed a team of 6, so I explain architecture in terms of cost, risk and business value.
 
 - **10+** production systems shipped in 2026, as the sole architect
 - **94%** of my 2026 commits co-authored with Claude
@@ -27,7 +27,7 @@ I design, build and run software products end to end, and I run the whole softwa
 5. **Ship.** On the main platforms (SIMBIA CRM, PROTECTDENT, XyliMelts): GitHub Actions with PostgreSQL and Redis service containers, a database backup before every deploy, migrations, health-gated automatic rollback and smoke tests.
 6. **Operate.** Daily off-site backups with weekly automated restore tests (SIMBIA CRM), Sentry, health endpoints and alerts. Incidents get a postmortem: after a sync failure wiped a working copy, the code was rebuilt from the agents’ session logs and checked against production.
 
-**Tools:** Claude Code (primary; in VS Code and the CLI) · OpenAI Codex · MCP servers (Chrome browser automation, iOS Simulator, Figma, Spline) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM
+**Tools:** Claude Code (primary, on commercial client projects; in VS Code and the CLI) · GitHub Copilot (VS Code) · OpenAI Codex · Cursor (tried, VS Code preferred) · MCP servers (Chrome browser automation, iOS Simulator, Figma, Spline) · LLM APIs: Claude, OpenAI, Gemini, Groq, NVIDIA NIM
 
 ### AI systems in production
 
@@ -43,9 +43,9 @@ I design, build and run software products end to end, and I run the whole softwa
 - **Agentic coding and autonomous software engineering:** Task orchestration across parallel agents (worktrees, frozen contracts, ownership maps), quality gates (tests, Definition of Done), validation by skeptic agents that must reproduce each finding, decisions recorded as ADRs.
 - **AI systems: AI workflows, single- and multi-agent:** AI workflows in production: LLM pipelines for lead qualification, reply-intent classification and document AI with human review, with multi-provider routing; multi-agent systems: a multi-agent audit system (28 agents, 750 tool calls) and parallel coding agents for the engineering itself.
 - **Infrastructure choices: security, cost, performance, scalability:** Self-managed Linux infrastructure for 20+ projects on 4+ servers (nginx, PM2, systemd, TLS, Docker) with backups and restore tests; AWS integrations: S3 object storage with presigned URLs (TAXI BOSS), Amazon SES with bounce and complaint webhooks over SNS, signature-verified (PROTECTDENT); technology picked for the data and the cost, e.g. PostgreSQL trigram search chosen over pgvector (vector/semantic search) for a 500-item catalog (CashFlow); security by design: passkeys and WebAuthn, argon2id, CSP and HSTS, rate limits, HMAC-signed webhooks, signed URLs, PII masking, GDPR.
-- **Business value and stakeholders:** Co-founder and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier co-owned a business and led a creative team; a 90-day EU go-to-market plan with pricing research across 9 countries.
+- **Business value and stakeholders:** Co-founder and board member of a software company that licenses its platforms; the B2B commerce platform runs three businesses’ stores in production (Mind Logistic, PROTECTDENT, XyliMelts); earlier co-owned and ran a business with a team of 6; a 90-day EU go-to-market plan with pricing research across 9 countries.
 - **Communication with technical and non-technical audiences:** For engineers: specs, ADRs, runbooks and audit reports with file-and-line evidence. For buyers and owners: proposals, seller cheat sheets, minute-by-minute demo scripts and plain tables of what a system does, what is coming and what not to promise.
-- **Leadership:** Co-founder and Board Member of SIMBIA sp. z o.o. (2026); President of the Management Board of Black Point Group sp. z o.o. and leader of its creative and marketing team (2022–2025); pro bono tech lead of a foundation’s MVP (2026).
+- **Leadership:** Managed a team of 6 at Black Point (co-owner from 2020; President of the Management Board of Black Point Group sp. z o.o., 2022–2025); co-founder and Board Member of SIMBIA sp. z o.o. (2026); pro bono tech lead of a foundation’s MVP (2026).
 
 ## Experience
 
@@ -63,21 +63,21 @@ Designed, built and operate 10+ production systems for Polish and EU businesses,
 
 ### Design System Engineer (contract), spin.clinic
 
-Sep 2026 (1 month)
+Sep 2026 – Sep 2026 (1 month)
 
 Built the production design system and motion UI kit (11K lines, 41 exports, used across 56 product files) with 9 parallel coding agents and a QA agent in about 14.5 hours.
 
 ### Tech Lead (pro bono), Fundacja Novus Ignis
 
-Sep 2026 (1 month)
+Sep 2026 – Sep 2026 (1 month)
 
 Re-architected and built the MVP of a verifiable deliberation platform: Next.js 16, passkeys, a Merkle tree anchored with OpenTimestamps and an LLM ingest pipeline; 29 ADRs, 58 tests.
 
-### Owner: web, branding and video studio, STYLEICON (own studio)
+### Freelance Web Developer & Designer, Self-employed (from 2025 as STYLEICON)
 
-Jan 2025 – Dec 2025 · Poznań
+Sep 2020 – Dec 2025 · Poznań
 
-Websites, brand identities and video production for local businesses.
+Websites and e-shops for small businesses, designed and built single-handed on WordPress and Elementor alongside running the businesses below: Black Point (a barbershop with online booking), Architect Vision (an interior design studio), Hair Hub (a hair salon), Alibia (an e-shop) and more; from 2025 under the STYLEICON brand, with branding and video (13 sites on sunlucki.pl).
 
 ### Co-owner, Black Point Barbershop
 
@@ -89,7 +89,7 @@ Co-founded and ran a barbershop and creative hub: identity, a website with onlin
 
 Sep 2022 – Jan 2025 · Poznań
 
-Led the creative team and marketing operations: campaigns, brand strategy, content and video production, client communication.
+Managed a team of 6 and the marketing operations: campaigns, brand strategy, content and video production, client communication.
 
 ### Web Developer, GreenView
 
@@ -156,7 +156,7 @@ Also: CashFlow (iOS finance advisor: SwiftUI, Fastify, Claude with structured ou
 
 ## Skills
 
-- **AI and SDLC:** AI-assisted SDLC, Agentic coding, Multi-agent orchestration, Claude Code, OpenAI Codex, MCP, LLM integration, Structured outputs, Prompt caching, Document AI / OCR, LLM pipelines, Prompt engineering
+- **AI and SDLC:** AI-assisted SDLC, Agentic coding, Multi-agent orchestration, Claude Code, GitHub Copilot, OpenAI Codex, MCP, LLM integration, Structured outputs, Prompt caching, Document AI / OCR, LLM pipelines, Prompt engineering
 - **Architecture:** Solution architecture, System design, Domain modules, State machines, Event-driven design (LISTEN/NOTIFY, SSE, queues), Integration architecture (OAuth2, signed webhooks, idempotency), Security architecture, ADRs
 - **Engineering:** TypeScript, Node.js (Fastify, Express), React, Next.js, PostgreSQL, Prisma, Drizzle, Redis / BullMQ, REST / OpenAPI, Swift / SwiftUI
 - **Delivery and operations:** CI/CD (GitHub Actions), Automated testing (Vitest, XCTest), Docker, Linux (nginx, PM2, systemd), AWS: S3, SES, SNS (SDK v3, presigned URLs, signature-verified webhooks), Backups and disaster recovery, Sentry
