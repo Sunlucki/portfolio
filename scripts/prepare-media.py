@@ -547,14 +547,15 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
                ("stickers", [("Alibia/STICKERS.pdf", n) for n in (19, 15, 10, 9, 8, 5, 4, 1)], None, (80, 80), 0)],  # (eight of its twenty)
     # (2026-10-01, his archive's other clients: CHANG's trailer wrap (a side, 3 by 2.3 m), its two menu boards and its
     # sticker (2.4 by 1.4 m), what its PDFs have round them cut off (33 pt, the sticker's 100 mm); Currywurst Po
-    # Polsku's stickers for its food boxes; Lizard Moving's card; Magic Patron's thank-you insert and its round sticker;
-    # Perfumeria Outlet's order insert, in its two versions)
+    # Polsku's stickers for its food boxes; Lizard Moving's card; Magic Patron's thank-you insert (its front alone: its
+    # back's how-to, sniffing the powder, left out, his call) and its round sticker; Perfumeria Outlet's order insert, in
+    # its two versions)
     "chang": [("wrap", ("CHANG/PDF/Przyczepa 3 Poprawki (Zestaw Graficzny).pdf", 1), None, (3000, 2300), 11.64),
               ("menus", [("CHANG/PDF/CHANG MENU V2.pdf", n) for n in (2, 1)], None, (400, 800), 11.64),
               ("sticker", ("CHANG/AI/Наклейка.ai", 1), None, (2400, 1400), 100)],
     "currywurst": [("stickers", [(f"CURRYWURST/NAKLEJKA/{n}.pdf", 1) for n in ("NAKLEJKA GOOGLE", "NAKLEJKA CW + Dodatki", "NAKLEJKA CURRYWURST")], None, (110, 80), 0)],
     "lizard-moving": [("card", ("LIZARD MOVING/Visit Card/Lizzard Moving Buisiness Card Edit 3.pdf", 1), ("LIZARD MOVING/Visit Card/Lizzard Moving Buisiness Card Edit 3.pdf", 2), (90, 50), 11.64)],
-    "magic-patron": [("insert", ("Magic Patrone/Typografia/A5 Druk Poprawki.pdf", 1), ("Magic Patrone/Typografia/A5 Druk Poprawki.pdf", 2), (148, 210), 0),
+    "magic-patron": [("insert", ("Magic Patrone/Typografia/A5 Druk Poprawki.pdf", 1), None, (148, 210), 0),
                      ("sticker", ("round", ("Magic Patrone/Typografia/Sticker.pdf", 1)), None, (100, 100), 0)],
     "perfumeria-outlet": [("inserts", [f"PARFUMES/ASSETS/IMAGE ADS/17.03.2026/{n}.png" for n in ("DRUK", "DRUK2")], None, (297, 210), 0)],
     "da-vinci": [("deck", [(f"Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC {n}.pdf", 1) for n in range(1, 6)], ("Da Vinci Tatoo/PDF/Визитки /DV Tatoo - BC 1.pdf", 2), (50, 90), 0),

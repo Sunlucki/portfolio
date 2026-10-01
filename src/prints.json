@@ -752,8 +752,7 @@
    "kind": "insert",
    "w": 148,
    "h": 210,
-   "front": "/scenes/print/magic-patron-0-front.webp",
-   "back": "/scenes/print/magic-patron-0-back.webp"
+   "front": "/scenes/print/magic-patron-0-front.webp"
   },
   {
    "kind": "sticker",
