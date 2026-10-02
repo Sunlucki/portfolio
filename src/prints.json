@@ -538,20 +538,21 @@
    "kind": "badges",
    "w": 105,
    "h": 148,
-   "lanyard": "/scenes/hype-strap.webp",
-   "back": "/scenes/print/hype-0-back.webp",
+   "lanyard": "/scenes/hype-strap.webp?v=2",
+   "back": "/scenes/print/hype-0-back.webp?v=ad1ad574",
    "fronts": [
-    "/scenes/print/hype-0-front0.webp",
-    "/scenes/print/hype-0-front1.webp",
-    "/scenes/print/hype-0-front2.webp",
-    "/scenes/print/hype-0-front3.webp"
+    "/scenes/print/hype-0-front0.webp?v=281e5b3c",
+    "/scenes/print/hype-0-front1.webp?v=e720fb0c",
+    "/scenes/print/hype-0-front2.webp?v=89831263",
+    "/scenes/print/hype-0-front3.webp?v=0a1a9a73"
    ]
   },
   {
    "kind": "wristband",
    "w": 250,
    "h": 19,
-   "front": "/scenes/print/hype-1-front.webp"
+   "hand": "/scenes/hand.bin",
+   "front": "/scenes/print/hype-1-front.webp?v=074f43ea"
   }
  ],
  "black-point": [

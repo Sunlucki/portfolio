@@ -302,7 +302,7 @@ export const PROJECTS: Project[] = [
 // STYLEICON archive (scripts/prepare-media.py), their words in t.graphics.tiles.
 // `?v` busts the 30-day cache. Branding, print and social media only: the sites are in the WordPress card (Bogdan,
 // 2026-09-30).
-export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=12`, alt }));
+export const TILES = t.graphics.tiles.map((alt, i) => ({ src: `/tiles/${String(i).padStart(2, '0')}.webp?v=13`, alt }));
 
 // The covers' projects (2026-10-01): each with all its pictures (public/graphics/<slug>/N.webp, sized in graphics.json by
 // scripts/prepare-media.py) and when it was, from the dates of its PSDs on his desktop (Проэкты/АРХИВ); a cover opens
@@ -345,15 +345,15 @@ export const GRAPHICS = Object.fromEntries(
     {
       slug,
       when: GRAPHICS_DATES[slug],
-      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp?v=3`, width, height })), // (?v: a 30-day cache)
+      pictures: graphicsSizes[slug].map(([width, height], i) => ({ src: `/graphics/${slug}/${i}.webp?v=4`, width, height })), // (?v: a 30-day cache)
       ...t.graphics.projects[slug],
     },
   ]),
 ) as Record<GraphicsSlug, { slug: GraphicsSlug; when: [string, string?]; pictures: { src: string; width: number; height: number }[] } & (typeof t.graphics.projects)[GraphicsSlug]>;
 // cover i (TILES): its project, and which of the project's pictures it shows (-1: its 3D scene, SCENE_OF)
 export const COVER_OF: [GraphicsSlug, number][] = [
-  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', -1], ['hype', 4], ['ihor', 0],
-  ['dc-consulting', 0], ['touch-coffee', 0], ['da-vinci', 1], ['black-point', 5], ['chang', 0], ['lizard-moving', 0],
+  ['mind-logistic', 0], ['elixir', -1], ['poucher', -1], ['elixir-gummies', -1], ['hype', -1], ['ihor', 0],
+  ['dc-consulting', 0], ['black-point', 15], ['da-vinci', 1], ['touch-coffee', 0], ['chang', 0], ['lizard-moving', 0],
   ['adaya', 0], ['soul-nation', 0], ['currywurst', 0], ['perfumeria-outlet', 0], ['alibia', 1], ['yana-lashes', 0],
   ['strimat', 0], ['depilacja', 0], ['black-point', 2], ['kreem', 0], ['black-point', 7], ['magic-patron', 0],
   ['time-relax-body', 0], ['zero-sladu', 0], ['na-serio-na-zarty', 0], ['stories-beauty', 0], ['slovianka', 0],
@@ -413,13 +413,18 @@ export const PRINT_LANYARDS = Object.fromEntries(
 ) as Partial<Record<GraphicsSlug, ({ fronts: string[]; back: string; strap: string } | null)[]>>;
 // A project's pictures in blocks under their titles (2026-10-01, his call: Black Point's logo, site, merch and social
 // media; picture numbers as in graphics.json), the T-shirts one block that changes from one to the next
-// (src/components/PixelSwap.tsx)
-export const GRAPHICS_BLOCKS: Partial<Record<GraphicsSlug, { what: 'logo' | 'site' | 'merch' | 'social'; pictures: number[]; swap?: true }[]>> = {
+// (src/components/PixelSwap.tsx); KREEM's logo on things, its site and its offer's catalogue (2026-10-02, his call)
+export const GRAPHICS_BLOCKS: Partial<Record<GraphicsSlug, { what: 'logo' | 'site' | 'merch' | 'social' | 'catalogue'; pictures: number[]; swap?: true }[]>> = {
   'black-point': [
-    { what: 'logo', pictures: [1] },
+    { what: 'logo', pictures: [15, 1] },
     { what: 'site', pictures: [0, 12, 13, 14] },
     { what: 'merch', pictures: [5, 6, 7, 8, 9, 10, 11], swap: true },
     { what: 'social', pictures: [2, 3, 4] },
+  ],
+  kreem: [
+    { what: 'logo', pictures: [0, 6, 7, 8, 9, 10] },
+    { what: 'site', pictures: [11, 12] },
+    { what: 'catalogue', pictures: [1, 2, 3, 4, 5] },
   ],
 };
 

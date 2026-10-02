@@ -20,7 +20,7 @@ Outputs into ../public:
                                                           films alone: python3 scripts/prepare-media.py videos <slug>...)
 Re-run safe: overwrites outputs.
 """
-import os, sys, math, subprocess, tempfile, glob, re, json, random, shutil, unicodedata
+import os, sys, math, subprocess, tempfile, glob, re, json, random, shutil, unicodedata, zlib
 from PIL import Image, ImageChops, ImageFilter, ImageStat, features
 
 HOME = os.path.expanduser("~")
@@ -128,11 +128,14 @@ POUCHERS = ["BLUEBERRY", "SWEET RASPBERRY", "BUBBLE GUM", "CITRUS"]  # the 3D ca
 SCENES = os.path.join(KB, "sources", "scenes")  # stills of the 3D covers, the covers' pictures till they draw
 TILES = [  # on the section's rings, eight a ring, in this order (the first ring the first eight)
     # Mind Logistic first (2026-10-01): its logo (his pick, in place of its sticker on a laptop), the Elixir bottle's, the
-    # Poucher can's and the gummies' pouch's 3D scenes (stills of them, under the live scene)
+    # Poucher can's and the gummies' pouch's 3D scenes (stills of them, under the live scene). HYPE's a still of its
+    # badge on the lanyard, in its 2024 purple; Black Point's its logo on black, in the first ring in place of Touch
+    # Coffee's bus stop (2026-10-02, his calls)
     f"{ML}/LOGO:BRANDING/BRANDING SHOWREEL/Image/SHOWREEL.jpg",
     f"{SCENES}/elixir.png", f"{SCENES}/poucher.png", f"{SCENES}/gummies.png",
-    f"{COVERS}/2025/05/HYPE.jpg", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
-    f"{COVERS}/2025/05/TouchMockup.jpg", f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", (f"{WP_ASSETS}/Black Point - T-shirt AM.jpg", (0.25, 0.28, 0.75, 0.81)),
+    f"{SCENES}/hype-badge.png", f"{COVERS}/2025/05/Igor-music-poster.jpg", f"{COVERS}/2025/06/DC-LOGO-Moucup.jpg",
+    ("fit", (f"{ARCHIVE}/BLACK POINT/Логотип/LOGO Black Point.pdf", 1), (0, 0, 0), (0.1, 0.1, 0.9, 0.9)),
+    f"{COVERS}/2025/05/Da-Vinci-Business-card-NS.png", f"{COVERS}/2025/05/TouchMockup.jpg",
     # (2026-10-01, his archive's other clients on the second ring: CHANG's wrapped trailer, Lizard Moving's cards,
     # Currywurst Po Polsku's logo (its menu's cover), Perfumeria Outlet's logo (his picks); KREEM's logo, Magic Patron's sticker and
     # Slovianka's cards among the rest, a project's second covers last)
@@ -161,7 +164,8 @@ GRAPHICS = {
     "black-point": ["Black Point.jpg", "Black Point - Branding.png", "Black Point - INSTA1.jpg", "Black Point - INSTA2.jpg", "Black Point - INSTA3.jpg",
                     "Black Point - T-shirt AM.jpg", "Black Point - T-shirt IS.jpg", "Black Point - T-shirt JV.jpg", "Black Point - T-shirt LB.jpg",
                     "Black Point - T-shirt RL.jpg", "Black Point - T-shirt SB.jpg", "Black Point - T-shirt VT.jpg", "Black Point - WEB.png",
-                    "Black Point - WEB2.jpg", "Black Point - WEB3.jpg"],
+                    "Black Point - WEB2.jpg", "Black Point - WEB3.jpg",
+                    (f"{ARCHIVE}/BLACK POINT/Логотип/LOGO Black Point.pdf", 1)],  # (its logo on black, its cover since 2026-10-02)
     "adaya": ["ADAYA.jpg"],
     "soul-nation": ["SOUL NATION.jpg"],
     "strimat": ["Strimat.jpg"],
@@ -202,11 +206,16 @@ GRAPHICS = {
                       (f"{ARCHIVE}/LIZARD MOVING/PDF/LIZARD MOVING COMPLETE TO PRINT.pdf", 1)],
     "magic-patron": [f"{ARCHIVE}/Magic Patrone/Typografia/{f}" for f in ("Sticker Mockup.png", "Mockup.png")],
     "slovianka": [f"{ARCHIVE}/SLOVIANKA/85x55_business_card_mockup_01.png"],
-    "kreem": [(f"{ARCHIVE}/KREEM/Oferta KREEM PATISSIERE.pdf", n) for n in (1, 2, 3, 6, 13, 14)],
-    # (Perfumeria Outlet in gold, his call: every gold version of its logo, its chatbot's avatar and its manager's
-    # picture, its reviews' badge, then its gold ad; the green-screen ones left out)
-    "perfumeria-outlet": [f"{ARCHIVE}/PARFUMES/ASSETS/LOGO/BRANDING/{f}.png" for f in ("LOGO PNG", "LOGO копия 5", "LOGO копия 6", "LOGO копия 4",
-                          "BOT копия 5", "BOT копия 6", "BOT копия 4", "MANAGER копия 5", "MANAGER копия 6", "MANAGER копия 4", "OPINIE")]
+    # (KREEM's logo and its offer's pages, then (2026-10-02, his call) the logo on things from its brand kit (not its
+    # business card, letterhead nor Facebook page: the kit's stand-in names and numbers are on them) and the site on a
+    # laptop, on white and on black)
+    "kreem": [(f"{ARCHIVE}/KREEM/Oferta KREEM PATISSIERE.pdf", n) for n in (1, 2, 3, 6, 13, 14)]
+             + [f"{ARCHIVE}/KREEM/kreem-2/Pakiet\u00a0PRZEDSIE\u0328BIORSTWO/Obrazy\u00a0makiet/{f}.jpg" for f in ("Oznakowanie", "Okno",
+                "Czarna\u00a0karta", "Papierowa\u00a0torba", "Koszula")]  # (its names as they are on disk: no-break spaces, Ę decomposed)
+             + [os.path.join(HOME, "Desktop", "Проэкты", "#STYLEICON", "STYLEICON REACT APP", "PORTFOLIO IMAGES", "KREEM", "KREEM COVER.png"), "KREEM.jpg"],
+    # (Perfumeria Outlet's final branding, all in gold (2026-10-02, his word): its gold logo, its gold chatbot, its
+    # manager on gold, then its reviews' badge and its gold ad; the other versions left out)
+    "perfumeria-outlet": [f"{ARCHIVE}/PARFUMES/ASSETS/LOGO/BRANDING/{f}.png" for f in ("LOGO копия 5", "BOT копия 5", "MANAGER копия 5", "OPINIE")]
                          + [f"{ARCHIVE}/PARFUMES/ASSETS/IMAGE ADS/15.02.2026/K1.jpg"],
 }
 ABOUT = {"pointer": "Указатель.png"}
@@ -267,10 +276,13 @@ def wp_demos():
         size += os.path.getsize(film)
     return size
 
-def tile(i, p):  # a path or a (PDF, page), or (either, box) for a closer crop, or ("fit", path, colour): all of it, on that colour
+def tile(i, p):  # a path or a (PDF, page), or (either, box) for a closer crop, or ("fit", either, colour[, box]): all of it
+    # (or of that box), on that colour
     if isinstance(p, tuple) and p[0] == "fit":  # (a logo cut out, its round words cut off by a crop)
-        _, src, colour = p
-        im = Image.open(src).convert("RGBA")
+        _, src, colour, *box = p
+        im = Image.open(raster(src)).convert("RGBA")
+        if box:
+            im = im.crop(tuple(round(f * s) for f, s in zip(box[0], im.size * 2)))
         im.thumbnail((840, 500), Image.LANCZOS)
         card = Image.new("RGBA", (840, 540), (*colour, 255))
         card.alpha_composite(im, ((840 - im.width) // 2, (540 - im.height) // 2))
@@ -494,7 +506,8 @@ def scenes():
 # HYPE's event badges on a lanyard (2026-10-01, his call, after React Bits' Lanyard: src/vendor/react-bits/Lanyard.tsx):
 # React Bits' badge model (its card, clip and clamp, kept in the knowledge base as sources/scenes/lanyard-card.glb)
 # without its own picture, 2.3 MB of the 2.5 (the badges are drawn on it from their sides in src/prints.json), and the
-# strap's picture: HYPE's 2023 logo in its yellow on black, as on the badges, once a tile (the strap repeats it).
+# strap's picture: HYPE's 2024 logo in its purple on black, as on the badges (2026-10-02, his call: they were in its 2023
+# yellow and logo), once a tile (the strap repeats it, each tile four times as long as the strap is wide).
 def badge():
     data = open(os.path.join(SCENES, "lanyard-card.glb"), "rb").read()
     head = json.loads(data[20:20 + int.from_bytes(data[12:16], "little")])
@@ -525,11 +538,11 @@ def badge():
     glb += len(text).to_bytes(4, "little") + b"JSON" + text + len(packed).to_bytes(4, "little") + b"BIN\0" + bytes(packed)
     with open(out("models", "badge.glb"), "wb") as fh:
         fh.write(glb)
-    logo = Image.open(os.path.join(ARCHIVE, "HYPE", "ГРАФИКА", "NEW Hype LOGO.png")).convert("RGBA")
+    logo = Image.open(os.path.join(ARCHIVE, "HYPE", "LOGO", "logotype", "300ppi", "white logo.png")).convert("RGBA")
     logo = logo.crop(logo.getchannel("A").getbbox())
-    logo.thumbnail((460, 104), Image.LANCZOS)
+    logo.thumbnail((520, 112), Image.LANCZOS)
     strap = Image.new("RGBA", (1024, 256), (12, 12, 12, 255))
-    strap.alpha_composite(logo, ((1024 - logo.width) // 2, (256 - logo.height) // 2))
+    strap.paste(HYPE_PURPLE, ((1024 - logo.width) // 2, (256 - logo.height) // 2), logo.getchannel("A"))
     strap.convert("RGB").save(out("scenes", "hype-strap.webp"), "WEBP", quality=88, method=6)
     return len(glb) + os.path.getsize(out("scenes", "hype-strap.webp"))
 
@@ -594,9 +607,11 @@ PRINTS = {  # project: [(what, front, back or None, (width, height) mm, bleed mm
              ("banner", ("IGOR MUSIC/Igor Poperechny BANER.pdf", 1), None, (700, 1200), 0)],
     "dc-consulting": [("voucher", "DC CONSULTING/VOUCHER/JPG/AWERS.jpg", "DC CONSULTING/VOUCHER/JPG/REWERS.jpg", (210, 148), 0)],
     # (HYPE's event badges, A6's proportions, every one a front, one back for all (BAGE BACK), on a lanyard, its strap's
-    # picture there (badge() below), and its wristband, 250 by 19 mm: the PDF's 33 pt round it cut off)
-    "hype": [("badges", [f"HYPE/BAGE/{n}.png" for n in ("VIP", "ARTIST", "STAFF", "FACE CONTROL")], "HYPE/BAGE/BAGE BACK.png", (105, 148), 0, {"lanyard": "/scenes/hype-strap.webp"}),
-             ("wristband", ("HYPE/Браслеты /OPASKA HYPE.pdf", 1), None, (250, 19), 11.64)],
+    # picture there (badge() below), in its 2024 purple and logo (rebranded() above), and its wristband, 250 by 19 mm: the
+    # PDF's 33 pt round it cut off, worn on a hand)
+    "hype": [("badges", [("rebrand", f"HYPE/BAGE/{n}.png") for n in ("VIP", "ARTIST", "STAFF", "FACE CONTROL")], ("rebrand", "HYPE/BAGE/BAGE BACK.png"), (105, 148), 0,
+              {"lanyard": "/scenes/hype-strap.webp?v=2"}),  # (v2: the 2024 logo)
+             ("wristband", ("HYPE/Браслеты /OPASKA HYPE.pdf", 1), None, (250, 19), 11.64, {"hand": "/scenes/hand.bin"})],  # (on a hand: scripts/prepare-scenes.mjs)
     # (2026-10-01, more of his print: each project's cards, flyers, vouchers and stickers in the archive)
     # (its card's back: the logo in holographic foil on a black panel; its voucher folded in two, an invitation written in
     # white marker inside)
@@ -664,6 +679,30 @@ def unnamed(im, box):  # the dark letters in box (left, top, right, bottom px) f
     im.paste(out, box[:2])
     return im
 
+HYPE_PURPLE = (155, 63, 214)  # HYPE's 2024 purple (its 2023 yellow: (255, 232, 0))
+
+def rebranded(im):  # HYPE's badge in its 2024 look (2026-10-02, his call): as much of its yellow as a pixel has, that much
+    # of the purple instead (the frames, the QR code); its 2023 logo, if it has it (in the middle of its head, a fifth of
+    # its width across: not on the back), under a soft dark patch, the 2024 one on it in the purple (its white logo's shape)
+    r, g, b = im.convert("RGB").split()
+    ink = ImageChops.subtract(ImageChops.darker(r, g), b).point(lambda v: min(255, v * 255 // 232))
+    bands = []
+    for band, yellow, purple in zip((r, g, b), (255, 232, 0), HYPE_PURPLE):
+        shift = ink.point(lambda a, d=abs(purple - yellow): a * d // 255)
+        bands.append(ImageChops.add(band, shift) if purple > yellow else ImageChops.subtract(band, shift))
+    im = Image.merge("RGB", bands)
+    w, h = im.size
+    if not ink.crop((round(w * 0.4), round(h * 0.283), round(w * 0.6), round(h * 0.32))).point(lambda a: 255 if a > 128 else 0).getbbox():
+        return im
+    patch = Image.new("L", im.size, 0)
+    patch.paste(255, (round(w * 0.382), round(h * 0.27), round(w * 0.618), round(h * 0.333)))
+    im = Image.composite(Image.new("RGB", im.size, 0), im, patch.filter(ImageFilter.GaussianBlur(w * 0.008)))
+    logo = Image.open(os.path.join(ARCHIVE, "HYPE", "LOGO", "logotype", "300ppi", "white logo.png")).convert("RGBA")
+    logo = logo.crop(logo.getchannel("A").getbbox())
+    logo = logo.resize((round(w * 0.2035), round(logo.height * w * 0.2035 / logo.width)), Image.LANCZOS)
+    im.paste(HYPE_PURPLE, (round((w - logo.width) / 2), round(h * 0.3019 - logo.height / 2)), logo.getchannel("A"))
+    return im
+
 def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its gloss map if it has one
     if isinstance(spec, tuple) and spec[0] == "gloss":  # spot varnish: the art as printed, its varnish layer dark on white
         art, coat = side(spec[1])[0], side(spec[2])[0].convert("L").point(lambda v: 255 - v)
@@ -683,6 +722,8 @@ def side(spec, mm=(90, 50)):  # a side of a printed thing, as a picture, and its
         return art, Image.merge("RGB", (foil, foil.point(lambda a: 191 - round(a / 255 * 150)), foil))
     if isinstance(spec, tuple) and spec[0] == "unnamed":
         return unnamed(side(spec[1], mm)[0], spec[2]), None
+    if isinstance(spec, tuple) and spec[0] == "rebrand":  # (HYPE's badges, in its 2024 purple and logo)
+        return rebranded(side(spec[1], mm)[0]), None
     if isinstance(spec, tuple) and spec[0] == "round":  # a round sticker: its circle, cut out of its white page
         im = side(spec[1], mm)[0]
         im = im.crop(ImageChops.difference(im, Image.new("RGB", im.size, "white")).getbbox())
@@ -862,7 +903,8 @@ def prints(only=None):  # only: the projects to make again; the rest keep their 
                     name = f"{slug}-{i}-{face}{['', '-gloss'][k]}.webp"
                     im.save(out("scenes", "print", name), "WEBP", quality=85, method=6)
                     size += os.path.getsize(out("scenes", "print", name))
-                    sheet[face + ["", "Gloss"][k]] = f"/scenes/print/{name}"
+                    with open(out("scenes", "print", name), "rb") as fh:  # (its content's checksum on it: a side made again is fetched again)
+                        sheet[face + ["", "Gloss"][k]] = f"/scenes/print/{name}?v={zlib.crc32(fh.read()):08x}"
             if isinstance(front, list):  # (a deck's fronts, in order)
                 sheet["fronts"] = [sheet.pop(f"front{n}") for n in range(len(front))]
             sheets[slug].append(sheet)

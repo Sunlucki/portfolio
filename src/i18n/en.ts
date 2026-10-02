@@ -208,12 +208,12 @@ const en = {
       'Elixir Panoramixa bottle in 3D',
       'Poucher can in 3D',
       'Elixir Cherry Cola gummies pouch in 3D',
-      'HYPE event series posters',
+      'HYPE event badge on a lanyard',
       'Music poster for Ihor Poperechny',
       'DC Consulting logo',
-      'Touch Coffee branding',
+      'Black Point logo on black',
       'Da Vinci Tattoo business cards',
-      'Black Point T-shirt with the Ant Might print',
+      'Touch Coffee branding',
       'CHANG ice cream trailer, wrapped',
       'Lizard Moving business cards',
       'Adaya branding',
@@ -250,7 +250,7 @@ const en = {
     badge: 'Tap to change the badge', // (a badge on a lanyard)
     swing: 'Drag to swing it',
     things: { logo: 'Logo', folder: 'Folder', deck: 'Tarot deck', card: 'Business card', flyer: 'Flyer', voucher: 'Voucher', guide: 'Aftercare guide', sticker: 'Sticker', badges: 'Badges', wristband: 'Wristband', banner: 'Banner', banners: 'Banners', sign: 'Office sign', certificate: 'Diploma', stickers: 'Stickers', posters: 'Posters', wrap: 'Trailer wrap', menus: 'Menu boards', insert: 'Order insert', inserts: 'Order inserts' }, // (its printed things' chips)
-    blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social media' }, // (a project's pictures' blocks' titles)
+    blocks: { logo: 'Logo', site: 'Website', merch: 'Merch', social: 'Social media', catalogue: 'Catalogue' }, // (a project's pictures' blocks' titles)
     // each cover's project (content.ts GRAPHICS): who it was for, what was wrong, what Bogdan did
     projects: {
       hype: { name: 'HYPE', kind: 'Logo, event posters, badges and wristbands', client: '', problem: '', solution: '' },
@@ -279,7 +279,7 @@ const en = {
       'lizard-moving': { name: 'Lizard Moving', kind: 'Logo, business card and phone case', client: 'A moving company in Calgary, Canada.', problem: '', solution: '' },
       'magic-patron': { name: 'Magic Patron', kind: 'Thank-you insert and sticker', client: '', problem: '', solution: '' },
       slovianka: { name: 'Slovianka', kind: 'Business cards', client: '', problem: '', solution: '' },
-      kreem: { name: 'KREEM', kind: 'Logo and offer catalogue for a pâtisserie', client: '', problem: '', solution: '' },
+      kreem: { name: 'KREEM', kind: 'Logo and brand identity, website and offer catalogue for a pâtisserie', client: '', problem: '', solution: '' },
       'perfumeria-outlet': { name: 'Perfumeria Outlet', kind: 'Logo, chatbot avatar, order insert and ads', client: '', problem: '', solution: '' },
     },
   },

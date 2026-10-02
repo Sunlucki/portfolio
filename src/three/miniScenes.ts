@@ -927,6 +927,8 @@ type Sheet = {
   holo?: boolean; // (and their red holographic: the foil's colours)
   round?: boolean; // (a round sticker: a disc, its picture the circle in it)
   corner?: number; // (its corners cut round: their radius, mm)
+  hand?: string; // (a wristband: worn on this hand, scripts/prepare-scenes.mjs)
+  lanyard?: string; // (badges shown on a lanyard instead: src/vendor/react-bits/Lanyard.tsx)
   inner?: string[]; // a folded card's inside: the cover's, the back's
   // a folder's
   page?: number[];
@@ -977,7 +979,11 @@ async function sheets(name: SceneName): Promise<Live> {
   }));
   for (const side of sides) for (const data of [side.frontGloss, side.backGloss]) if (data) data.colorSpace = THREE.NoColorSpace; // (data, not colour)
   const maps = (i: number) => [...sides[i].fronts, sides[i].back, sides[i].frontGloss, sides[i].backGloss, ...sides[i].inner];
-  const ready = (i: number) => maps(i).every((texture) => !texture || texture.image);
+  // (a wristband's hand, loaded with the scene)
+  let hand: Awaited<ReturnType<typeof model>> | null = null;
+  const handOf = things.find((thing) => thing.hand)?.hand;
+  if (handOf) void model(handOf).then((parts) => (hand = parts));
+  const ready = (i: number) => maps(i).every((texture) => !texture || texture.image) && (!things[i].hand || !!hand);
   await Promise.all(maps(0).map((texture) => texture?.ready));
 
   const scene = new THREE.Scene();
@@ -1147,6 +1153,24 @@ async function sheets(name: SceneName): Promise<Live> {
     };
     return [root];
   };
+  // a wristband on its hand (HYPE's): the hand violet, as the manifesto's are, its nails pale, the band its print outside
+  // and white inside; upright, the back of the hand towards us, as tall as the view takes
+  let handSize = { w: 1, h: 1, t: 0.04 };
+  const worn = (i: number) => {
+    const [skin, nails, band, inside] = hand!;
+    const group = new THREE.Group().add(
+      new THREE.Mesh(skin.geometry, new THREE.MeshPhysicalMaterial({ color: 0x8f66ff, roughness: 0.42, clearcoat: 0.3, clearcoatRoughness: 0.4 })),
+      new THREE.Mesh(nails.geometry, new THREE.MeshStandardMaterial({ color: 0xebf2ff, roughness: 0.25 })),
+      new THREE.Mesh(band.geometry, Object.assign(paper(sides[i].fronts[0], null), { roughness: 0.75 })), // (Tyvek)
+      new THREE.Mesh(inside.geometry, new THREE.MeshStandardMaterial({ color: 0xf4f2ec, roughness: 0.85 })),
+    );
+    const box = new THREE.Box3().setFromObject(group);
+    const k = 5.4 / (box.max.y - box.min.y);
+    group.scale.setScalar(k);
+    group.position.copy(box.getCenter(new THREE.Vector3()).multiplyScalar(-k));
+    handSize = { w: (box.max.x - box.min.x) * k, h: (box.max.y - box.min.y) * k, t: 0.04 };
+    return [new THREE.Group().add(group)];
+  };
   let size = { w: 1, h: 1, t: 0.04 };
   let shown: THREE.Object3D[] = [];
   let cards: THREE.Mesh[] = []; // the shown thing's
@@ -1169,17 +1193,20 @@ async function sheets(name: SceneName): Promise<Live> {
           ? fold(thing, i)
           : thing.inner
             ? card(i)
-            : side.fronts.map((map) => {
-                const front = paper(map, side.frontGloss, side.metal, side.holo);
-                const back = paper(side.back, side.backGloss, side.metal, side.holo);
-                const mesh = thing.round
-                  ? new THREE.Mesh(disc, [edge, front, back])
-                  : thing.corner
-                    ? new THREE.Mesh(rounded(thing), [front, back, edge])
-                    : new THREE.Mesh(box, [edge, edge, edge, edge, front, back]);
-                mesh.scale.set(size.w, size.h, size.t);
-                return mesh;
-              });
+            : thing.hand
+              ? worn(i)
+              : side.fronts.map((map) => {
+                  const front = paper(map, side.frontGloss, side.metal, side.holo);
+                  const back = paper(side.back, side.backGloss, side.metal, side.holo);
+                  const mesh = thing.round
+                    ? new THREE.Mesh(disc, [edge, front, back])
+                    : thing.corner
+                      ? new THREE.Mesh(rounded(thing), [front, back, edge])
+                      : new THREE.Mesh(box, [edge, edge, edge, edge, front, back]);
+                  mesh.scale.set(size.w, size.h, size.t);
+                  return mesh;
+                });
+    if (thing.hand) size = handSize;
     pivot.remove(...shown);
     shown = built[i];
     pivot.add(...shown);
@@ -1190,7 +1217,7 @@ async function sheets(name: SceneName): Promise<Live> {
     lie = scatter();
     shuffle = null;
     turnOf<Flip>(name).auto = cards.length === 1; // (a deck stays face up, a folder or a folded card opens instead)
-    turnOf<Flip>(name).sway = !side.back; // (nothing printed on its back)
+    turnOf<Flip>(name).sway = !side.back && !thing.hand; // (nothing printed on its back; a hand turns round to its palm)
   };
   show(0);
   const flip = turnOf<Flip>(name);
@@ -1216,8 +1243,9 @@ async function sheets(name: SceneName): Promise<Live> {
       time += dt;
       const asked = picks.get(name) ?? 0;
       if (asked !== wanted && ready(asked)) {
+        const unseen = !!things[wanted].lanyard; // (shown on a lanyard instead: nothing here to turn away from)
         wanted = asked;
-        if (still) show(wanted);
+        if (still || unseen) show(wanted);
         else {
           flip.round();
           swapping = true;

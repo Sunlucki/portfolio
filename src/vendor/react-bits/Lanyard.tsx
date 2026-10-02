@@ -35,6 +35,8 @@ const BACK = { x: 0.5, y: 0, w: 0.5, h: 0.757 };
 const FACE = 0.7164;
 const ATLAS = 1536;
 const NEXT_S = 6; // seconds a badge hangs before the next one turns in by itself
+const FOV = 20;
+const TILE = 4; // the strap's picture's width to its height: a tile is that many times as long as the strap is wide
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const LINE: [ConstructorParameters<typeof MeshLineMaterial>[0]] = [{ resolution: new THREE.Vector2(1000, 1000) }]; // (the strap's material, made once)
 
@@ -54,7 +56,7 @@ export default function Lanyard({ fronts, back, strap, onReady }: LanyardProps) 
   }, []);
   return (
     <div ref={wrap} className="h-full w-full" style={{ touchAction: 'pan-y' }}>
-      <Canvas camera={{ position: [0, -0.25, 13], fov: 20 }} dpr={[1, phone ? 1.5 : 2]} onCreated={({ gl }) => gl.setClearColor(0x0b0b0e, 1)}>
+      <Canvas camera={{ position: [0, -0.25, 13], fov: FOV }} dpr={[1, phone ? 1.5 : 2]} onCreated={({ gl }) => gl.setClearColor(0x0b0b0e, 1)}>
         <ambientLight intensity={Math.PI} />
         <Suspense fallback={null}>
           <Physics gravity={[0, -40, 0]} timeStep={phone ? 1 / 30 : 1 / 60}>
@@ -94,6 +96,7 @@ function Band({
   const [vec, ang, rot, dir] = useMemo(() => [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], []);
   const segment: RigidBodyProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 };
   const lerped = (body: Body) => (body.lerped ??= new THREE.Vector3().copy(body.translation()));
+  const resolution: [number, number] = phone ? [1000, 2000] : [1000, 1000]; // (the strap's, React Bits')
 
   const { nodes, materials } = useGLTF(MODEL) as unknown as { nodes: Record<string, THREE.Mesh>; materials: Record<string, THREE.MeshStandardMaterial> };
   const strapMap = useTexture(strap, (texture) => {
@@ -146,6 +149,7 @@ function Band({
 
   useFrame((state, delta) => {
     const time = state.clock.elapsedTime;
+    if (frames.current === 0) last.current = time; // (the first badge hangs its while from when it shows, however long the rest took to load)
     if (dragged) {
       vec.set(state.pointer.x, state.pointer.y, 0.5).unproject(state.camera);
       dir.copy(vec).sub(state.camera.position).normalize();
@@ -163,7 +167,15 @@ function Band({
       curve.points[1].copy(lerped(j2.current));
       curve.points[2].copy(lerped(j1.current));
       curve.points[3].copy(fixed.current.translation());
-      band.current.geometry.setPoints(curve.getPoints(phone ? 16 : 32));
+      const points = curve.getPoints(phone ? 16 : 32);
+      band.current.geometry.setPoints(points);
+      // as many tiles of its picture along the strap as keep the logo's proportions (his call: it was squashed): meshline
+      // makes a strap hanging upright tan(fov / 2) wide for each of the canvas's width to its height, over the
+      // resolution's width to its height
+      let length = 0;
+      for (let k = 1; k < points.length; k++) length += points[k].distanceTo(points[k - 1]);
+      const wide = (Math.tan((FOV / 2) * (Math.PI / 180)) * (state.size.width / state.size.height) * resolution[1]) / resolution[0];
+      band.current.material.repeat.set(-length / (TILE * wide), 1);
       ang.copy(card.current.angvel());
       rot.copy(card.current.rotation());
       card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z }, true);
@@ -240,7 +252,7 @@ function Band({
       </group>
       <mesh ref={band}>
         <meshLineGeometry />
-        <meshLineMaterial args={LINE} color="white" depthTest={false} resolution={phone ? [1000, 2000] : [1000, 1000]} useMap={1} map={strapMap} repeat={[-4, 1]} lineWidth={1} />
+        <meshLineMaterial args={LINE} color="white" depthTest={false} resolution={resolution} useMap={1} map={strapMap} lineWidth={1} />
       </mesh>
     </>
   );
