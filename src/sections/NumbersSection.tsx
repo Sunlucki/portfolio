@@ -6,9 +6,10 @@ import { LOCALE } from '../i18n';
 
 // The numbers on see-through cards in rows that slide slowly in alternating directions as the page scrolls, as the
 // Graphics section's covers once did (his call, 2026-10-01: the drum that turned through them one by one made the
-// block long): two rows on screens, three on phones, each card's number racing up to its value as soon as its row
-// comes into view, so no zeros show (and again the next time). A soft glow behind the rows, for the glass to show;
-// their ends fade into the page.
+// block long): two rows on screens, three on phones. On screens each card's number races up to its value as soon as
+// its row comes into view, so no zeros show (and again the next time); on phones it only fades up into place, and the
+// cards blur nothing behind them anywhere (his calls, 2026-10-02: phones dropped frames scrolling through them). A soft
+// glow behind the rows; their ends fade into the page.
 const dealt = (count: number) =>
   Array.from({ length: count }, (_, row) => NUMBERS.map((n, i) => ({ ...n, i })).filter(({ i }) => Math.floor((i * count) / NUMBERS.length) === row));
 const ROWS = { wide: dealt(2), phone: dealt(3) };
@@ -102,10 +103,24 @@ export function NumbersSection() {
               {[...cards, ...cards, ...cards].map((n, k) => (
                 <div
                   key={k}
-                  className="flex w-[232px] shrink-0 flex-col items-start justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] px-6 py-6 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] backdrop-blur-md sm:w-[300px] md:w-[380px] md:px-8 md:py-8"
+                  className="flex w-[232px] shrink-0 flex-col items-start justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.045] px-6 py-6 text-left shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] sm:w-[300px] md:w-[380px] md:px-8 md:py-8"
                 >
                   <div className="font-black leading-none text-[#D7E2EA]" style={{ fontSize: 'clamp(2rem, 4.4vw, 3.4rem)' }}>
-                    <SpeedNumber value={n.value} suffix={n.suffix} run={!!seen[r]} />
+                    {phone ? (
+                      <span
+                        className="hero-heading inline-block whitespace-nowrap tabular-nums"
+                        style={{
+                          opacity: seen[r] || still ? 1 : 0,
+                          transform: `translateY(${seen[r] || still ? 0 : 0.3}em) skewX(-9deg)`,
+                          transition: `opacity 0.6s ease-out ${(k % cards.length) * 90}ms, transform 0.6s ease-out ${(k % cards.length) * 90}ms`,
+                        }}
+                      >
+                        {n.value.toLocaleString(LOCALE)}
+                        {n.suffix}
+                      </span>
+                    ) : (
+                      <SpeedNumber value={n.value} suffix={n.suffix} run={!!seen[r]} />
+                    )}
                   </div>
                   <p className="mt-3 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/60 sm:text-xs">{n.label}</p>
                 </div>
