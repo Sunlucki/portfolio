@@ -330,6 +330,7 @@ const uk: Copy = {
       models: '3D-моделі за ліцензією',
       by: 'автора',
       recoloured: 'перефарбовано',
+      simplified: 'спрощено',
       and: 'і',
       particles: 'перетворено на частинки',
       earth: 'Земля вночі: NASA Black Marble.',

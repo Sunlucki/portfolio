@@ -323,6 +323,7 @@ const pl: Copy = {
       models: 'Modele 3D na licencji',
       by: 'autorstwa',
       recoloured: 'w zmienionej kolorystyce',
+      simplified: 'uproszczony',
       and: 'i',
       particles: 'zamienione w cząsteczki',
       earth: 'Ziemia nocą: NASA Black Marble.',

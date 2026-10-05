@@ -135,6 +135,8 @@ export function ContactSection() {
           {C.models} <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>: {open}
           <a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>
           {close} {C.by} <a href="https://sketchfab.com/MG990">MajdyModels</a>, {C.recoloured}; {open}
+          <a href="https://sketchfab.com/3d-models/f22-raptor-e765eb495f0546d7a94fcf48db53ee3b">F22 Raptor</a>
+          {close} {C.by} <a href="https://sketchfab.com/alexkahler">Aleksander Kähler</a>, {C.simplified}; {open}
           <a href="https://sketchfab.com/3d-models/realistic-human-heart-3f8072336ce94d18b3d0d055a1ece089">Realistic Human Heart</a>
           {close} {C.by} <a href="https://sketchfab.com/neshallads">neshallads</a> {C.and} {open}
           <a href="https://sketchfab.com/3d-models/low-poly-human-brain-model-781330cf8c6e40508f0de62e2fef8dec">Low-Poly Human Brain Model</a>

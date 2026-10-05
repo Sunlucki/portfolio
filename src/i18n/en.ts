@@ -323,6 +323,7 @@ const en = {
       models: '3D models under',
       by: 'by',
       recoloured: 'recoloured',
+      simplified: 'simplified',
       and: 'and',
       particles: 'turned into particles',
       earth: 'Earth at night: NASA Black Marble.',

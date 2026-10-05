@@ -324,6 +324,7 @@ const it: Copy = {
       models: 'Modelli 3D con licenza',
       by: 'di',
       recoloured: 'ricolorato',
+      simplified: 'semplificato',
       and: 'e',
       particles: 'trasformati in particelle',
       earth: 'La Terra di notte: NASA Black Marble.',

@@ -321,6 +321,7 @@ const de: Copy = {
       models: '3D-Modelle unter',
       by: 'von',
       recoloured: 'umgefärbt',
+      simplified: 'vereinfacht',
       and: 'und',
       particles: 'in Partikel verwandelt',
       earth: 'Die Erde bei Nacht: NASA Black Marble.',

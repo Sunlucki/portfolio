@@ -323,6 +323,7 @@ const ru: Copy = {
       models: '3D-модели по лицензии',
       by: 'от',
       recoloured: 'цвет изменён',
+      simplified: 'упрощена',
       and: 'и',
       particles: 'превращены в частицы',
       earth: 'Ночная Земля: NASA Black Marble.',

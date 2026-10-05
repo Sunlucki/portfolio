@@ -1,10 +1,13 @@
 import { ArrowUpRight } from 'lucide-react';
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState, type PointerEvent } from 'react';
 import { SectionTitle } from '../components/SectionTitle';
 import { fill, t } from '../i18n';
 import { COVER_OF, GRAPHICS, TILES } from '../content';
 import { flow, PERSPECTIVE } from '../three/flow';
+import { Quiet } from './FlowSections';
 import { GraphicsProject, type Opening } from './GraphicsProject';
+
+const RaptorScene = lazy(() => import('../three/RaptorScene'));
 
 // The covers on rings of eight, in order (the first ring the first eight), after louisraille.fr's work section (his
 // call, 2026-10-01): each ring a cylinder of cards turning round its axis, the vortex of particles inside them
@@ -16,7 +19,9 @@ import { GraphicsProject, type Opening } from './GraphicsProject';
 // under the particles' canvas, their front halves over it, so the vortex is inside them. Each cover is turned and
 // pushed out on its own: a ring turned edge-on as a whole could not be clicked (the browser finds nothing in a layer it
 // sees edge-on). Pointed at, a cover grows with a bounce and says what a click does (index.css); clicked, it opens its
-// project (GraphicsProject).
+// project (GraphicsProject). Over the rings an F-22 dives, nose down, turning after the pointer, its control surfaces
+// moving (three/RaptorScene.tsx, his call, 2026-10-06): a canvas of its own, loaded as the section comes near, drawn
+// while it is on the screen, letting clicks through.
 const PER_RING = 8;
 const STEP = 360 / PER_RING;
 const RINGS = Array.from({ length: Math.ceil(TILES.length / PER_RING) }, (_, r) =>
@@ -98,6 +103,7 @@ export function GraphicsSection() {
   const drag = useRef<{ id: number; x: number; y: number; ring: number; from: number; now: number; sideways: boolean | null } | null>(null);
   const wheel = useRef<{ ring: number; from: number; dx: number; timer: number } | null>(null);
   const dragged = useRef(false);
+  const [jet, setJet] = useState({ near: false, shown: false }); // the F-22's canvas: made as the section comes near, drawn while on screen
 
   // the layout, from the stage's own size (the screen's height without the browser's bars)
   useEffect(() => {
@@ -110,6 +116,18 @@ export function GraphicsSection() {
   useEffect(() => {
     flow.rings.radius = layout.radius;
   }, [layout.radius]);
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const ahead = new IntersectionObserver(([entry]) => entry.isIntersecting && setJet((j) => ({ ...j, near: true })), { rootMargin: '100% 0px' });
+    const around = new IntersectionObserver(([entry]) => setJet((j) => ({ ...j, shown: entry.isIntersecting })));
+    ahead.observe(el);
+    around.observe(el);
+    return () => {
+      ahead.disconnect();
+      around.disconnect();
+    };
+  }, []);
 
   // every frame while the section is near the screen: where the rings stand and how far they have turned
   useEffect(() => {
@@ -365,6 +383,15 @@ export function GraphicsSection() {
         >
           {RINGS.map((cards, i) => ring(cards, i, true))}
           {!layout.phone && RINGS.map((_, i) => arrows(i))}
+          {jet.near && (
+            <div aria-hidden className="pointer-events-none absolute inset-0 z-10">
+              <Quiet>
+                <Suspense fallback={null}>
+                  <RaptorScene active={jet.shown} />
+                </Suspense>
+              </Quiet>
+            </div>
+          )}
         </div>
       </div>
       {opening && <GraphicsProject opening={opening} onClose={() => setOpening(null)} />}
