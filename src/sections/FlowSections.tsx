@@ -4,7 +4,7 @@ import { flow, type FlowLayer } from '../three/flow';
 const FlowScene = lazy(() => import('../three/FlowScene'));
 
 // Without WebGL there is no phone and no particles; the sections stay as they are.
-export class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
+class Quiet extends Component<{ children: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };

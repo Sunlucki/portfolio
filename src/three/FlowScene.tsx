@@ -1,12 +1,13 @@
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Environment, Lightformer, useGLTF, useTexture } from '@react-three/drei';
-import { useEffect, useMemo, useRef } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { MeshSurfaceSampler } from 'three/examples/jsm/math/MeshSurfaceSampler.js';
 import { MOBILE_APPS } from '../content';
 import { flow, phoneLayout, PERSPECTIVE } from './flow';
 import { FOV as MUSIC_FOV, RIM, inPlay, placeCamera } from './musicFloor';
 import { NOISE_GLSL } from './noise';
+import { Raptor, type RaptorPlace } from './Raptor';
 
 /**
  * The particle scene behind the Mobile Apps, Graphics and Video sections (sections/FlowSections.tsx holds it, a
@@ -15,7 +16,8 @@ import { NOISE_GLSL } from './noise';
  * portrait does out of the manifesto's; it stands there swaying, the apps' screens on its display, a new one pushing
  * in from the right, a new app turning it round. Scrolled on, it breaks up again: its particles swirl up the middle
  * of the screen as a vortex inside the Graphics section's rings of covers (the rings' back halves drawn under this
- * canvas, their front halves over it), and land on the Video section's first films, which then show (their cards'
+ * canvas, their front halves over it), an F-22 diving down its axis among them (three/Raptor.tsx), and land on the
+ * Video section's first films, which then show (their cards'
  * opacity, set here). On phones the Video section shows no grid: the particles build the iPhone again there, the
  * films on its screen as a grid, PLAY in particles standing out in front of it; tapped, the phone flies at the camera
  * until its screen fills the view, its picture splitting into red, green and blue, and the section's feed opens;
@@ -586,6 +588,7 @@ function Scene() {
   const grid = useRef<ReturnType<typeof filmGrid> | null>(null);
   useEffect(() => () => grid.current?.texture.dispose(), []);
   const run = useRef({ time: 0, shown: -1, app: -1, push: 1, turn: 1, assemble: 0, leave: 0, land: 0, onward: 0, play: 0, flown: false, landed: false, cards: -1, ready: '' });
+  const jet = useRef<RaptorPlace>({ into: 0, out: 0, length: 1, fall: 1 }); // the F-22's place (three/Raptor.tsx)
   const tools = useMemo(
     () => ({
       matrix: new THREE.Matrix4(),
@@ -654,6 +657,13 @@ function Scene() {
     // itself and further as the page scrolls on
     const rings = flow.rings.radius || canvas.width * 0.3;
     u.uCloud.value.set(rings * 0.62 * perPx, TALL * 1.15, (window.scrollY / vh) * 0.3, r.time * 0.5 + (window.scrollY / vh) * 1.6);
+    // the F-22 on the vortex's axis (his call, 2026-10-06): a little shorter than the vortex is wide across its middle,
+    // diving in from above the screen as it gathers and on out at the foot as the particles leave for the films
+    const at = jet.current;
+    at.length = Math.max(0.9 * rings * 0.62 * perPx, 0.19 * TALL);
+    at.fall = TALL * 0.75;
+    at.into = still ? Number(r.leave > 0.5) : smooth(0.35, 0.95, r.leave);
+    at.out = still ? Number(r.land > 0.5) : smooth(0.02, 0.45, r.land);
 
     // on to the Music section: the particles leave the phone (phones: once it is on its way up the screen) or the
     // films as its stage comes up, and build the stage's floor, done as it reaches the middle of the screen; then
@@ -849,6 +859,9 @@ function Scene() {
         )}
       </group>
       {!still && <points ref={dots} geometry={geometry} material={material} frustumCulled={false} />}
+      <Suspense fallback={null}>
+        <Raptor place={jet} />
+      </Suspense>
     </>
   );
 }
