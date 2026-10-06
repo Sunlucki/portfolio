@@ -16,7 +16,7 @@ import * as THREE from 'three';
  * gently to and fro, so they keep moving.
  */
 
-const MODEL = '/models/raptor.glb';
+const MODEL = '/models/raptor.glb?v=2'; // (?v: up by one each time the model is made again: browsers keep the one they have)
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const IDLE_S = 2.5; // seconds without the pointer moving before the jet goes back to rocking by itself
 
