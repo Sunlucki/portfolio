@@ -1,4 +1,5 @@
 import { Component, lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { afterLoad } from '../afterLoad';
 import { PHRASES, SHAPE_SCROLL, phraseRuns, phraseText } from '../content';
 import { t } from '../i18n';
 import { handoffLength } from '../three/aboutStage';
@@ -81,13 +82,12 @@ export function ManifestoSection() {
       { rootMargin: '100% 0px' },
     );
     observer.observe(section);
-    // The scene is the next thing on the page: load and mount it as soon as the browser is idle (while the
-    // hero plays), so its set-up never lands in the middle of a scroll.
-    const idleFetch = window.requestIdleCallback?.(() => setNear(true), { timeout: 3000 }) ?? window.setTimeout(() => setNear(true), 1500);
+    // The scene is the next thing on the page: load and mount it as soon as the page is in and the browser idle
+    // (while the hero plays), so its set-up never lands in the middle of a scroll.
+    const idleFetch = afterLoad(() => setNear(true), 3000);
     return () => {
       observer.disconnect();
-      if (window.cancelIdleCallback) window.cancelIdleCallback(idleFetch);
-      else window.clearTimeout(idleFetch);
+      idleFetch();
     };
   }, []);
 

@@ -1,5 +1,5 @@
 import en, { type Copy } from './en.ts';
-import { LANGS, LOCALES, MONTSERRAT, fontOf, type Lang } from './langs';
+import { LANGS, LOCALES, fontOf, type Lang } from './langs';
 
 export { LANGS, LANG_NAMES, langPath, type Lang } from './langs';
 
@@ -55,9 +55,3 @@ document.documentElement.lang = lang;
 document.documentElement.style.setProperty('--font', FONT);
 document.title = t.meta.title;
 document.querySelector('meta[name="description"]')?.setAttribute('content', t.meta.description);
-if (FONT === 'Montserrat' && !document.querySelector(`link[href="${MONTSERRAT}"]`)) {
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = MONTSERRAT;
-  document.head.append(link);
-}

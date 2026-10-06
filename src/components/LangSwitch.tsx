@@ -24,7 +24,7 @@ export function LangSwitch({ className = '' }: { className?: string }) {
         type="button"
         onClick={() => setOpen((was) => !was)}
         aria-expanded={open}
-        aria-label={`${t.language}: ${LANG_NAMES[lang]}`}
+        aria-label={`${lang.toUpperCase()}, ${t.language}: ${LANG_NAMES[lang]}`}
         className={`-my-3 py-3 text-[#D7E2EA] transition-opacity duration-200 hover:opacity-70 ${className}`}
       >
         {lang.toUpperCase()}

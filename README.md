@@ -12,7 +12,7 @@ Personal site of a full-stack design engineer from Poznań, Poland. It shows sel
 - anime.js 4 — the scroll-synced hero timeline (`onScroll`) and the scroll hint loop
 - React Three Fiber + drei + postprocessing — the manifesto and the 3D phone scene in the contact section (loaded lazily)
 - React Bits — Micro Slats (hero backdrop), Tech Text (headings) and Folder Float (the stack, with matter-js), in `src/vendor/react-bits/`
-- Lucide icons, Kanit (and Montserrat for Cyrillic) from Google Fonts
+- Lucide icons; Kanit (and Montserrat for Cyrillic) and Caveat served from the site itself (`@fontsource`, imported in `src/main.tsx`; Caveat cut to the letters of its two handwritten words by `scripts/prepare-caveat.mjs`), so no third-party stylesheet holds up the first paint
 
 ## How the hero works
 
@@ -34,7 +34,7 @@ Mouse depth (fine pointers only, off for `prefers-reduced-motion`), in three pla
 
 On phones the first frames are drawn slightly smaller, with the backdrop extended above, to make room for a two-line headline. The framing eases back to full cover early in the scroll. At the bottom the tagline is centred, the contact button centred under it, over a darker scrim so they read over the print. Touch screens have no pointer to burn the print with: the page opens on the print, and at once a hint plays low in the middle, the finger coming in over the tagline (`src/components/ScrollHint.tsx`): a finger comes in turned 45° to the left, presses (a ring goes out where it touches), swipes up speeding up and slowing on a slight arc, turning up with the swipe as a hand does, and lets go, three times, 2.55 s each (slow enough to read the word), in the contact button's purples; each time the word "scroll" is written up behind its tip in particles, upright along the swipe in the hand of About's "Why?" (Caveat), then blows away up the screen. A touch or a swipe takes the hint away at once and shows the photo whole (the print dissolving into it, each cell at its own threshold); after three seconds with nothing touched or scrolled the print knits back and the hint plays again. Nothing in the hero can be selected: a finger held on the photo selected all of it on the iPhone.
 
-Frames load cut-outs first, then video frames coarse-to-fine (every 8th first), so scrubbing works before everything has downloaded. Phones get a 1280 px set, desktops a 1920 px set, all WebP.
+The first cut-out loads with the page (preloaded in `index.html`); the other frames (some 3 MB on a phone, 5 MB on a desktop) once the page has loaded and the browser is idle, or as soon as the page is scrolled (`src/afterLoad.ts`), so they never hold up the page's own files: cut-outs first, then video frames coarse-to-fine (every 8th first), so scrubbing works before everything has downloaded. Phones get a 1280 px set, desktops a 1920 px set, all WebP.
 
 The canvases are sized from their own box (a ResizeObserver: Safari can run the set-up before the styles apply, which left the hero stretched and blurred) and never sharper than the frames themselves. Each layer is drawn only while it can be seen, the cut-out's photo at 1x (it only shows where the pointer burns through the print), and the frames around the playhead are decoded ahead of drawing. Measured in Safari 26 over WebDriver (safaridriver): the hero went from 34 to 60 fps at the median, with 3 frames over 34 ms instead of 35.
 
@@ -98,7 +98,7 @@ Sticky cards that stack as the page scrolls, each named by the system it is (the
 
 The B2B platform's live button shows the three stores it runs in its window instead (PROTECTDENT, XyliMelts, Mind Logistic: each its own site's icon, `public/work/store-*.webp`, its name and address, a link to it); pressed again, the promo comes back.
 
-The WordPress sites' card turns through the sites instead (`public/work/wp-*.webp`, made by `scripts/prepare-media.py`), the ones with a demo film first: each its film, Bogdan's own mockups easing in a little closer, then its pages scrolling on a MacBook drawn in CSS, with a pill per site and a link to each site that is still live.
+The WordPress sites' card turns through the sites instead (`public/work/wp-*.webp`, made by `scripts/prepare-media.py`), the ones with a demo film first: each its film, Bogdan's own mockups easing in a little closer, then its pages scrolling on a MacBook drawn in CSS, with a pill per site and a link to each site that is still live. Its pictures load lazily and its films only once the card has come up.
 
 `src/promo/saas` and `src/promo/oner` are copied from the SIMBIA repo (branch `promo/wideo-2d` at `2ba662f`: `Claude outputs/promo-remotion/src/saas` without `compositions.tsx` and `kit/Demo.tsx`, and the 16 files of `packages/oner/src` it needs), changed only where this app needs it: the paths to oner, and one unused render-prop parameter renamed (`b2b/Mobile.tsx`). They are linted at the source, not here (`.oxlintrc.json`). To update, copy them again from the branch.
 
@@ -183,6 +183,7 @@ scripts/
   prepare-lights.py     the Earth's night lights for the manifesto (NASA Black Marble → 720×360)
   prepare-models.py     the manifesto's heart, brain and bulb with hands, baked from models into point sets
   prepare-bands.mjs     each track's spectrum for the music stage (needs ffmpeg)
+  prepare-caveat.mjs    Caveat cut to the letters of the handwritten words, every language (needs python3 with fonttools, brotli)
   qa-shots.mjs          headless-Chrome visual QA (desktop 1440 px + mobile 390 px) over the DevTools protocol
 public/                 generated media (hero/, work/, tiles/, graphics/, scenes/, about/, models/, egg/; music/ and video/ not in git) and the CV (cv/)
 ```
@@ -198,7 +199,7 @@ npm run dev
 npm run build
 ```
 
-`npm run deploy` builds and rsyncs `dist/` to the server (SSH host alias `styleicon`), where nginx serves it with TLS from Let's Encrypt.
+`npm run deploy` builds and rsyncs `dist/` to the server (SSH host alias `styleicon`), where nginx serves it with TLS from Let's Encrypt, gzipping the text files and the 3D models and point clouds (`.glb`, `.bin`).
 
 ## Rights
 

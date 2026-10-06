@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react';
 import { createPortal } from 'react-dom';
+import { afterLoad } from '../afterLoad';
 import { t } from '../i18n';
 import { ContactButton } from './Buttons';
 
@@ -81,7 +82,7 @@ export function SwipeEgg() {
   }, []);
 
   useEffect(() => {
-    new Image().src = SHEET;
+    const sheetLater = afterLoad(() => (new Image().src = SHEET));
     let count = 0;
     let coast = 0; // till when the page moving is the visitor's doing: a finger on it lately, or the wheel, a trackpad
     let marks: number[] = []; // when, and where the page was: the last SPAN, and the mark before it
@@ -122,6 +123,7 @@ export function SwipeEgg() {
     window.addEventListener('click', clicked, true);
     window.addEventListener('scroll', scrolled, passive);
     return () => {
+      sheetLater();
       for (const type of TOUCH) window.removeEventListener(type, touched);
       window.removeEventListener('wheel', wheel);
       window.removeEventListener('click', clicked, true);

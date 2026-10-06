@@ -62,6 +62,16 @@ export function VideoSection() {
   const theater = useRef<HTMLDivElement>(null);
   const feeder = useRef<FeedHandle>(null);
   const fallback = useRef(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [near, setNear] = useState(false); // phones: the feed (and its first films' pictures) in the page once the section is a screen away
+
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    const ahead = new IntersectionObserver(([entry]) => entry.isIntersecting && setNear(true), { rootMargin: '100% 0px' });
+    ahead.observe(section);
+    return () => ahead.disconnect();
+  }, []);
 
   useEffect(() => {
     const fit = () => {
@@ -151,7 +161,7 @@ export function VideoSection() {
   const film = open === null ? null : FILMS[open];
 
   return (
-    <section id="video" className="px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
+    <section ref={sectionRef} id="video" className="px-4 pb-16 pt-16 sm:px-6 md:px-10 md:pt-24">
       <div className="text-shade">
         <SectionTitle text={t.video.title} className="mb-4 md:mb-6" />
         <Views />
@@ -174,12 +184,14 @@ export function VideoSection() {
             </button>
           </div>
           <p className="mt-2 text-balance text-center text-xs uppercase tracking-[0.18em] text-[#D7E2EA]/60">{t.video.tap}</p>
-          <VideoFeed
-            ref={feeder}
-            open={feed}
-            onClose={closeFeed}
-            films={FILMS.map((f) => ({ ...f, credit: f.credit && credited(f.credit), poster: poster(f) }))}
-          />
+          {near && (
+            <VideoFeed
+              ref={feeder}
+              open={feed}
+              onClose={closeFeed}
+              films={FILMS.map((f) => ({ ...f, credit: f.credit && credited(f.credit), poster: poster(f) }))}
+            />
+          )}
         </>
       ) : (
         <div data-flow="films" className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">

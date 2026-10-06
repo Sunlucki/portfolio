@@ -92,7 +92,7 @@ export function AppsSection() {
             >
               <ChevronRight className="h-5 w-5" />
             </button>
-            <span className="ml-1 text-xs uppercase tracking-[0.2em] text-[#D7E2EA]/40">{MOBILE_APPS.drag}</span>
+            <span className="ml-1 text-xs uppercase tracking-[0.2em] text-[#D7E2EA]/55">{MOBILE_APPS.drag}</span>
           </div>
         </div>
 

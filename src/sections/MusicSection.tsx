@@ -154,7 +154,7 @@ export function MusicSection() {
               </Quiet>
             )}
             <div className="pointer-events-none absolute left-0 top-0">
-              <p className="text-[11px] uppercase tracking-[0.25em] text-[#D7E2EA]/50">{playing ? t.music.nowPlaying : MUSIC.album}</p>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-[#D7E2EA]/55">{playing ? t.music.nowPlaying : MUSIC.album}</p>
               <p className="mt-1 text-2xl font-black uppercase leading-tight text-white sm:text-3xl">{track.title}</p>
               <p className="mt-1 text-sm text-[#D7E2EA]/60">{track.artist ?? MUSIC.artist}</p>
             </div>
@@ -325,14 +325,14 @@ function TrackCard({ track, k, on, open, playing, time, onPick, onFocus, onBlur,
       <motion.span layout={morph ? 'position' : false} transition={SPRING} className="flex w-full shrink-0 items-center gap-3" style={{ height: STRIP - 4 }}>
         <span className="hero-heading w-9 shrink-0 text-[26px] font-black leading-none">{String(k + 1).padStart(2, '0')}</span>
         <span className={`min-w-0 flex-1 truncate text-sm font-medium uppercase tracking-wide ${on || open ? 'text-white' : 'text-[#D7E2EA]/70'}`}>{track.title}</span>
-        <span className="shrink-0 text-xs tabular-nums text-[#D7E2EA]/50">{clock(track.seconds)}</span>
+        <span className="shrink-0 text-xs tabular-nums text-[#D7E2EA]/55">{clock(track.seconds)}</span>
         <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full ${on ? 'bg-[#5B9BFF] text-white' : 'bg-white/10 text-[#D7E2EA]'}`}>
           {on && playing ? <Pause className="h-3 w-3" fill="currentColor" /> : <Play className="h-3 w-3 translate-x-px" fill="currentColor" />}
         </span>
       </motion.span>
       <motion.span
         layout={morph ? 'position' : false}
-        className="flex w-full items-center gap-3 pl-12 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/45"
+        className="flex w-full items-center gap-3 pl-12 text-[11px] uppercase tracking-[0.2em] text-[#D7E2EA]/55"
         initial={false}
         animate={{ opacity: open ? 1 : 0, y: open ? 0 : -6 }}
         transition={SPRING}
@@ -410,7 +410,7 @@ function PhoneList({ current, playing, time, onPick }: PlaylistProps) {
           className="mx-auto mt-4 flex items-center gap-2 rounded-full border border-[#D7E2EA]/30 px-5 py-2.5 text-xs font-medium uppercase tracking-[0.2em] text-[#D7E2EA]/80 transition-colors hover:border-[#D7E2EA]/70 hover:text-white"
         >
           {all ? t.music.fewer : t.music.all}
-          {!all && <span className="tabular-nums text-[#D7E2EA]/45">{TRACKS.length}</span>}
+          {!all && <span className="tabular-nums text-[#D7E2EA]/55">{TRACKS.length}</span>}
         </button>
       )}
     </div>

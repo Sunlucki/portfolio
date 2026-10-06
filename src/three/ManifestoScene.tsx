@@ -1699,7 +1699,7 @@ function writeWords(width: number, height: number) {
   const upright = narrow && height > width;
   const lower = 0.45 * Math.max(0, Math.min(1, (width / height) * 1.1) - 0.51); // (the layout's fit, over a tall phone's)
   // (Montserrat, for Cyrillic, runs wider than Kanit: a size smaller, so the lines hold as many words)
-  const fontSize = Math.min(70.4, Math.max(30.4, width * 0.052)) * (FONT === 'Montserrat' ? 0.9 : 1);
+  const fontSize = Math.min(70.4, Math.max(30.4, width * 0.052)) * (FONT === 'Montserrat Variable' ? 0.9 : 1);
   const lead = fontSize * 1.08;
   const measure = Math.min(width - 48, fontSize * 10.8);
   const bottom = height * (narrow ? 0.91 : 0.85);

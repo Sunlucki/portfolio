@@ -6,7 +6,7 @@ import de from './src/i18n/de.ts'
 import en, { type Copy } from './src/i18n/en.ts'
 import fr from './src/i18n/fr.ts'
 import it from './src/i18n/it.ts'
-import { LANGS, MONTSERRAT, OG_LOCALES, fontOf, langPath, type Lang } from './src/i18n/langs.ts'
+import { LANGS, OG_LOCALES, langPath, type Lang } from './src/i18n/langs.ts'
 import pl from './src/i18n/pl.ts'
 import ru from './src/i18n/ru.ts'
 import uk from './src/i18n/uk.ts'
@@ -14,9 +14,6 @@ import uk from './src/i18n/uk.ts'
 const SITE = 'https://sunlucki.pl'
 const COPIES: Record<Lang, Copy> = { en, ru, uk, pl, de, it, fr }
 const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-// the handwritten "Why?" over the handle in About and the word the hero's finger writes, in every language: just
-// those letters of Caveat
-const HINTS = encodeURIComponent([...new Set(LANGS.flatMap((lang) => [...COPIES[lang].about.hint, ...COPIES[lang].hero.swipe]))].join(''))
 
 // What search engines and link previews read of a language's page: its title and description, where its
 // translations are, the share card, and who it's about (schema.org).
@@ -80,8 +77,6 @@ function head(lang: Lang) {
     `<meta name="twitter:title" content="${escape(t.meta.title)}" />`,
     `<meta name="twitter:description" content="${escape(t.meta.ogDescription)}" />`,
     `<meta name="twitter:image" content="${SITE}/og.jpg" />`,
-    ...(fontOf(lang) === 'Montserrat' ? [`<link rel="stylesheet" href="${MONTSERRAT}" />`] : []),
-    `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&text=${HINTS}&display=swap" />`,
     `<script type="application/ld+json">${JSON.stringify(graph)}</script>`,
   ].join('\n    ')
 }
@@ -90,16 +85,19 @@ const SEO = /<!-- seo -->[\s\S]*?<!-- \/seo -->/
 const seo = (lang: Lang) => `<!-- seo -->\n    ${head(lang)}\n    <!-- /seo -->`
 
 // The page for each language: index.html (English) with its head filled in, and once the build is written a copy
-// for every other language at ru/index.html and so on; with a sitemap of them all, each listing its translations.
+// for every other language at ru/index.html and so on, fetching that language's copy along with the page's own
+// scripts (the page waits for it: i18n/index.ts); with a sitemap of them all, each listing its translations.
 function languages(): Plugin {
   return {
     name: 'languages',
     transformIndexHtml: { order: 'post', handler: (html) => html.replace(SEO, seo('en')) },
-    writeBundle({ dir = 'dist' }) {
+    writeBundle({ dir = 'dist' }, bundle) {
       const html = readFileSync(join(dir, 'index.html'), 'utf8')
       for (const lang of LANGS.filter((lang) => lang !== 'en')) {
         mkdirSync(join(dir, lang), { recursive: true })
-        writeFileSync(join(dir, lang, 'index.html'), html.replace('<html lang="en">', `<html lang="${lang}">`).replace(SEO, seo(lang)))
+        const copy = Object.values(bundle).find((file) => file.type === 'chunk' && file.facadeModuleId?.endsWith(`/src/i18n/${lang}.ts`))
+        const page = html.replace('<html lang="en">', `<html lang="${lang}">`).replace(SEO, seo(lang))
+        writeFileSync(join(dir, lang, 'index.html'), copy ? page.replace('</head>', `  <link rel="modulepreload" crossorigin href="/${copy.fileName}">\n  </head>`) : page)
       }
       const day = new Date().toISOString().slice(0, 10)
       const links = [

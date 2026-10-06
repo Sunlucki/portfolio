@@ -10,6 +10,7 @@ import TechText from '../vendor/react-bits/TechText';
 import { HERO_FG_FRAMES, HERO_FRAMES, HERO_TAGLINE, NAV } from '../content';
 import { FONT, fill, t } from '../i18n';
 import heroMotion from '../heroMotion.json';
+import { afterLoad } from '../afterLoad';
 import { createHeroVeil } from './heroVeil';
 
 type Layer = 'bg' | 'fg';
@@ -33,7 +34,7 @@ const LOAD_ORDER: Array<[Layer, number]> = [
 // On narrow phones the links shrink a little to fit side by side (Montserrat, set for Cyrillic, runs wider than
 // Kanit: smaller still, and closer).
 const NAV_TEXT = `${
-  FONT === 'Montserrat' ? 'text-[clamp(10px,3.1vw,0.75rem)] tracking-normal sm:text-sm sm:tracking-wider' : 'text-[clamp(11px,3.6vw,0.875rem)] tracking-wider'
+  FONT === 'Montserrat Variable' ? 'text-[clamp(10px,3.1vw,0.75rem)] tracking-normal sm:text-sm sm:tracking-wider' : 'text-[clamp(11px,3.6vw,0.875rem)] tracking-wider'
 } whitespace-nowrap font-medium uppercase md:text-lg lg:text-[1.4rem]`;
 const HEADROOM = 0.12; // phones: share of the screen above the subject at the very top of the page
 const LOOSE_UNTIL = 0.12; // phones: scroll progress at which the framing is back to full cover
@@ -193,7 +194,7 @@ export function HeroSection() {
       requestPaint();
     };
 
-    for (const [layer, i] of LOAD_ORDER) {
+    const fetchFrame = ([layer, i]: [Layer, number]) => {
       const img = new Image();
       img.decoding = 'async';
       img.onload = () => {
@@ -202,7 +203,19 @@ export function HeroSection() {
       };
       img.src = frameSrc(layer, mobile, i);
       frames[layer][i] = img;
-    }
+    };
+    // The opening's cut-out at once; the other frames (some 3 MB) once the page is in and the browser idle, or as soon
+    // as the page moves, so they don't hold up the page's own files.
+    fetchFrame(LOAD_ORDER[0]);
+    let restAsked = false;
+    const fetchRest = () => {
+      if (restAsked) return;
+      restAsked = true;
+      window.removeEventListener('scroll', fetchRest);
+      LOAD_ORDER.slice(1).forEach(fetchFrame);
+    };
+    const restLater = afterLoad(fetchRest);
+    window.addEventListener('scroll', fetchRest, { passive: true });
 
     // Sized from the canvas's own box whenever it changes. Safari can run this before the page's styles
     // apply, while the canvases are still 300 × 150: sized once, the hero stayed stretched and blurred.
@@ -376,6 +389,8 @@ export function HeroSection() {
       if (veilRaf) cancelAnimationFrame(veilRaf);
       if (raf) cancelAnimationFrame(raf);
       veil.destroy();
+      restLater();
+      window.removeEventListener('scroll', fetchRest);
       for (const layer of ['bg', 'fg'] as const) frames[layer].forEach((img) => (img.onload = null));
       hint.revert();
       timeline.revert();

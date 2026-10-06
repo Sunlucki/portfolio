@@ -5,6 +5,7 @@ import { SectionTitle } from '../components/SectionTitle';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
 import { LangLinks } from '../components/LangSwitch';
+import { afterLoad } from '../afterLoad';
 import { PERSON } from '../content';
 import { fill, t } from '../i18n';
 
@@ -44,12 +45,10 @@ export function ContactSection() {
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const idle = (run: () => void, timeout: number) => window.requestIdleCallback?.(run, { timeout }) ?? window.setTimeout(run, timeout / 4);
-    const unidle = (id: number) => (window.cancelIdleCallback ? window.cancelIdleCallback(id) : window.clearTimeout(id));
     // Setting the scene up is a long task: do it when the browser is idle after load, or at the latest
     // 1.2 s after the page comes within three screens of it, so it never lands in the middle of a scroll.
     const mount = () => setNear(true);
-    const early = idle(mount, 5000);
+    const early = afterLoad(mount, 5000);
     let fallback = 0;
     const ahead = new IntersectionObserver(
       ([entry]) => {
@@ -63,7 +62,7 @@ export function ContactSection() {
     return () => {
       ahead.disconnect();
       around.disconnect();
-      unidle(early);
+      early();
       window.clearTimeout(fallback);
     };
   }, []);
@@ -121,17 +120,17 @@ export function ContactSection() {
         </FadeIn>
       </div>
 
-      <footer className="relative mx-auto mt-24 max-w-6xl border-t border-[#D7E2EA]/15 pt-6 text-xs uppercase tracking-wider text-[#D7E2EA]/50">
+      <footer className="relative mx-auto mt-24 max-w-6xl border-t border-[#D7E2EA]/15 pt-6 text-xs uppercase tracking-wider text-[#D7E2EA]/55">
         <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
           <span>
             © {new Date().getFullYear()} {PERSON.name}
           </span>
           <span>{t.contact.b2b}</span>
         </div>
-        <div className="mt-4 text-[#D7E2EA]/40">
+        <div className="mt-4 text-[#D7E2EA]/55">
           <LangLinks />
         </div>
-        <p className="mt-4 text-center text-xs normal-case leading-relaxed tracking-normal text-[#D7E2EA]/35 sm:text-left [&_a]:py-2 [&_a]:underline-offset-2 hover:[&_a]:underline">
+        <p className="mt-4 text-center text-xs normal-case leading-relaxed tracking-normal text-[#D7E2EA]/55 sm:text-left [&_a]:py-2 [&_a]:underline-offset-2 hover:[&_a]:underline">
           {C.models} <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>: {open}
           <a href="https://sketchfab.com/3d-models/iphone-17-pro-max-87fc1df741384124a8ce0226d2b2058d">iPhone 17 Pro Max</a>
           {close} {C.by} <a href="https://sketchfab.com/MG990">MajdyModels</a>, {C.recoloured}; {open}

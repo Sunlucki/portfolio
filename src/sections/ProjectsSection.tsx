@@ -120,7 +120,7 @@ function ProjectCard({ project, index, progress, range, targetScale, playing, ca
           ) : project.live ? (
             <LiveProjectButton href={project.live} label={project.liveLabel} />
           ) : project.slides ? null : (
-            <span className="rounded-full border-2 border-[#D7E2EA]/30 px-8 py-3 text-sm uppercase tracking-widest text-[#D7E2EA]/50 sm:px-10 sm:py-3.5">
+            <span className="rounded-full border-2 border-[#D7E2EA]/30 px-8 py-3 text-sm uppercase tracking-widest text-[#D7E2EA]/55 sm:px-10 sm:py-3.5">
               {t.projects.caseStudy}
             </span>
           )}
@@ -218,18 +218,20 @@ function Slides({ slides, playing }: { slides: Slide[]; playing: boolean }) {
   const site = frames[at].site;
   const url = slides[site].url;
   const near = [(at + frames.length - 1) % frames.length, at, (at + 1) % frames.length];
+  const woke = playing || at > 0; // (its card has come up: its films may load; till then they wait, the page's first load spared them)
 
   // a frame as it shows: mockups and films across the window, pages on the MacBook's screen
   const frame = (i: number) => {
     const shot = frames[i];
     const on = i === at;
     const moving = on && playing && !still;
-    if (shot.video) return <Film key={shot.video} frame={shot} on={on} playing={moving} />;
+    if (shot.video) return <Film key={shot.video} frame={shot} on={on} playing={moving} woke={woke} />;
     return (
       <img
         key={shot.image}
         src={shot.image}
         alt={shot.alt}
+        loading="lazy"
         aria-hidden={!on}
         className="absolute inset-0 h-full w-full object-cover"
         style={{
@@ -281,8 +283,9 @@ function Slides({ slides, playing }: { slides: Slide[]; playing: boolean }) {
   );
 }
 
-// A site's demo film in the slideshow: from its start each time its frame comes up, paused otherwise.
-function Film({ frame, on, playing }: { frame: Slide['frames'][number]; on: boolean; playing: boolean }) {
+// A site's demo film in the slideshow: from its start each time its frame comes up, paused otherwise; fetched (it and
+// its poster) only once its card has come up.
+function Film({ frame, on, playing, woke }: { frame: Slide['frames'][number]; on: boolean; playing: boolean; woke: boolean }) {
   const film = useRef<HTMLVideoElement>(null);
   useEffect(() => {
     const video = film.current;
@@ -296,8 +299,8 @@ function Film({ frame, on, playing }: { frame: Slide['frames'][number]; on: bool
   return (
     <video
       ref={film}
-      src={frame.video}
-      poster={frame.image}
+      src={woke ? frame.video : undefined}
+      poster={woke ? frame.image : undefined}
       muted
       playsInline
       preload="auto"
