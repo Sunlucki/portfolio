@@ -251,23 +251,26 @@ const gaussian = () => {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 };
 
-// The order of the points along the Hilbert curve of (u, v) in [0, 1]²: by default their x/y within ±half.
+// The order of the points along the Hilbert curve of (u, v) in [0, 1]²: by default their x/y within ±half. Each
+// point's key is its Hilbert index, then a random tiebreak, then the point's own index, in one whole number (under
+// 2^53), so the keys sort natively, without a comparator: the shapes are laid out on the page's main thread.
 function hilbertOrder(points: Float32Array, half: number, uv?: (i: number) => [number, number]) {
   const keys = new Float64Array(COUNT);
-  const order = new Uint32Array(COUNT);
   for (let i = 0; i < COUNT; i++) {
     const [u, v] = uv ? uv(i) : [(points[i * S] / half + 1) / 2, (points[i * S + 1] / half + 1) / 2];
     const x = Math.min(1023, Math.max(0, Math.round(u * 1023)));
     const y = Math.min(1023, Math.max(0, Math.round(v * 1023)));
-    keys[i] = hilbert(x, y) + Math.random() * 0.5;
-    order[i] = i;
+    keys[i] = (hilbert(x, y) * 1024 + Math.floor(Math.random() * 1024)) * COUNT + i;
   }
-  return order.sort((a, b) => keys[a] - keys[b]);
+  keys.sort();
+  const order = new Uint32Array(COUNT);
+  for (let i = 0; i < COUNT; i++) order[i] = keys[i] % COUNT;
+  return order;
 }
 
 function permute(points: Float32Array, order: Uint32Array) {
   const sorted = new Float32Array(COUNT * S);
-  for (let i = 0; i < COUNT; i++) sorted.set(points.subarray(order[i] * S, order[i] * S + S), i * S);
+  for (let i = 0; i < COUNT; i++) for (let k = 0; k < S; k++) sorted[i * S + k] = points[order[i] * S + k];
   return sorted;
 }
 
@@ -1083,17 +1086,74 @@ const BRAIN = '/manifesto/brain.bin';
 const IDEA = '/manifesto/idea.bin';
 
 // ——— the cloud ———
+type Media = { photo: HTMLImageElement | null; lights: ImageData | null; heart: Uint8Array | null; idea: Uint8Array | null; brain: Uint8Array | null };
+type Layout = Awaited<ReturnType<typeof layOut>>;
+
+// The shapes laid out for the screen: each one's points, and where the eye, the Earth, the heart and the rest sit. On
+// phones the shapes sit higher, above the phrase, and narrower. A shape at a time, each in a task of its own: all in
+// one, they held a phone's page up for over half a second.
+async function layOut(media: Media, worldHeight: number, aspect: number, portrait: boolean, stageAspect: number) {
+  const next = <T,>(make: () => T) => new Promise<T>((done) => window.setTimeout(() => done(make())));
+  const fit = Math.min(1, aspect * 1.1);
+  const lift = worldHeight * (portrait ? 0.17 : 0.135);
+  const s = worldHeight * fit;
+  const w = s * (portrait ? 0.44 : 0.32);
+  const eye = { x: 0, y: lift + worldHeight * (portrait ? 0.02 : 0.06), w, h: w * 0.42 };
+  const up = lift + s * 0.035; // the Earth a little higher, its rim clear of its phrases' three lines
+  const globe = await next(() => earth(s * 0.3, up));
+  // the heart, as big as the camera gets to it, a little smaller and higher on wide screens, clear of its phrase
+  const heart = { lift: lift + (portrait ? 0 : s * 0.02), size: s * (portrait ? 0.62 : 0.57) };
+  // the laptop and its chip a little higher, clear of the phrase; on phones, where the phrase is far below,
+  // larger instead, so the brain on the chip reads
+  const chipLift = lift + (portrait ? 0 : s * 0.07);
+  const chipSize = s * (portrait ? 1 : 0.72);
+  const laptop = await next(() => laptopShape(s * (portrait ? 0.66 : 0.5), chipLift));
+  // the bulb's bolt folds into the laptop's screen, its glass and base into the rest of it; the chip's letters
+  // AI into the eye's lids and iris (FLIGHTS)
+  const bulb = await next(() => ideaShape(media.idea, s * 0.7, lift));
+  const idea = await next(() =>
+    permute(bulb, pairOrder(bulb, laptop.points, [
+      [[PART.bolt], [PART.screen, PART.code, PART.caret]],
+      [[PART.glass, PART.base], [PART.shell, PART.key]],
+    ])),
+  );
+  const eyePoints = await next(() => eyeShape(eye));
+  const chips = await next(() => chipShapes(chipSize, chipLift));
+  const [chipBrain, chipAI] = await next(() => {
+    const chipOrder = pairOrder(chips[1], eyePoints, [[[PART.neon], [PART.lid, PART.line, PART.iris, PART.glint]]]);
+    return chips.map((chip) => permute(chip, chipOrder));
+  });
+  const shapes = [
+    await next(() => iris(worldHeight)),
+    globe,
+    await next(() => earthLights(globe, media.lights, s * 0.3, up)),
+    await next(() => heartShape(media.heart, heart.size, heart.lift)),
+    await next(() => brainShape(media.brain, s * 0.66, lift)),
+    idea,
+    laptop.points,
+    chipBrain,
+    chipAI,
+    eyePoints,
+    await next(() => portraitShape(media.photo, coverCrop(stageAspect, PORTRAIT.aspect, PORTRAIT.focus))),
+  ];
+  return {
+    eye,
+    earth: [0, up, 0, s * 0.3],
+    heart: [0, heart.lift, 0, heart.size],
+    bulb: bulbOf(media.idea, s * 0.7, lift),
+    hands: handsOf(idea, bulbOf(media.idea, s * 0.7, lift)[0]),
+    brain: [0, lift, 0, s * 0.66],
+    chip: [0, chipLift, 0, chipSize / 2], // half the board
+    dive: [...laptop.chip, 10], // where the chip sits in the laptop, and how many times nearer the camera gets
+    shapes,
+  };
+}
+
 function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph: RefObject<Morph>; bridge: RefObject<ManifestoBridge | null>; onReady: () => void }) {
   const size = useThree((state) => state.size);
   // The photo the manifesto ends in, the Earth's lights at night and the baked heart, idea and brain; each is
   // null if it failed to load.
-  const [media, setMedia] = useState<{
-    photo: HTMLImageElement | null;
-    lights: ImageData | null;
-    heart: Uint8Array | null;
-    idea: Uint8Array | null;
-    brain: Uint8Array | null;
-  } | null>(null);
+  const [media, setMedia] = useState<Media | null>(null);
   useEffect(() => {
     let alive = true;
     const load = (src: string) => {
@@ -1135,56 +1195,14 @@ function Cloud({ uniforms, morph, bridge, onReady }: { uniforms: Uniforms; morph
   // The portrait is sampled as the About stage frames it (in steps, so small resizes keep the layout).
   const stage = bridge.current?.stage?.getBoundingClientRect();
   const stageAspect = stage && stage.height > 0 ? Math.round((stage.width / stage.height) * 20) / 20 : portrait ? 0.8 : 0.6;
-  // Laid out once per orientation. On phones the shapes sit higher, above the phrase, and narrower.
-  const layout = useMemo(() => {
-    if (!media) return null;
-    const fit = Math.min(1, aspect * 1.1);
-    const lift = worldHeight * (portrait ? 0.17 : 0.135);
-    const s = worldHeight * fit;
-    const w = s * (portrait ? 0.44 : 0.32);
-    const eye = { x: 0, y: lift + worldHeight * (portrait ? 0.02 : 0.06), w, h: w * 0.42 };
-    const up = lift + s * 0.035; // the Earth a little higher, its rim clear of its phrases' three lines
-    const globe = earth(s * 0.3, up);
-    // the heart, as big as the camera gets to it, a little smaller and higher on wide screens, clear of its phrase
-    const heart = { lift: lift + (portrait ? 0 : s * 0.02), size: s * (portrait ? 0.62 : 0.57) };
-    // the laptop and its chip a little higher, clear of the phrase; on phones, where the phrase is far below,
-    // larger instead, so the brain on the chip reads
-    const chipLift = lift + (portrait ? 0 : s * 0.07);
-    const chipSize = s * (portrait ? 1 : 0.72);
-    const laptop = laptopShape(s * (portrait ? 0.66 : 0.5), chipLift);
-    // the bulb's bolt folds into the laptop's screen, its glass and base into the rest of it; the chip's letters
-    // AI into the eye's lids and iris (FLIGHTS)
-    const bulb = ideaShape(media.idea, s * 0.7, lift);
-    const idea = permute(bulb, pairOrder(bulb, laptop.points, [
-      [[PART.bolt], [PART.screen, PART.code, PART.caret]],
-      [[PART.glass, PART.base], [PART.shell, PART.key]],
-    ]));
-    const eyePoints = eyeShape(eye);
-    const chips = chipShapes(chipSize, chipLift);
-    const chipOrder = pairOrder(chips[1], eyePoints, [[[PART.neon], [PART.lid, PART.line, PART.iris, PART.glint]]]);
-    const [chipBrain, chipAI] = chips.map((chip) => permute(chip, chipOrder));
-    return {
-      eye,
-      earth: [0, up, 0, s * 0.3],
-      heart: [0, heart.lift, 0, heart.size],
-      bulb: bulbOf(media.idea, s * 0.7, lift),
-      hands: handsOf(idea, bulbOf(media.idea, s * 0.7, lift)[0]),
-      brain: [0, lift, 0, s * 0.66],
-      chip: [0, chipLift, 0, chipSize / 2], // half the board
-      dive: [...laptop.chip, 10], // where the chip sits in the laptop, and how many times nearer the camera gets
-      shapes: [
-        iris(worldHeight),
-        globe,
-        earthLights(globe, media.lights, s * 0.3, up),
-        heartShape(media.heart, heart.size, heart.lift),
-        brainShape(media.brain, s * 0.66, lift),
-        idea,
-        laptop.points,
-        chipBrain,
-        chipAI,
-        eyePoints,
-        portraitShape(media.photo, coverCrop(stageAspect, PORTRAIT.aspect, PORTRAIT.focus)),
-      ],
+  // Laid out once per orientation (layOut, a shape at a time).
+  const [layout, setLayout] = useState<Layout | null>(null);
+  useEffect(() => {
+    if (!media) return;
+    let alive = true;
+    void layOut(media, worldHeight, aspect, portrait, stageAspect).then((done) => alive && setLayout(done));
+    return () => {
+      alive = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [media, portrait, stageAspect]);
