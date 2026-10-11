@@ -26,15 +26,31 @@ export const person = {
   ],
 };
 
-export const summary =
-  'I design, build and run software products end to end, and I run the whole software lifecycle through AI agents. ' +
-  'In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses: a CRM with double-entry ' +
-  'accounting and KSeF e-invoicing that runs my own company, a B2B commerce platform with 7 payment gateways and 6 ' +
-  'marketplace integrations, a 23-language EU store with an LLM lead-qualification pipeline, a workforce platform for ' +
-  'staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps. My delivery is spec-driven and agentic: written specifications, parallel coding agents ' +
-  'with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback. Before ' +
-  'engineering full time I co-owned businesses and managed a team of 6, so I explain architecture in terms of cost, risk ' +
-  'and business value.';
+// The summary in its parts, for the page (a lead, what I built in 2026, how I deliver, where I come from); the PDFs,
+// Markdown and JSON Resume read it as one paragraph, `summary`, the same words.
+export const summaryParts = {
+  lead: 'I design, build and run software products end to end, and I run the whole software lifecycle through AI agents.',
+  built: {
+    intro: 'In 2026 I was the sole architect of 10+ production systems for Polish and EU businesses',
+    items: [
+      'a CRM with double-entry accounting and KSeF e-invoicing that runs my own company',
+      'a B2B commerce platform with 7 payment gateways and 6 marketplace integrations',
+      'a 23-language EU store with an LLM lead-qualification pipeline',
+      'a workforce platform for staffing agencies and fleet management for Uber and Bolt partner fleets, both with native iOS apps',
+    ],
+  },
+  delivery:
+    'My delivery is spec-driven and agentic: written specifications, parallel coding agents with frozen contracts, automated tests, adversarial multi-agent reviews and, on the main platforms, CI/CD with health-gated rollback.',
+  background:
+    'Before engineering full time I co-owned businesses and managed a team of 6, so I explain architecture in terms of cost, risk and business value.',
+};
+const { built } = summaryParts;
+export const summary = [
+  summaryParts.lead,
+  `${built.intro}: ${built.items.join(", ")}.`,
+  summaryParts.delivery,
+  summaryParts.background,
+].join(' ');
 
 export const numbers = [
   { value: '10+', label: 'production systems shipped in 2026, as the sole architect' },

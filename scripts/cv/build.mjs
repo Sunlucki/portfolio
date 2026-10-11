@@ -1,7 +1,8 @@
-// The CV (scripts/cv/data.mjs) as the page public/cv/index.html, in the site's look, its PDF (printed from the page by
-// headless Chrome), Markdown (cv.txt) and JSON Resume (resume.json): the same words in each, readable by people and by
-// the agents that score CVs. All the text is in the HTML (nothing needs JavaScript to be read); the PDF has a real text
-// layer, tagged, one column.
+// The CV (scripts/cv/data.mjs) as the page public/cv/index.html (a bento grid, page.mjs), two PDFs printed by headless
+// Chrome (the page itself, with working buttons; and a one-column *_ATS.pdf for applicant tracking systems, from the
+// template below), Markdown (cv.txt) and JSON Resume (resume.json): the same words in each, readable by people and by
+// the agents that score CVs. All the text is in the HTML (nothing needs JavaScript to be read); both PDFs have a real,
+// tagged text layer.
 //
 //   node scripts/cv/build.mjs                       → public/cv/
 //   node scripts/cv/build.mjs --out <dir> --phone "+48 …" --pdf <name>.pdf
@@ -13,11 +14,13 @@ import { join, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
 import * as cv from './data.mjs';
+import { page } from './page.mjs';
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, arg, i, all) => (arg.startsWith('--') ? [...pairs, [arg.slice(2), all[i + 1]]] : pairs), []));
 const PUBLIC = resolve(import.meta.dirname, '../../public/cv');
 const OUT = args.out ? resolve(args.out) : PUBLIC;
 const PDF = args.pdf ?? 'Bogdan_Nenadovic_CV.pdf';
+const ATS = PDF.replace(/\.pdf$/, '_ATS.pdf');
 const PHONE = args.phone ?? null;
 const URL_CV = `${cv.SITE}/cv/`;
 
@@ -63,7 +66,8 @@ const jsonLd = {
   },
 };
 
-const html = `<!doctype html>
+// the one-column PDF for applicant tracking systems is printed from this page; the CV page itself is page.mjs's bento
+const atsHtml = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -600,7 +604,9 @@ const resume = {
 };
 
 mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, 'index.html'), html);
+writeFileSync(join(OUT, 'index.html'), page({ cv, PDF, ATS, PHONE, URL_CV, jsonLd }));
+const ATS_PAGE = join(OUT, `.ats-${process.pid}.html`);
+writeFileSync(ATS_PAGE, atsHtml);
 writeFileSync(join(OUT, 'cv.txt'), md); // (Markdown, served as plain text: the server has no type for .md)
 writeFileSync(join(OUT, 'resume.json'), `${JSON.stringify(resume, null, 2)}\n`);
 if (OUT !== PUBLIC) copyFileSync(join(PUBLIC, 'portrait.jpg'), join(OUT, 'portrait.jpg'));
@@ -633,18 +639,25 @@ try {
       ws.send(JSON.stringify({ id, method, params }));
     });
   await send('Page.enable');
-  await send('Page.navigate', { url: pathToFileURL(join(OUT, 'index.html')).href });
-  await sleep(1500);
-  await send('Runtime.evaluate', {
-    expression: `Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]).then(() => { dispatchEvent(new Event('beforeprint')); return true; })`,
-    awaitPromise: true,
-  });
-  const { data } = await send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true, generateTaggedPDF: true, generateDocumentOutline: true });
-  writeFileSync(join(OUT, PDF), Buffer.from(data, 'base64'));
+  const print = async (from, to) => {
+    await send('Page.navigate', { url: pathToFileURL(from).href });
+    await sleep(1500);
+    await send('Runtime.evaluate', {
+      // (links to the files beside the page point at the live copies, not at this disk)
+      expression: `document.querySelectorAll('a[href]:not([href^="#"])').forEach((a) => { if (a.href.startsWith('file:')) a.href = new URL(a.getAttribute('href'), ${JSON.stringify(URL_CV)}).href; });
+        Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]).then(() => { dispatchEvent(new Event('beforeprint')); return true; })`,
+      awaitPromise: true,
+    });
+    const { data } = await send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true, generateTaggedPDF: true, generateDocumentOutline: true });
+    writeFileSync(join(OUT, to), Buffer.from(data, 'base64'));
+  };
+  await print(join(OUT, 'index.html'), PDF);
+  await print(ATS_PAGE, ATS);
   ws.close();
 } finally {
   chrome.kill();
   await sleep(400);
   rmSync(profile, { recursive: true, force: true });
+  rmSync(ATS_PAGE, { force: true });
 }
-console.log(`CV → ${OUT}: index.html, cv.txt, resume.json, ${PDF}`);
+console.log(`CV → ${OUT}: index.html, cv.txt, resume.json, ${PDF}, ${ATS}`);
