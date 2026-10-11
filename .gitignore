@@ -11,3 +11,6 @@ public/video/
 
 # Python bytecode from the media scripts
 __pycache__/
+
+# The CV's product promos (scripts/cv/render-promos.mjs): deployed from this Mac too; their posters stay in git
+public/cv/promo/*.mp4
