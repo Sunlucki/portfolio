@@ -102,7 +102,7 @@ h1.name span { display: block; }
 .stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
 .stat { display: flex; flex-direction: column; gap: 10px; background: linear-gradient(160deg, rgb(255 255 255 / 0.05), rgb(255 255 255 / 0.01)), var(--panel); }
 .stat .value small { font-size: 0.5em; font-weight: 600; }
-.stat .value { font-weight: 900; font-size: clamp(1.7rem, 2.9vw, 2.5rem); line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stat .value { overflow: hidden; font-weight: 900; font-size: clamp(1.7rem, 2.9vw, 2.5rem); line-height: 1; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .stat .what { color: var(--muted); font-size: 0.84rem; line-height: 1.35; }
 
 /* summary */
@@ -690,7 +690,7 @@ html.js .rv.in { opacity: 1; transform: none; }
     const step = (t) => {
       const k = Math.min(1, (t - t0) / 1400), v = Math.round(c.to * (1 - Math.pow(1 - k, 4)));
       c.node.nodeValue = c.pre + (c.comma ? v.toLocaleString('en-US') : v) + c.post;
-      if (k < 1) requestAnimationFrame(step); else c.node.nodeValue = c.text;
+      if (k < 1) requestAnimationFrame(step); else { c.node.nodeValue = c.text; fit(); }
     };
     requestAnimationFrame(step);
   };
@@ -705,8 +705,10 @@ html.js .rv.in { opacity: 1; transform: none; }
   } else parts.forEach((p) => p.classList.add('in'));
   // each title's first letter: its selection box says its size, as a design tool would
   const sizes = () => document.querySelectorAll('.tt').forEach((t) => { const r = t.querySelector('.tt-l').getBoundingClientRect(); t.querySelector('.dim').textContent = t.textContent.trim()[0] + '  ' + Math.round(r.width) + ' × ' + Math.round(r.height); });
-  document.fonts.ready.then(sizes);
-  addEventListener('resize', sizes);
+  // a number wider than its tile steps down until it fits
+  const fit = () => document.querySelectorAll('.stat .value').forEach((v) => { v.style.fontSize = ''; for (let i = 0; i < 16 && v.scrollWidth > v.clientWidth; i++) v.style.fontSize = parseFloat(getComputedStyle(v).fontSize) - 1 + 'px'; });
+  document.fonts.ready.then(() => { sizes(); fit(); });
+  addEventListener('resize', () => { sizes(); fit(); });
   // tiles lit where the pointer is
   addEventListener('pointermove', (e) => { const t = e.target.closest && e.target.closest('.tile'); if (!t) return; const r = t.getBoundingClientRect(); t.style.setProperty('--mx', e.clientX - r.left + 'px'); t.style.setProperty('--my', e.clientY - r.top + 'px'); }, { passive: true });
   // the section on screen lit in the bar
