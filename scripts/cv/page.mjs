@@ -121,6 +121,8 @@ h1.name span { display: block; }
 .facts li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; align-items: start; }
 .facts svg { width: 18px; height: 18px; margin-top: 3px; stroke: var(--accent); fill: none; stroke-width: 1.8; }
 .contacts { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; }
+/* addresses as written, so they copy whole (spaced capitals come out of a PDF as single letters) */
+.contacts .addr { text-transform: none; letter-spacing: 0; font-size: 0.86rem; }
 .stat { display: flex; flex-direction: column; justify-content: space-between; gap: 10px; }
 .stat .value { font-weight: 900; font-size: clamp(1.9rem, 3.4vw, 2.8rem); line-height: 1; background: var(--heading); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; white-space: nowrap; }
 .stat .what { color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
@@ -231,6 +233,7 @@ html.js .rv.in { opacity: 1; transform: none; }
   .role { font-size: 11pt; margin-top: 6pt; }
   .portrait img { min-height: 0; height: 100%; }
   .btn { padding: 3pt 9pt; font-size: 6.8pt; border-width: 1px; }
+  .contacts .addr { font-size: 7.6pt; }
   .stat .value { font-size: 17pt; }
   .stat .what { font-size: 7.4pt; }
   section { padding: 12pt 0 0; break-inside: auto; }
@@ -283,9 +286,9 @@ html.js .rv.in { opacity: 1; transform: none; }
     <div class="tile s5 rv">
       <span class="label">Contact</span>
       <p class="contacts">
-        <a class="btn" href="mailto:${esc(person.email)}">${esc(person.email)}</a>
-        ${PHONE ? `<a class="btn" href="tel:${esc(PHONE.replace(/\s/g, ''))}">${esc(PHONE)}</a>` : ''}
-        ${person.links.map((l) => `<a class="btn" href="${esc(l.url)}">${esc(l.label)}</a>`).join('\n        ')}
+        <a class="btn addr" href="mailto:${esc(person.email)}">${esc(person.email)}</a>
+        ${PHONE ? `<a class="btn addr" href="tel:${esc(PHONE.replace(/\s/g, ''))}">${esc(PHONE)}</a>` : ''}
+        ${person.links.map((l) => `<a class="btn addr" href="${esc(l.url)}">${esc(l.label)}</a>`).join('\n        ')}
         <a class="btn cta noprint" href="${esc(PDF)}" download>Download PDF</a>
         <a class="btn small noprint" href="${esc(ATS)}" download>One-column PDF for ATS</a>
       </p>

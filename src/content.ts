@@ -13,7 +13,7 @@ export const PERSON = {
   firstName: 'bogdan',
   role: t.role,
   // TODO: confirm the public mailbox — sunlucki.pl has no MX records yet.
-  email: 'hello@sunlucki.pl',
+  email: 'bogdan@simbia.eu',
   linkedin: 'https://www.linkedin.com/in/sunlucki',
   github: 'https://github.com/Sunlucki',
   location: t.location,

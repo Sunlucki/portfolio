@@ -12,7 +12,7 @@ export const person = {
   focus: 'AI-assisted SDLC · agentic coding · CRM, commerce and fintech platforms',
   location: 'Poznań, Poland (CET)',
   terms: 'Remote from home · on site for key company events · B2B through my own company, SIMBIA sp. z o.o.',
-  email: 'hello@sunlucki.pl',
+  email: 'bogdan@simbia.eu',
   links: [
     { label: 'sunlucki.pl', url: 'https://sunlucki.pl' },
     { label: 'linkedin.com/in/sunlucki', url: 'https://www.linkedin.com/in/sunlucki', network: 'LinkedIn', username: 'sunlucki' },
