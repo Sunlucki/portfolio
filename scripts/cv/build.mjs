@@ -645,6 +645,7 @@ try {
     await send('Runtime.evaluate', {
       // (links to the files beside the page point at the live copies, not at this disk)
       expression: `document.querySelectorAll('a[href]:not([href^="#"])').forEach((a) => { if (a.href.startsWith('file:')) a.href = new URL(a.getAttribute('href'), ${JSON.stringify(URL_CV)}).href; });
+        document.querySelectorAll('img').forEach((i) => (i.loading = 'eager'));
         Promise.all([document.fonts.ready, ...[...document.images].map((i) => i.decode().catch(() => {}))]).then(() => { dispatchEvent(new Event('beforeprint')); return true; })`,
       awaitPromise: true,
     });
