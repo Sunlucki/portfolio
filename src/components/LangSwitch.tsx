@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { LANGS, LANG_NAMES, lang, langPath, pick, t } from '../i18n';
+import { LANGS, LANG_NAMES, lang, langPath, pick, t, type Lang } from '../i18n';
 
 // The language menu in the hero's nav: the page's language, which opens a list of them all, each a link to its page
-// (picked, it is remembered for the next visit to /).
-export function LangSwitch({ className = '' }: { className?: string }) {
+// (picked, it is remembered for the next visit to /). `href` gives a language's page (the CV's: src/cv).
+export function LangSwitch({ className = '', href = langPath }: { className?: string; href?: (to: Lang) => string }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -37,7 +37,7 @@ export function LangSwitch({ className = '' }: { className?: string }) {
         {LANGS.map((to) => (
           <li key={to}>
             <a
-              href={langPath(to)}
+              href={href(to)}
               hrefLang={to}
               lang={to}
               onClick={() => pick(to)}
@@ -57,13 +57,13 @@ export function LangSwitch({ className = '' }: { className?: string }) {
 }
 
 // The same links in a row, for the footer (and for search engines, which follow them to each language's page).
-export function LangLinks() {
+export function LangLinks({ href = langPath }: { href?: (to: Lang) => string }) {
   return (
     <nav aria-label={t.language} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 sm:justify-start">
       {LANGS.map((to) => (
         <a
           key={to}
-          href={langPath(to)}
+          href={href(to)}
           hrefLang={to}
           lang={to}
           onClick={() => pick(to)}

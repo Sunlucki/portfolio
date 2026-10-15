@@ -358,6 +358,7 @@ const fr: Copy = {
     sceneAlt: 'Bogdan Nenadović flottant au-dessus d’un iPhone lumineux',
     pitch: 'Ouvert aux postes produit et design engineering en télétravail, ainsi qu’aux contrats B2B. Basé à {location}, je travaille avec des équipes dans toute l’Europe et aux États-Unis.',
     b2b: 'Contrats B2B via SIMBIA sp. z o.o.',
+    cv: 'CV',
     // the credits in the footer, around the names and links
     credits: {
       models: 'Modèles 3D sous licence',

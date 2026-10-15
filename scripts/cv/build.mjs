@@ -1,4 +1,4 @@
-// The CV (scripts/cv/data.mjs) as the page public/cv/index.html (a bento grid, page.mjs), two PDFs printed by headless
+// The CV (src/cv/data.ts) as two PDFs printed by headless
 // Chrome (the page itself, with working buttons; and a one-column *_ATS.pdf for applicant tracking systems, from the
 // template below), Markdown (cv.txt) and JSON Resume (resume.json): the same words in each, readable by people and by
 // the agents that score CVs. All the text is in the HTML (nothing needs JavaScript to be read); both PDFs have a real,
@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { pathToFileURL } from 'node:url';
-import * as cv from './data.mjs';
+import * as cv from '../../src/cv/data.ts';
 import { page } from './page.mjs';
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((pairs, arg, i, all) => (arg.startsWith('--') ? [...pairs, [arg.slice(2), all[i + 1]]] : pairs), []));
@@ -604,7 +604,9 @@ const resume = {
 };
 
 mkdirSync(OUT, { recursive: true });
-writeFileSync(join(OUT, 'index.html'), page({ cv, PDF, ATS, PHONE, URL_CV, jsonLd }));
+// the pages the PDFs are printed from, beside the files they show; deleted once printed (the CV page itself is src/cv)
+const PAGE = join(OUT, `.page-${process.pid}.html`);
+writeFileSync(PAGE, page({ cv, PDF, ATS, PHONE, URL_CV, jsonLd }));
 const ATS_PAGE = join(OUT, `.ats-${process.pid}.html`);
 writeFileSync(ATS_PAGE, atsHtml);
 writeFileSync(join(OUT, 'cv.txt'), md); // (Markdown, served as plain text: the server has no type for .md)
@@ -652,7 +654,7 @@ try {
     const { data } = await send('Page.printToPDF', { printBackground: true, preferCSSPageSize: true, generateTaggedPDF: true, generateDocumentOutline: true });
     writeFileSync(join(OUT, to), Buffer.from(data, 'base64'));
   };
-  await print(join(OUT, 'index.html'), PDF);
+  await print(PAGE, PDF);
   await print(ATS_PAGE, ATS);
   ws.close();
 } finally {
@@ -660,5 +662,6 @@ try {
   await sleep(400);
   rmSync(profile, { recursive: true, force: true });
   rmSync(ATS_PAGE, { force: true });
+  rmSync(PAGE, { force: true });
 }
-console.log(`CV → ${OUT}: index.html, cv.txt, resume.json, ${PDF}, ${ATS}`);
+console.log(`CV → ${OUT}: cv.txt, resume.json, ${PDF}, ${ATS}`);

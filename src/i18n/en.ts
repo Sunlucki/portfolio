@@ -318,6 +318,7 @@ const en = {
     sceneAlt: 'Bogdan Nenadović floating above a glowing iPhone',
     pitch: 'Open to remote product and design-engineering roles and B2B contracts. Based in {location}, working with teams across Europe and the US.',
     b2b: 'B2B contracts via SIMBIA sp. z o.o.',
+    cv: 'CV', // the footer's link to the CV (src/cv)
     // the credits in the footer, around the names and links
     credits: {
       models: '3D models under',

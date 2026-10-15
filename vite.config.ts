@@ -1,5 +1,5 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 import de from './src/i18n/de.ts'
@@ -10,9 +10,19 @@ import { LANGS, OG_LOCALES, langPath, type Lang } from './src/i18n/langs.ts'
 import pl from './src/i18n/pl.ts'
 import ru from './src/i18n/ru.ts'
 import uk from './src/i18n/uk.ts'
+import cvDe from './src/cv/copy/de.ts'
+import cvEn from './src/cv/copy/en.ts'
+import cvFr from './src/cv/copy/fr.ts'
+import cvIt from './src/cv/copy/it.ts'
+import cvPl from './src/cv/copy/pl.ts'
+import cvRu from './src/cv/copy/ru.ts'
+import type { CvText } from './src/cv/copy/types.ts'
+import cvUk from './src/cv/copy/uk.ts'
 
 const SITE = 'https://sunlucki.pl'
 const COPIES: Record<Lang, Copy> = { en, ru, uk, pl, de, it, fr }
+const CV_COPIES: Record<Lang, CvText> = { en: cvEn, ru: cvRu, uk: cvUk, pl: cvPl, de: cvDe, it: cvIt, fr: cvFr }
+const cvPath = (lang: Lang) => `${langPath(lang)}cv/`
 const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 
 // What search engines and link previews read of a language's page: its title and description, where its
@@ -84,14 +94,51 @@ function head(lang: Lang) {
 const SEO = /<!-- seo -->[\s\S]*?<!-- \/seo -->/
 const seo = (lang: Lang) => `<!-- seo -->\n    ${head(lang)}\n    <!-- /seo -->`
 
+// The CV's head in a language (src/cv): its title and description, where its translations are, who it is about.
+function cvHead(lang: Lang) {
+  const t = CV_COPIES[lang]
+  const url = `${SITE}${cvPath(lang)}`
+  const page = {
+    '@context': 'https://schema.org',
+    '@type': 'ProfilePage',
+    url,
+    name: t.meta.title,
+    inLanguage: lang,
+    mainEntity: { '@type': 'Person', '@id': `${SITE}/#person`, name: 'Bogdan Nenadović', jobTitle: t.headline, email: 'mailto:bogdan@simbia.eu', url: `${SITE}/`, image: `${SITE}/cv/portrait.jpg` },
+  }
+  return [
+    `<title>${escape(t.meta.title)}</title>`,
+    `<meta name="description" content="${escape(t.meta.description)}" />`,
+    `<meta name="author" content="Bogdan Nenadović" />`,
+    `<link rel="canonical" href="${url}" />`,
+    ...LANGS.map((other) => `<link rel="alternate" hreflang="${other}" href="${SITE}${cvPath(other)}" />`),
+    `<meta property="og:type" content="profile" />`,
+    `<meta property="og:url" content="${url}" />`,
+    `<meta property="og:title" content="${escape(t.meta.title)}" />`,
+    `<meta property="og:description" content="${escape(t.meta.description)}" />`,
+    `<meta property="og:image" content="${SITE}/og.jpg" />`,
+    `<meta property="og:locale" content="${OG_LOCALES[lang]}" />`,
+    `<script type="application/ld+json">${JSON.stringify(page)}</script>`,
+  ].join('\n    ')
+}
+const cvSeo = (lang: Lang) => `<!-- seo -->\n    ${cvHead(lang)}\n    <!-- /seo -->`
+
 // The page for each language: index.html (English) with its head filled in, and once the build is written a copy
 // for every other language at ru/index.html and so on, fetching that language's copy along with the page's own
 // scripts (the page waits for it: i18n/index.ts); with a sitemap of them all, each listing its translations.
 function languages(): Plugin {
   return {
     name: 'languages',
-    transformIndexHtml: { order: 'post', handler: (html) => html.replace(SEO, seo('en')) },
+    transformIndexHtml: { order: 'post', handler: (html, ctx) => html.replace(SEO, ctx.path.startsWith('/cv/') ? cvSeo('en') : seo('en')) },
     writeBundle({ dir = 'dist' }, bundle) {
+      // the CV in each language, at /cv/, /ru/cv/ and so on (scripts/cv/prerender.mjs then writes their words in)
+      const cv = readFileSync(join(dir, 'cv', 'index.html'), 'utf8')
+      for (const lang of LANGS.filter((lang) => lang !== 'en')) {
+        mkdirSync(join(dir, lang, 'cv'), { recursive: true })
+        const copy = Object.values(bundle).find((file) => file.type === 'chunk' && file.facadeModuleId?.endsWith(`/src/cv/copy/${lang}.ts`))
+        const page = cv.replace('<html lang="en">', `<html lang="${lang}">`).replace(SEO, cvSeo(lang))
+        writeFileSync(join(dir, lang, 'cv', 'index.html'), copy ? page.replace('</head>', `  <link rel="modulepreload" crossorigin href="/${copy.fileName}">\n  </head>`) : page)
+      }
       const html = readFileSync(join(dir, 'index.html'), 'utf8')
       for (const lang of LANGS.filter((lang) => lang !== 'en')) {
         mkdirSync(join(dir, lang), { recursive: true })
@@ -116,4 +163,6 @@ function languages(): Plugin {
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), languages()],
+  // the landing, and the CV (cv/index.html → src/cv)
+  build: { rollupOptions: { input: { main: resolve(import.meta.dirname, 'index.html'), cv: resolve(import.meta.dirname, 'cv/index.html') } } },
 })

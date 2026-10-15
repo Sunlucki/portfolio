@@ -7,7 +7,7 @@ import { ContactButton } from '../components/Buttons';
 import { LangLinks } from '../components/LangSwitch';
 import { afterLoad } from '../afterLoad';
 import { PERSON } from '../content';
-import { fill, t } from '../i18n';
+import { fill, lang, langPath, t } from '../i18n';
 
 // three.js and friends: loaded and mounted when the browser is idle after load (see below).
 const PhoneScene = lazy(() => import('../three/PhoneScene'));
@@ -126,6 +126,10 @@ export function ContactSection() {
             © {new Date().getFullYear()} {PERSON.name}
           </span>
           <span>{t.contact.b2b}</span>
+          <a href={`${langPath(lang)}cv/`} className="-my-3 inline-flex items-center gap-1 py-3 text-[#D7E2EA] transition-opacity hover:opacity-70">
+            {t.contact.cv}
+            <ArrowUpRight aria-hidden className="h-3.5 w-3.5" />
+          </a>
         </div>
         <div className="mt-4 text-[#D7E2EA]/55">
           <LangLinks />

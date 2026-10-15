@@ -1,5 +1,5 @@
-// The CV's words and facts, once: scripts/cv/build.mjs renders them as the page (public/cv/index.html), its PDF,
-// Markdown (cv.txt) and JSON Resume (resume.json). Facts mirror ../data/profile.json in the knowledge base: only what
+// The CV's words and facts in English, once: the CV page (src/cv, which translates them in src/cv/copy) and
+// scripts/cv/build.mjs, which prints them as the PDFs, Markdown (cv.txt) and JSON Resume (resume.json). Facts mirror ../data/profile.json in the knowledge base: only what
 // the code, the git history and the registries show. No em dashes in the copy.
 
 export const UPDATED = '2026-10-01';
@@ -23,7 +23,7 @@ export const person = {
     ['Polish', 'C2'],
     ['Ukrainian', 'native'],
     ['Russian', 'native'],
-  ],
+  ] as [string, string][],
 };
 
 // The summary in its parts, for the page (a lead, what I built in 2026, how I deliver, where I come from); the PDFs,
@@ -135,7 +135,7 @@ export const fit = [
   },
 ];
 
-export const experience = [
+export const experience: { org: string; url?: string; role: string; start: string; end: string | null; place?: string; text: string }[] = [
   {
     org: 'SIMBIA sp. z o.o.',
     url: 'https://simbia.eu',
@@ -216,7 +216,7 @@ export const SKILL_TAGS = {
   payments: 'Payments & e-invoicing',
 };
 
-export const projects = [
+export const projects: { name: string; url?: string; pdf?: false; status: string; text: string; metrics?: string[]; points: string[]; skills: (keyof typeof SKILL_TAGS)[] }[] = [
   {
     name: 'SIMBIA CRM',
     url: 'https://crm.simbia.eu',

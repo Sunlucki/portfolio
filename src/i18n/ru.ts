@@ -318,6 +318,7 @@ const ru: Copy = {
     sceneAlt: 'Богдан Ненадович парит над светящимся iPhone',
     pitch: 'Открыт к удалённым позициям продуктового разработчика и дизайн-инженера, а также к B2B-контрактам. Моя база: {location}. Работаю с командами по всей Европе и в США.',
     b2b: 'B2B-контракты через SIMBIA sp. z o.o.',
+    cv: 'Резюме (CV)',
     // the credits in the footer, around the names and links
     credits: {
       models: '3D-модели по лицензии',

@@ -316,6 +316,7 @@ const de: Copy = {
     sceneAlt: 'Bogdan Nenadović schwebt über einem leuchtenden iPhone',
     pitch: 'Offen für Remote-Positionen im Product- und Design-Engineering sowie für B2B-Verträge. Ich arbeite mit Teams in ganz Europa und den USA, von {location} aus.',
     b2b: 'B2B-Verträge über SIMBIA sp. z o.o.',
+    cv: 'Lebenslauf (CV)',
     // the credits in the footer, around the names and links
     credits: {
       models: '3D-Modelle unter',

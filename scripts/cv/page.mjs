@@ -4,7 +4,7 @@
 // site's numbered service rows on a white sheet, projects as wide cards playing their product promos (rendered by
 // scripts/cv/render-promos.mjs) with the site's chapters, skills as the stack's folders, numbers that count up.
 // Long details fold into cells that open smoothly on screen and are all open in the PDF, where every address and
-// section is still a button and each promo is its poster. The words are data.mjs's, the same as in the one-column
+// section is still a button and each promo is its poster. The words are src/cv/data.ts's, the same as in the one-column
 // ATS PDF, the Markdown and the JSON Resume.
 import { PROMO_CHAPTERS } from './promos/chapters.mjs';
 
