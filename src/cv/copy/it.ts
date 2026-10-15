@@ -16,7 +16,7 @@ const it: CvText = {
       experience: 'Dal primo ruolo a oggi',
       projects: 'Sistemi in produzione che ho progettato e sviluppato; i video promozionali li mostrano all’opera',
       fit: 'Solutions Architect · SDLC assistito dall’AI: cosa chiede il ruolo e cosa lo dimostra',
-      skills: 'Lo stack, cartella per cartella',
+      skills: 'Tecnologie e pratiche con cui lavoro',
     },
     builtIn2026: 'Sviluppato nel 2026',
     howIDeliver: 'Come lavoro',

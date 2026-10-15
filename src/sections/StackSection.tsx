@@ -33,17 +33,6 @@ const useMedia = (query: string) => {
  * its tools spring out as notes that can be dragged around. Wide screens get a 4 × 2 shelf with room
  * above every row for the notes; narrow ones a swipeable row whose middle folder opens by itself.
  */
-type Folder = { name: string; items: string[]; sub: string };
-const FOLDERS: Folder[] = STACK.map((folder) => ({ ...folder, sub: fill(t.stack.tools, { n: folder.items.length }) }));
-
-// The folders alone, for another page's own (the CV's skills: src/cv): a shelf on wide screens, a swipeable row on narrow ones.
-export function FolderShelf({ folders }: { folders: Folder[] }) {
-  const wide = useMedia('(min-width: 1024px)');
-  const hover = useMedia('(hover: hover) and (pointer: fine)');
-  const trigger: FolderFloatTrigger = hover ? 'hover' : 'click';
-  return wide ? <Shelf trigger={trigger} folders={folders} /> : <Carousel trigger={trigger} folders={folders} />;
-}
-
 export function StackSection() {
   const wide = useMedia('(min-width: 1024px)');
   const hover = useMedia('(hover: hover) and (pointer: fine)');
@@ -65,7 +54,7 @@ export function StackSection() {
       >
         {t.stack.intro} {hint}
       </FadeIn>
-      {wide ? <Shelf trigger={trigger} folders={FOLDERS} /> : <Carousel trigger={trigger} folders={FOLDERS} />}
+      {wide ? <Shelf trigger={trigger} /> : <Carousel trigger={trigger} />}
       <CatEgg />
       <ul className="sr-only">
         {STACK.map((folder) => (
@@ -78,16 +67,16 @@ export function StackSection() {
   );
 }
 
-function Shelf({ trigger, folders }: { trigger: FolderFloatTrigger; folders: Folder[] }) {
+function Shelf({ trigger }: { trigger: FolderFloatTrigger }) {
   return (
     <div className="mx-auto grid w-fit grid-cols-4 gap-x-8">
-      {folders.map((folder, i) => (
+      {STACK.map((folder, i) => (
         <FadeIn key={folder.name} delay={(i % 4) * 0.08} className="flex justify-center pt-[210px]">
           <FolderFloat
             {...FOLDER}
             trigger={trigger}
             label={folder.name}
-            sublabel={folder.sub}
+            sublabel={fill(t.stack.tools, { n: folder.items.length })}
             items={folder.items}
             width={160}
             height={118}
@@ -99,9 +88,9 @@ function Shelf({ trigger, folders }: { trigger: FolderFloatTrigger; folders: Fol
   );
 }
 
-function Carousel({ trigger, folders }: { trigger: FolderFloatTrigger; folders: Folder[] }) {
+function Carousel({ trigger }: { trigger: FolderFloatTrigger }) {
   const scrollerRef = useRef<HTMLDivElement>(null);
-  const open = useRef(folders.map(() => false));
+  const open = useRef(STACK.map(() => false));
   const [centred, setCentred] = useState(0);
   const [onScreen, setOnScreen] = useState(false);
 
@@ -137,13 +126,13 @@ function Carousel({ trigger, folders }: { trigger: FolderFloatTrigger; folders: 
       ref={scrollerRef}
       className="-mx-5 flex snap-x snap-mandatory gap-6 overflow-x-auto px-[calc(50%-90px)] pb-4 pt-[250px] [scrollbar-width:none] sm:-mx-8 md:-mx-10 [&::-webkit-scrollbar]:hidden"
     >
-      {folders.map((folder, i) => (
+      {STACK.map((folder, i) => (
         <div key={folder.name} className="shrink-0 snap-center">
           <FolderFloat
             {...FOLDER}
             trigger={trigger}
             label={folder.name}
-            sublabel={folder.sub}
+            sublabel={fill(t.stack.tools, { n: folder.items.length })}
             items={folder.items}
             width={180}
             height={132}

@@ -29,6 +29,7 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "remotion": "4.0.528",
+    "simple-icons": "16.33.0",
     "three": "^0.186.1"
   },
   "devDependencies": {

@@ -1,12 +1,18 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { ArrowUpRight, Briefcase, Globe2, MapPin } from 'lucide-react';
+import {
+  ArrowUpRight, Blocks, Bot, Boxes, Braces, BrainCircuit, Briefcase, Calculator, Car, Cloud, Contact, DatabaseBackup, DatabaseZap, FileText, Globe2, MapPin, MessageSquareCode,
+  Network, Package, Radio, Receipt, ScanText, ShieldCheck, Sparkles, SquareTerminal, Store, Users, Waypoints, Webhook, Workflow, type LucideIcon,
+} from 'lucide-react';
+import {
+  siClaude, siDocker, siDrizzle, siGithubactions, siGithubcopilot, siLinux, siModelcontextprotocol, siNextdotjs, siNodedotjs, siOpenapiinitiative, siPostgresql, siPrisma, siReact,
+  siRedis, siSentry, siStripe, siSwift, siTypescript, siVitest, type SimpleIcon,
+} from 'simple-icons';
 import { FadeIn } from '../components/FadeIn';
 import { Magnet } from '../components/Magnet';
 import { ContactButton } from '../components/Buttons';
 import { LangLinks, LangSwitch } from '../components/LangSwitch';
 import { SectionTitle } from '../components/SectionTitle';
 import { SpeedNumber } from '../components/SpeedNumber';
-import { FolderShelf } from '../sections/StackSection';
 import MicroSlats from '../vendor/react-bits/MicroSlats';
 import TechText from '../vendor/react-bits/TechText';
 import { FONT, LOCALE, fill, lang, langPath, type Lang } from '../i18n';
@@ -548,36 +554,77 @@ function Diploma() {
   );
 }
 
-// The skills in eight folders, as the landing's stack: the CV's five groups (data.ts), the first two and the
-// third split by what they are; [group, items' indices in it] for each.
-const FOLDERS: [string | keyof CvText['ui']['folders'], number, number[]][] = [
-  ['', 0, [0, 1, 2, 3, 4, 5, 6]],
-  ['llm', 0, [7, 8, 9, 10, 11, 12]],
-  ['', 1, [0, 1, 2, 3, 7]],
-  ['integrations', 1, [4, 5, 6]],
-  ['frontend', 2, [0, 2, 3, 9]],
-  ['backend', 2, [1, 4, 5, 6, 7, 8]],
-  ['', 3, [0, 1, 2, 3, 4, 5, 6]],
-  ['', 4, [0, 1, 2, 3, 4, 5, 6]],
+// The skills as a bento grid: a cell per kind (the CV's five groups, the first three split by what they are), each
+// skill a small card with its logo (Simple Icons, CC0) or, for a practice rather than a product, a Lucide sign.
+// [cell's own name or '', group, items' indices in it, columns of twelve]
+const CELLS: [string, number, number[], string][] = [
+  ['', 0, [0, 1, 2, 3, 4, 5, 6], 'lg:col-span-7'],
+  ['llm', 0, [7, 8, 9, 10, 11, 12], 'lg:col-span-5'],
+  ['frontend', 2, [0, 2, 3, 9], 'lg:col-span-4'],
+  ['backend', 2, [1, 4, 5, 6, 7, 8], 'lg:col-span-8'],
+  ['', 1, [0, 1, 2, 3, 7], 'lg:col-span-5'],
+  ['integrations', 1, [4, 5, 6], 'lg:col-span-7'],
+  ['', 3, [0, 1, 2, 3, 4, 5, 6], 'lg:col-span-7'],
+  ['', 4, [0, 1, 2, 3, 4, 5, 6], 'lg:col-span-5'],
 ];
+type Logo = SimpleIcon | LucideIcon;
+// each skill's sign, by its group and place in data.ts
+const LOGOS: Logo[][] = [
+  [Sparkles, Bot, Network, siClaude, siGithubcopilot, SquareTerminal, siModelcontextprotocol, BrainCircuit, Braces, DatabaseZap, ScanText, Workflow, MessageSquareCode],
+  [Blocks, Boxes, Package, Waypoints, Radio, Webhook, ShieldCheck, FileText],
+  [siTypescript, siNodedotjs, siReact, siNextdotjs, siPostgresql, siPrisma, siDrizzle, siRedis, siOpenapiinitiative, siSwift],
+  [siGithubactions, siVitest, siDocker, siLinux, Cloud, DatabaseBackup, siSentry],
+  [Users, Store, siStripe, Receipt, Calculator, Contact, Car],
+];
+// a brand's own colour, or the page's light grey where the brand's is too dark to see on black
+const tint = (hex: string) => {
+  const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 70 ? '#D7E2EA' : `#${hex}`;
+};
+function Sign({ logo }: { logo: Logo }) {
+  if ('path' in logo) {
+    const color = tint(logo.hex);
+    return (
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg" style={{ background: `${color}1f` }}>
+        <svg viewBox="0 0 24 24" aria-hidden className="h-[18px] w-[18px]" fill={color}>
+          <path d={logo.path} />
+        </svg>
+      </span>
+    );
+  }
+  const Icon = logo;
+  return (
+    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#7FB0FF]/10 text-[#7FB0FF]">
+      <Icon aria-hidden className="h-[18px] w-[18px]" strokeWidth={1.8} />
+    </span>
+  );
+}
 
 function Skills() {
-  const folders = FOLDERS.map(([own, g, items]) => {
-    const group = c.skills[g];
-    const picked = items.map((i) => group.items[i]);
-    return { name: own ? c.ui.folders[own as keyof CvText['ui']['folders']] : group.group, items: picked, sub: fill(c.ui.toolsCount, { n: picked.length }) };
-  });
   return (
     <section id="skills" className="mx-auto max-w-[1200px] scroll-mt-20 px-4 pt-24 sm:px-6">
       <Title text={c.ui.nav.skills} sub={c.ui.subs.skills} />
-      <FolderShelf folders={folders} />
-      <ul className="sr-only">
-        {c.skills.map((g) => (
-          <li key={g.group}>
-            {g.group}: {g.items.join(', ')}
-          </li>
-        ))}
-      </ul>
+      <div className="grid gap-3.5 md:grid-cols-2 lg:grid-cols-12">
+        {CELLS.map(([own, g, items, span], i) => {
+          const group = c.skills[g];
+          return (
+            <FadeIn key={i} delay={(i % 3) * 0.06} className={`tile flex flex-col gap-4 ${span}`}>
+              <div className="flex items-baseline justify-between gap-3">
+                <h3>{own ? c.ui.folders[own as keyof CvText['ui']['folders']] : group.group}</h3>
+                <span className="shrink-0 text-[0.72rem] uppercase tracking-[0.14em] text-[#D7E2EA]/50">{fill(c.ui.toolsCount, { n: items.length })}</span>
+              </div>
+              <ul className="flex flex-wrap gap-2">
+                {items.map((k) => (
+                  <li key={k} className="flex items-center gap-2.5 rounded-xl border border-[#D7E2EA]/10 bg-white/[0.03] py-1.5 pl-1.5 pr-3 text-[0.86rem] leading-tight transition-[transform,border-color] duration-300 hover:-translate-y-0.5 hover:border-[#7FB0FF]/50">
+                    <Sign logo={LOGOS[g][k]} />
+                    <span>{group.items[k]}</span>
+                  </li>
+                ))}
+              </ul>
+            </FadeIn>
+          );
+        })}
+      </div>
     </section>
   );
 }

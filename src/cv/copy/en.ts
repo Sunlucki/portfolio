@@ -16,7 +16,7 @@ const en: CvText = {
       experience: 'From the first role down to now',
       projects: 'Production systems I designed and built; the promos show them at work',
       fit: 'Solutions Architect · AI-assisted SDLC: what the role asks, and what shows it',
-      skills: 'The stack, folder by folder',
+      skills: 'Technologies and practices I work with',
     },
     builtIn2026: 'Built in 2026',
     howIDeliver: 'How I deliver',

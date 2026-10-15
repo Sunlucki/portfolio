@@ -23,7 +23,7 @@ const de: CvText = {
       experience: 'Von der ersten Stelle bis heute',
       projects: 'Produktivsysteme, die ich entworfen und gebaut habe; die Promovideos zeigen sie im Einsatz',
       fit: 'Solutions Architect · KI-gestützter SDLC: was die Rolle verlangt und was es belegt',
-      skills: 'Der Stack, Ordner für Ordner',
+      skills: 'Technologien und Methoden, mit denen ich arbeite',
     },
     builtIn2026: 'Gebaut 2026',
     howIDeliver: 'Arbeitsweise',
