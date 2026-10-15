@@ -175,7 +175,7 @@ src/
 scripts/
   prepare-media.py      builds hero frames (+ Vision cut-outs), card images, the WordPress slides and films, marquee tiles, icons and the music from local sources
   prepare-scenes.mjs    the Graphics covers' 3D models (Mind Logistic's bottle and can), small, for src/three/miniScenes.ts
-  cv/                   the CV: its words (data.mjs) and the page, Markdown, JSON Resume and PDF made from them (build.mjs)
+  cv/                   the CV: its PDFs, Markdown and JSON Resume (build.mjs), the PDFs' templates (page.mjs), the prerender (prerender.mjs)
   cutout.swift          Apple Vision foreground mask → full-frame transparent PNGs
   estimate-motion.py    camera zoom between hero frames + the pupil per frame (needs opencv-python-headless, numpy)
   prepare-about.py      phone scene assets (cut-out, poster, recoloured iPhone model)

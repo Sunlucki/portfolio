@@ -388,11 +388,12 @@ function Experience() {
   );
 }
 
-// Projects: two rows of their screens sliding in opposite directions as the page scrolls (the landing's first marquee),
+// Projects: two rows of their mockups sliding in opposite directions as the page scrolls (the landing's first marquee),
 // and the way to the landing, where each one is shown in full.
+// (mockups only: the sites on their devices, then the branding and print work as the landing's covers)
 const ROWS = [
-  ['simbia-1', 'b2b-1', 'protectdent-1', 'iapply-1', 'taxiboss-1', 'spin-1', 'simbia-2', 'b2b-2', 'protectdent-2', 'iapply-2', 'taxiboss-2', 'spin-2'],
-  ['wp-blackpoint-0', 'simbia-3', 'wp-architect-0', 'b2b-3', 'wp-alibia-0', 'protectdent-3', 'wp-kreem-0', 'iapply-3', 'wp-lizard-0', 'spin-3', 'wp-magicpatron-0', 'wp-casada-0'],
+  ['alibia-0', 'arab-0', 'architect-0', 'blackpoint-0', 'casada-0', 'kreem-0', 'lizard-0', 'magicpatron-0', 'namiclean-0', 'blackpoint-2'].map((name) => `/work/wp-${name}.webp`),
+  [1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14, 15, 19, 20].map((i) => `/tiles/${String(i).padStart(2, '0')}.webp?v=13`),
 ];
 const TILE = 'h-[120px] w-[192px] shrink-0 rounded-2xl sm:h-[160px] sm:w-[256px] md:h-[200px] md:w-[320px]';
 
@@ -427,8 +428,8 @@ function Projects() {
       <a href={`${langPath(lang)}#projects`} className="flex flex-col gap-3 overflow-hidden py-2" aria-label={c.ui.projectsLink}>
         {ROWS.map((row, i) => (
           <div key={i} ref={(el) => void (rows.current[i] = el)} className="flex w-max gap-3" style={{ willChange: 'transform' }}>
-            {[...row, ...row, ...row].map((name, k) => (
-              <img key={k} src={`/work/${name}.webp`} alt={k < row.length ? fill(c.ui.projectScreens, { name: name.replace(/^wp-|-\d+$/g, '') }) : ''} loading="lazy" decoding="async" width={320} height={200} className={`${TILE} object-cover object-left-top`} />
+            {[...row, ...row, ...row].map((src, k) => (
+              <img key={k} src={src} alt="" loading="lazy" decoding="async" width={320} height={200} className={`${TILE} object-cover`} />
             ))}
           </div>
         ))}
