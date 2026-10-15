@@ -330,6 +330,7 @@ const fr: Copy = {
     play: 'Lire {title}',
     tap: 'Touchez pour lire les vidéos',
     swipe: 'Balayez vers le haut pour la suivante',
+    all: 'Voir les {n} vidéos',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'Film IA',

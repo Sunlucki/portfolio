@@ -290,6 +290,7 @@ const ru: Copy = {
     play: 'Смотреть «{title}»',
     tap: 'Нажми, чтобы воспроизвести видео',
     swipe: 'Листай вверх, чтобы смотреть дальше',
+    all: 'Смотреть все видео ({n})',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'ИИ-фильм',

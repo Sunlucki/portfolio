@@ -291,6 +291,7 @@ const it: Copy = {
     play: 'Riproduci {title}',
     tap: 'Tocca per riprodurre i video',
     swipe: 'Scorri verso l’alto per il prossimo',
+    all: 'Guarda tutti i {n} video',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'Film AI',

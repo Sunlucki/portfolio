@@ -290,6 +290,7 @@ const en = {
     play: 'Play {title}',
     tap: 'Tap to play the videos',
     swipe: 'Swipe up for the next one',
+    all: 'Watch all {n} videos', // screens: the grid shows the first films until this is pressed
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'AI film',

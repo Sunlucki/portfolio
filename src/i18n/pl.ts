@@ -290,6 +290,7 @@ const pl: Copy = {
     play: 'Odtwórz {title}',
     tap: 'Dotknij, aby odtworzyć wideo',
     swipe: 'Przesuń w górę, aby oglądać dalej',
+    all: 'Zobacz wszystkie filmy ({n})',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'Film AI',

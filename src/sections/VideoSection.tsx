@@ -41,6 +41,9 @@ const credited = (credit: string) => t.video.credits[credit] ?? credit;
 const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 // touch screens (no hover): no frames flipping
 const touch = typeof window !== 'undefined' && window.matchMedia('(hover: none)').matches;
+// screens: the first films, the last of them fading into the dark, until the visitor asks for them all (his call,
+// 2026-10-16: the grid of every film made the section very long)
+const FIRST = 10;
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 /**
  * Video: Bogdan's films in a masonry grid (three columns, two on tablets, one on phones), each at its own shape,
@@ -64,6 +67,10 @@ export function VideoSection() {
   const fallback = useRef(0);
   const sectionRef = useRef<HTMLElement>(null);
   const [near, setNear] = useState(false); // phones: the feed (and its first films' pictures) in the page once the section is a screen away
+  const [all, setAll] = useState(false); // screens: every film shown
+  const grid = useRef<HTMLDivElement>(null);
+  const [cut, setCut] = useState(''); // the grid's height while it shows the first films: down to its shortest column
+  const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -82,6 +89,23 @@ export function VideoSection() {
     window.addEventListener('resize', fit);
     return () => window.removeEventListener('resize', fit);
   }, []);
+
+  // the first films' grid ends with its shortest column, the others' last films cut off by it, all fading out
+  useEffect(() => {
+    const el = grid.current;
+    if (all || phone || !el) return;
+    const measure = () => setCut(`${Math.min(...[...el.children].map((column) => (column as HTMLElement).offsetHeight))}px`);
+    const resized = new ResizeObserver(measure);
+    [...el.children].forEach((column) => resized.observe(column));
+    measure();
+    return () => resized.disconnect();
+  }, [all, phone, columns]);
+  // asked for them all: the grid opens from that height to its full one, then lets go of it
+  const showAll = () => {
+    setAll(true);
+    setOpening(true);
+    requestAnimationFrame(() => requestAnimationFrame(() => grid.current && setCut(`${grid.current.scrollHeight}px`)));
+  };
 
   const stacks = useMemo(() => {
     const heights = Array.from({ length: columns }, () => 0);
@@ -194,14 +218,36 @@ export function VideoSection() {
           )}
         </>
       ) : (
-        <div data-flow="films" className="mx-auto flex max-w-6xl items-start gap-3 sm:gap-4">
-          {stacks.map((stack, c) => (
-            <div key={c} className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
-              {stack.map((i) => (
-                <Tile key={FILMS[i].slug} film={FILMS[i]} index={i} onOpen={() => show(i)} />
-              ))}
+        <div className="relative mx-auto max-w-6xl">
+          <div
+            ref={grid}
+            data-flow="films"
+            onTransitionEnd={(e) => e.target === e.currentTarget && opening && (setOpening(false), setCut(''))}
+            className={`flex items-start gap-3 overflow-hidden sm:gap-4 ${opening ? 'transition-[max-height] duration-[1100ms] ease-[cubic-bezier(0.23,1,0.32,1)]' : ''}`}
+            style={{ maxHeight: cut || undefined }}
+          >
+            {stacks.map((stack, c) => (
+              <div key={c} className="flex min-w-0 flex-1 flex-col gap-3 sm:gap-4">
+                {stack
+                  .filter((i) => all || i < FIRST)
+                  .map((i) => (
+                    <Tile key={FILMS[i].slug} film={FILMS[i]} index={i} onOpen={() => show(i)} />
+                  ))}
+              </div>
+            ))}
+          </div>
+          {!all && (
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[55%] items-end justify-center bg-gradient-to-b from-transparent via-[#0C0C0C]/80 to-[#0C0C0C] pb-6">
+              <button
+                type="button"
+                onClick={showAll}
+                className="pointer-events-auto inline-flex items-center gap-2 whitespace-nowrap rounded-full border-2 border-[#D7E2EA] bg-[#0C0C0C]/40 px-8 py-3 text-sm font-medium uppercase tracking-widest text-[#D7E2EA] backdrop-blur-sm transition-colors duration-200 hover:bg-[#D7E2EA]/10 sm:px-10 sm:py-3.5 sm:text-base"
+              >
+                {fill(t.video.all, { n: FILMS.length })}
+                <Play aria-hidden className="h-4 w-4" fill="currentColor" />
+              </button>
             </div>
-          ))}
+          )}
         </div>
       )}
 

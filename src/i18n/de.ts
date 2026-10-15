@@ -288,6 +288,7 @@ const de: Copy = {
     play: '{title} abspielen',
     tap: 'Tippen, um die Videos abzuspielen',
     swipe: 'Nach oben wischen für das nächste',
+    all: 'Alle {n} Videos ansehen',
     // the credits under the films that are words, not names
     credits: {
       'AI film': 'KI-Film',
